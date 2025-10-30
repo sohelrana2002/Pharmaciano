@@ -1,10 +1,12 @@
 import mongoose from "mongoose";
 import { config } from "./config";
+import { initializeSuperAdmin } from "../utils/initSuperAdmin";
 
 const connectDatabase = async (): Promise<void> => {
     try {
         mongoose.connection.on("connected", () => {
-            console.log("Successfully connected to the database!")
+            console.log("Successfully connected to the database!");
+            initializeSuperAdmin();
         });
 
         mongoose.connection.on("error", (err) => {
@@ -12,7 +14,7 @@ const connectDatabase = async (): Promise<void> => {
         });
 
         await mongoose.connect(config.databaseURI);
-        
+
     } catch (error) {
         console.error("Database connection error", error);
         process.exit(1);
