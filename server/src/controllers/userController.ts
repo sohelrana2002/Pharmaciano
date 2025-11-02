@@ -2,12 +2,14 @@
 import { Response } from 'express';
 import User from '../models/User';
 import Role from '../models/Role';
-import { AuthRequest } from '../types';
+import { AuthRequest, IRole, IUser } from '../types';
 import { createUserValidator } from '../validators/authValidator';
+// import { CreateUserRequest } from '../types';
 
-export const createUser = async (req: AuthRequest, res: Response) => {
+// create user 
+const createUser = async (req: AuthRequest, res: Response) => {
     try {
-        // Validate request body using Zod
+        // // Validate request body using Zod
         const validationResult = createUserValidator.safeParse(req.body);
 
         if (!validationResult.success) {
@@ -22,6 +24,7 @@ export const createUser = async (req: AuthRequest, res: Response) => {
         }
 
         const { email, password, name, role: roleName } = validationResult.data;
+        // const { email, password, name, role: roleName }: CreateUserRequest = req.body;
 
         const existingUser = await User.findOne({ email });
         if (existingUser) {
@@ -34,7 +37,7 @@ export const createUser = async (req: AuthRequest, res: Response) => {
         // Find role by name instead of ID
         const role = await Role.findOne({ name: roleName, isActive: true });
 
-        console.log("role", role);
+        // console.log("role", role);
 
         if (!role) {
             // Get available roles for better error message
@@ -63,7 +66,6 @@ export const createUser = async (req: AuthRequest, res: Response) => {
 
         // console.log("savedUser", savedUser);
 
-
         res.status(201).json({
             success: true,
             message: 'User created successfully.',
@@ -85,15 +87,25 @@ export const createUser = async (req: AuthRequest, res: Response) => {
     }
 };
 
-export const getUsers = async (req: AuthRequest, res: Response) => {
+
+// list of users 
+const userList = async (req: AuthRequest, res: Response) => {
     try {
         const users = await User.find()
-            .populate<{ role: any }>('role')
+            .populate<{ role: IRole & { createdBy: IUser } }>({
+                path: 'role',
+                select: "-description",
+                populate: {
+                    path: 'createdBy',
+                    select: 'name',
+                },
+            })
             .select('-password')
-            .sort({ createdAt: -1 });
+            .sort({ createdAt: -1 })
 
-        res.json({
+        res.status(200).json({
             success: true,
+            length: users.length,
             data: { users }
         });
     } catch (error) {
@@ -104,3 +116,5 @@ export const getUsers = async (req: AuthRequest, res: Response) => {
         });
     }
 };
+
+export { createUser, userList }
