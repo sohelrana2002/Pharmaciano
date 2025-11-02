@@ -1,15 +1,13 @@
 import { Router } from 'express';
-import { createUser, getUsers } from '../controllers/userController';
+import { createUser, userList } from '../controllers/userController';
 import { authenticate, isSuperAdmin } from '../middlewares/authMiddleware';
 import { createUserValidator } from '../validators/authValidator';
 import { validate } from '../middlewares/validateMiddleware';
+import { authorize } from '../middlewares/authMiddleware';
 
 const router = Router();
 
-router.use(authenticate);
-router.use(isSuperAdmin);
-
-router.post('/', validate(createUserValidator), createUser);
-router.get('/', getUsers);
+router.post('/', authenticate, isSuperAdmin, validate(createUserValidator), createUser);
+router.get('/', authenticate, authorize(["user:read"]), userList);
 
 export default router;
