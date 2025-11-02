@@ -1,0 +1,117 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+import { Response } from 'express';
+import Role from '../models/Role';
+import Feature from '../models/Feature';
+import { AuthRequest } from '../types';
+import { roleSchemaValidator } from '../validators/roleValidator';
+
+export const createRole = async (req: AuthRequest, res: Response) => {
+    try {
+        // Validate request body using Zod
+        const validationResult = roleSchemaValidator.safeParse(req.body);
+
+        if (!validationResult.success) {
+            return res.status(400).json({
+                success: false,
+                message: 'Validation failed',
+                errors: validationResult.error.issues.map((err: { path: any[]; message: any; }) => ({
+                    field: err.path.join('.'),
+                    message: err.message
+                }))
+            });
+        }
+        const { name, description, features } = validationResult.data;
+
+        // Check if role already exists
+        const existingRole = await Role.findOne({ name });
+        if (existingRole) {
+            return res.status(400).json({
+                success: false,
+                message: 'Role with this name already exists.'
+            });
+        }
+
+        // Validate that all features exist and are active
+        const availableFeatures = await Feature.find({
+            name: { $in: features },
+            isActive: true
+        });
+
+        // console.log("availableFeatures", availableFeatures);
+
+
+        if (availableFeatures.length !== features.length) {
+            const invalidFeatures = features.filter(feature =>
+                !availableFeatures.some(af => af.name === feature)
+            );
+
+            return res.status(400).json({
+                success: false,
+                message: `Invalid or inactive features: ${invalidFeatures.join(', ')}`
+            });
+        }
+
+        // Create the role
+        const role = new Role({
+            name,
+            description,
+            features,
+            createdBy: req.user!.userId
+        });
+
+        await role.save();
+
+        // Populate the createdBy field for response
+        const savedRole = await Role.findById(role._id)
+            .populate('createdBy', 'name email');
+
+        res.status(201).json({
+            success: true,
+            message: 'Role created successfully.',
+            data: { role: savedRole }
+        });
+    } catch (error: any) {
+        console.error('Create role error:', error);
+
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error.'
+        });
+    }
+};
+
+export const getRoles = async (req: AuthRequest, res: Response) => {
+    try {
+        const roles = await Role.find()
+            .populate('createdBy', 'name email')
+            .sort({ createdAt: -1 });
+
+        res.json({
+            success: true,
+            data: { roles }
+        });
+    } catch (error) {
+        console.error('Get roles error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error.'
+        });
+    }
+};
+
+export const getFeatures = async (req: AuthRequest, res: Response) => {
+    try {
+        const features = await Feature.find({ isActive: true }).sort({ category: 1, name: 1 });
+
+        res.json({
+            success: true,
+            data: { features }
+        });
+    } catch (error) {
+        console.error('Get features error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error.'
+        });
+    }
+};
