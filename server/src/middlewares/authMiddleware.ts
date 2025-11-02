@@ -97,49 +97,6 @@ export const authorize = (requiredFeatures: string[]) => {
     };
 };
 
-// export const authorize = async (roleName) => {
-//     const result = await Role.find();
-
-//     const ifRole = result.map((role) => role.in)
-// }
-// Alternative: Get role dynamically from database
-// export const authorizeDynamic = (allowedRoleNames = []) => {
-//     return async (req, res, next) => {
-//         try {
-//             if (allowedRoleNames.length === 0) return next();
-
-//             if (!req.user.role) {
-//                 return res.status(403).json({
-//                     message: 'Access denied. No role assigned.'
-//                 });
-//             }
-
-//             // Fetch fresh role data from database
-//             const userRole = await Role.findById(req.user.role._id);
-
-//             if (!userRole || !userRole.isActive) {
-//                 return res.status(403).json({
-//                     message: 'Access denied. Role not found or inactive.'
-//                 });
-//             }
-
-//             if (!allowedRoleNames.includes(userRole.name)) {
-//                 return res.status(403).json({
-//                     message: 'Access denied. Insufficient role permissions.',
-//                     requiredRoles: allowedRoleNames,
-//                     userRole: userRole.name
-//                 });
-//             }
-
-//             // Attach fresh role data to request
-//             req.user.currentRole = userRole;
-//             next();
-//         } catch (error) {
-//             res.status(500).json({ message: 'Authorization error.', error: error.message });
-//         }
-//     };
-// };
-
 
 export const isSuperAdmin = (req: AuthRequest, res: Response, next: NextFunction) => {
     if (!req.user || req.user.role !== 'Super Admin') {
