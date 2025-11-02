@@ -73,7 +73,7 @@ export const login = async (req: Request, res: Response) => {
         features: role.features
       },
       process.env.JWT_SECRET!,
-      { expiresIn: '24h' }
+      { expiresIn: '7d' }
     );
 
     res.json({
@@ -86,7 +86,6 @@ export const login = async (req: Request, res: Response) => {
           email: user.email,
           name: user.name,
           role: role.name,
-          features: role.features
         }
       }
     });
