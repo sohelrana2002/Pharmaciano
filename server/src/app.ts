@@ -21,9 +21,11 @@ app.use(helmet());
 app.use(cors());
 
 // Routes
-app.use('/api/v1/auth', authRoutes);
-app.use('/api/v1/users', userRoutes);
-app.use('/api/v1/roles', roleRoutes);
+const apiVersion: any = "v1";
+
+app.use(`/api/${apiVersion}/auth`, authRoutes);
+app.use(`/api/${apiVersion}/users`, userRoutes);
+app.use(`/api/${apiVersion}/roles`, roleRoutes);
 
 
 
