@@ -4,6 +4,7 @@ import User from '../models/User';
 import Role from '../models/Role';
 import { AuthRequest, IRole, IUser } from '../types';
 import { createUserValidator } from '../validators/authValidator';
+import { success } from 'zod';
 // import { CreateUserRequest } from '../types';
 
 // create user 
@@ -42,7 +43,7 @@ const createUser = async (req: AuthRequest, res: Response) => {
         if (!role) {
             // Get available roles for better error message
             const availableRoles = await Role.find({ isActive: true }).select('name');
-            console.log("availableRoles", availableRoles);
+            // console.log("availableRoles", availableRoles);
 
             return res.status(400).json({
                 success: false,
@@ -117,4 +118,32 @@ const userList = async (req: AuthRequest, res: Response) => {
     }
 };
 
-export { createUser, userList }
+// user update data 
+const userProfile = async (req: AuthRequest, res: Response) => {
+    try {
+        const userId = req.user?.userId;
+
+        const profile = await User.findOne({ _id: userId })
+            .populate<{ role: IRole & { createdBy: IUser } }>({
+                path: "role",
+                populate: {
+                    path: "createdBy",
+                    select: "name"
+                }
+            }).select("-password");
+
+        res.status(200).json({
+            success: success,
+            data: { profile }
+        })
+    } catch (error) {
+        console.error('Get users error:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error.'
+        });
+    }
+
+}
+
+export { createUser, userList, userProfile }
