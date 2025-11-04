@@ -3,7 +3,7 @@ import { Response } from 'express';
 import User from '../models/User';
 import Role from '../models/Role';
 import { AuthRequest, IRole, IUser } from '../types';
-import { createUserValidator } from '../validators/authValidator';
+import { createUserValidator, updateUserValidator } from '../validators/authValidator';
 import { success } from 'zod';
 // import { CreateUserRequest } from '../types';
 
@@ -146,4 +146,86 @@ const userProfile = async (req: AuthRequest, res: Response) => {
 
 }
 
-export { createUser, userList, userProfile }
+// update user info only super admin 
+const updateUser = async (req: AuthRequest, res: Response) => {
+    try {
+        const userId = req.params.id;
+        // // Validate request body using Zod
+        const validationResult = updateUserValidator.safeParse(req.body);
+
+        if (!validationResult.success) {
+            return res.status(400).json({
+                success: false,
+                message: 'Validation failed',
+                errors: validationResult.error.issues.map((err: { path: any[]; message: any; }) => ({
+                    field: err.path.join('.'),
+                    message: err.message
+                }))
+            });
+        }
+
+        const { email, password, name, role: roleName } = validationResult.data;
+
+        const existingUser = await User.findOne({ _id: userId });
+        if (!existingUser) {
+            return res.status(400).json({
+                success: false,
+                message: 'No user found.'
+            });
+        }
+
+        //Build update object
+        const updateData: any = {};
+        if (email) updateData.email = email;
+        if (name) updateData.name = name;
+        if (password) updateData.password = password;
+
+        // Optional role change
+        if (roleName) {
+            // Find role by name instead of ID
+            const role = await Role.findOne({ name: roleName, isActive: true });
+
+            // console.log("role", role);
+
+            if (!role) {
+                // Get available roles for better error message
+                const availableRoles = await Role.find({ isActive: true }).select('name');
+                // console.log("availableRoles", availableRoles);
+
+                return res.status(400).json({
+                    success: false,
+                    message: `Invalid role specified. Available roles: ${availableRoles.map(r => r.name).join(', ')}`
+                });
+            }
+            updateData.role = role._id;
+        }
+
+        const updateUser = await User.findByIdAndUpdate(
+            existingUser._id,
+            updateData,
+            { new: true }
+        );
+        // console.log("updateUser: ", updateUser);
+
+
+        res.status(201).json({
+            success: true,
+            message: 'User update successfully.',
+            data: {
+                user: {
+                    id: updateUser!._id.toString(),
+                    name: updateUser!.name,
+                }
+            }
+        });
+    } catch (error: any) {
+        console.error('Create user error:', error.message);
+
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error.'
+        });
+    }
+}
+
+export { createUser, userList, userProfile, updateUser }
