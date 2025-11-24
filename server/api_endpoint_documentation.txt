@@ -12,7 +12,7 @@ Create User
 }
 
 List Of User
--Authentication / Authorization: authenticate & authorize(["user:read"])
+-Authentication / Authorization: authenticate & authorize(["user:user-list"])
 -Method: GET
 -Endpoint: /api/v1/users
 
