@@ -1,0 +1,12 @@
+Create User
+-Authentication / Authorization: authenticate & authorize(["user:create"])
+-Method: POST
+-Endpoint: /api/v1/users
+-Request Body (JSON):
+-Exanple
+{
+  "email": "john@example.com",
+  "password": "password123",
+  "name": "John Doe",
+  "role": "admin"
+}
