@@ -8,7 +8,7 @@ export const initializeSuperAdmin = async () => {
     // Create default features
     const defaultFeatures = [
       { name: 'user:create', description: 'Create users', category: 'Users' },
-      { name: 'user:list-user', description: 'User List', category: 'Users' },
+      { name: 'user:user-list', description: 'User List', category: 'Users' },
       { name: 'user:read', description: 'View Profile', category: 'Users' },
       { name: 'user:update', description: 'Update users', category: 'Users' },
       { name: 'user:delete', description: 'Delete users', category: 'Users' },
