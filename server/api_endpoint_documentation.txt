@@ -17,7 +17,7 @@ List Of User
 -Endpoint: /api/v1/users
 
 Individual Profile
--Authentication
+-Authentication / Authorization: authenticate & authorize(["user:read"])
 -Method: GET
 -Endpoint: /api/v1/users/profile
 
@@ -49,6 +49,6 @@ Login User
 }
 
 Profile Info
--Authentication
+-Authentication / Authorization: authenticate & authorize(["user:read"])
 -Method: GET
 -Endpoint: /api/v1/auth/profile
