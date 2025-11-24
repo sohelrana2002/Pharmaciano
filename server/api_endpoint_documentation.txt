@@ -34,3 +34,16 @@ Update User
   "name": "John Doe",
   "role": "admin"
 }
+
+Delete user
+-Pending
+
+Login User
+-Method: POST
+-Endpoint: /api/v1/auth/login
+-Request Body (JSON):
+-Example
+{
+  "email": "john@example.com",
+  "password": "password123",
+}
