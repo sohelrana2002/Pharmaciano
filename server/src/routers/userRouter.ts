@@ -10,7 +10,7 @@ const router = Router();
 router.post('/', authenticate, authorize(["user:create"]), validate(createUserValidator), createUser);
 router.get('/', authenticate, authorize(["user:user-list"]), userList);
 // router.put("/update", authenticate, authorize(["user:update"]), updateUser);
-router.get("/profile", authenticate, userProfile);
+router.get("/profile", authenticate, authorize(["user:read"]), userProfile);
 
 // update router 
 router.put("/:id", authenticate, authorize(["user:update"]), validate(updateUserValidator), updateUser)
