@@ -8,7 +8,7 @@ import { authorize } from '../middlewares/authMiddleware';
 const router = Router();
 
 router.post('/', authenticate, authorize(["user:create"]), validate(createUserValidator), createUser);
-router.get('/', authenticate, authorize(["user:read"]), userList);
+router.get('/', authenticate, authorize(["user:user-list"]), userList);
 // router.put("/update", authenticate, authorize(["user:update"]), updateUser);
 router.get("/profile", authenticate, userProfile);
 
