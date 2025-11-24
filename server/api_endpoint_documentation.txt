@@ -17,7 +17,7 @@ List Of User
 -Endpoint: /api/v1/users
 
 Individual Profile
--Authentication / Authorization: authenticate & authorize(["user:read"])
+-Authentication
 -Method: GET
 -Endpoint: /api/v1/users/profile
 
@@ -47,3 +47,4 @@ Login User
   "email": "john@example.com",
   "password": "password123",
 }
+
