@@ -1,9 +1,9 @@
 Create User
--Authentication / Authorization: authenticate & authorize(["user:create"])
+-Authentication / Authorization / Validate: authenticate & authorize(["user:create"]) & validate(createUserValidator)
 -Method: POST
 -Endpoint: /api/v1/users
 -Request Body (JSON):
--Exanple
+-Example
 {
   "email": "john@example.com",
   "password": "password123",
@@ -20,3 +20,17 @@ Individual Profile
 -Authentication / Authorization: authenticate & authorize(["user:read"])
 -Method: GET
 -Endpoint: /api/v1/users/profile
+
+Update User
+-Authentication / Authorization / Validate: authenticate & authorize(["user:update"]) & validate(updateUserValidator)
+-Method: PUT
+-Endpoint: /api/v1/users/:id
+-Note: Provide dynamic id for update
+-Request Body (JSON):
+-Example
+{
+  "email": "john@example.com",
+  "password": "password123",
+  "name": "John Doe",
+  "role": "admin"
+}
