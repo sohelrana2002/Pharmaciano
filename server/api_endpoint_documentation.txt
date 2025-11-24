@@ -15,3 +15,8 @@ List Of User
 -Authentication / Authorization: authenticate & authorize(["user:read"])
 -Method: GET
 -Endpoint: /api/v1/users
+
+Individual Profile
+-Authentication / Authorization: authenticate & authorize(["user:read"])
+-Method: GET
+-Endpoint: /api/v1/users/profile
