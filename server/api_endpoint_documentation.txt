@@ -48,3 +48,7 @@ Login User
   "password": "password123",
 }
 
+Profile Info
+-Authentication
+-Method: GET
+-Endpoint: /api/v1/auth/profile
