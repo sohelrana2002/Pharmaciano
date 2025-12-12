@@ -1,6 +1,7 @@
 import { Document, Types } from 'mongoose';
 import { Request } from 'express';
 
+// user interface 
 export interface IUser extends Document {
     _id: Types.ObjectId;
     email: string;
@@ -12,6 +13,7 @@ export interface IUser extends Document {
     updatedAt: Date;
 }
 
+// role interface 
 export interface IRole extends Document {
     _id: Types.ObjectId;
     name: string;
@@ -23,6 +25,7 @@ export interface IRole extends Document {
     updatedAt: Date;
 }
 
+// feature interface 
 export interface IFeature extends Document {
     _id: Types.ObjectId;
     name: string;
@@ -32,6 +35,7 @@ export interface IFeature extends Document {
     createdAt: Date;
 }
 
+// authrequest interface 
 export interface AuthRequest extends Request {
     user?: {
         userId: string;
@@ -40,6 +44,8 @@ export interface AuthRequest extends Request {
         features: string[];
     };
 }
+
+// create user request interface 
 export interface CreateUserRequest {
     email: string;
     password: string;
@@ -47,6 +53,7 @@ export interface CreateUserRequest {
     role: string;
 }
 
+// create role request interface
 export interface CreateRoleRequest extends Request {
     name: string;
     description: string;
