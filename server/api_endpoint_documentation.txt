@@ -1,4 +1,4 @@
-Create User
+# Create User
 -Authentication / Authorization / Validate: authenticate & authorize(["user:create"]) & validate(createUserValidator)
 -Method: POST
 -Endpoint: /api/v1/users
@@ -11,17 +11,17 @@ Create User
   "role": "admin"
 }
 
-List Of User
+# List Of User
 -Authentication / Authorization: authenticate & authorize(["user:user-list"])
 -Method: GET
 -Endpoint: /api/v1/users
 
-Individual Profile
+# Individual Profile
 -Authentication / Authorization: authenticate & authorize(["user:read"])
 -Method: GET
 -Endpoint: /api/v1/users/profile
 
-Update User
+# Update User
 -Authentication / Authorization / Validate: authenticate & authorize(["user:update"]) & validate(updateUserValidator)
 -Method: PUT
 -Endpoint: /api/v1/users/:id
@@ -35,10 +35,10 @@ Update User
   "role": "admin"
 }
 
-Delete user
+# Delete user
 -Pending
 
-Login User
+# Login User
 -Method: POST
 -Endpoint: /api/v1/auth/login
 -Request Body (JSON):
@@ -48,7 +48,7 @@ Login User
   "password": "password123",
 }
 
-Profile Info
+# Profile Info
 -Authentication / Authorization: authenticate & authorize(["user:read"])
 -Method: GET
 -Endpoint: /api/v1/auth/profile
