@@ -7,12 +7,17 @@ import { authorize } from '../middlewares/authMiddleware';
 
 const router = Router();
 
+// create user 
 router.post('/', authenticate, authorize(["user:create"]), validate(createUserValidator), createUser);
-router.get('/', authenticate, authorize(["user:user-list"]), userList);
-// router.put("/update", authenticate, authorize(["user:update"]), updateUser);
+
+// list of users 
+router.get('/', authenticate, authorize(["user:list"]), userList);
+
+// individual profile info 
 router.get("/profile", authenticate, authorize(["user:read"]), userProfile);
 
-// update router 
-router.put("/:id", authenticate, authorize(["user:update"]), validate(updateUserValidator), updateUser)
+// update user 
+router.put("/:id", authenticate, authorize(["user:update"]), validate(updateUserValidator), updateUser);
+
 
 export default router;
