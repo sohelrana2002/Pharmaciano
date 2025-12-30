@@ -10,7 +10,8 @@ const router = Router();
 router.post('/', authenticate, authorize(["role:create"]), validate(roleSchemaValidator), createRole);
 
 // list of role 
-router.get('/', roleList);
+router.get('/', authenticate, authorize(["role:list"]), roleList);
+
 
 // get all features 
 router.get('/features', getFeatures);
