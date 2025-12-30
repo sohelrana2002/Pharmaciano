@@ -1,5 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Response } from 'express';
+import mongoose from 'mongoose';
 import User from '../models/UserModel';
 import Role from '../models/RoleModel';
 import { AuthRequest, IRole, IUser } from '../types';
@@ -118,7 +119,7 @@ const userList = async (req: AuthRequest, res: Response) => {
     }
 };
 
-// user update data 
+// user profile data 
 const userProfile = async (req: AuthRequest, res: Response) => {
     try {
         const userId = req.user?.userId;
@@ -150,7 +151,15 @@ const userProfile = async (req: AuthRequest, res: Response) => {
 const updateUser = async (req: AuthRequest, res: Response) => {
     try {
         const userId = req.params.id;
-        // // Validate request body using Zod
+
+        if (!mongoose.Types.ObjectId.isValid(userId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid user ID."
+            })
+        }
+
+        // Validate request body using Zod
         const validationResult = updateUserValidator.safeParse(req.body);
 
         if (!validationResult.success) {
