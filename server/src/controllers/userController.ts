@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Response } from 'express';
-import User from '../models/User';
-import Role from '../models/Role';
+import User from '../models/UserModel';
+import Role from '../models/RoleModel';
 import { AuthRequest, IRole, IUser } from '../types';
 import { createUserValidator, updateUserValidator } from '../validators/authValidator';
 import { success } from 'zod';

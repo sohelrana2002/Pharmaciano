@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Request, Response, NextFunction } from 'express';
-import Role from '../models/Role';
+import Role from '../models/RoleModel';
 
 
 export const requireFeature = (feature: string) => {

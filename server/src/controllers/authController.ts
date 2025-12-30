@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Request, Response } from 'express';
 import jwt from 'jsonwebtoken';
-import User from '../models/User';
-import Role from '../models/Role';
+import User from '../models/UserModel';
+import Role from '../models/RoleModel';
 
 // Define the User type with comparePassword method
 interface UserWithMethods {

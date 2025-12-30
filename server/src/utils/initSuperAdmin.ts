@@ -1,6 +1,6 @@
-import User from '../models/User';
-import Role from '../models/Role';
-import Feature from '../models/Feature';
+import User from '../models/UserModel';
+import Role from '../models/RoleModel';
+import Feature from '../models/FeatureModel';
 import { config } from '../config/config';
 
 export const initializeSuperAdmin = async () => {
