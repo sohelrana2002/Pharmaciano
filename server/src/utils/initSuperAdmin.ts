@@ -33,18 +33,18 @@ export const initializeSuperAdmin = async () => {
     const allFeatures = defaultFeatures.map(f => f.name);
     // console.log("allFeatures", allFeatures);
 
-    let superAdminRole = await Role.findOne({ name: 'Super Admin' });
-    // console.log("superAdminRole", superAdminRole);
-
-    if (!superAdminRole) {
-      superAdminRole = new Role({
+    const superAdminRole = await Role.findOneAndUpdate(
+      { name: 'Super Admin' },
+      {
         name: 'Super Admin',
         description: 'System administrator with full access',
         features: allFeatures,
-        // createdBy: null // Will be set after super admin user creation
+      },
+      {
+        upsert: true,
+        new: true,
       });
-      await superAdminRole.save();
-    }
+    // console.log("superAdminRole", superAdminRole);
 
     // Create super admin user
     const superAdminEmail = config.superAdminEmail!;
