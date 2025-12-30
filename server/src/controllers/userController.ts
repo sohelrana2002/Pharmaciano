@@ -219,7 +219,7 @@ const updateUser = async (req: AuthRequest, res: Response) => {
             }
         });
     } catch (error: any) {
-        console.error('Create user error:', error.message);
+        console.error('Create user error: ', error.message);
 
         res.status(500).json({
             success: false,
@@ -228,4 +228,36 @@ const updateUser = async (req: AuthRequest, res: Response) => {
     }
 }
 
-export { createUser, userList, userProfile, updateUser }
+// delete user 
+const deleteUser = async (req: AuthRequest, res: Response) => {
+    try {
+        const userId = req.params.id;
+
+        const existingUser = await User.findOne({ _id: userId });
+
+        if (!existingUser) {
+            return res.status(400).json({
+                success: false,
+                message: "No user found."
+            })
+        }
+
+        await User.deleteOne({ _id: userId });
+
+        res.status(200).json({
+            success: true,
+            message: "User deleted successfully.",
+            id: userId
+        })
+
+    } catch (error: any) {
+        console.error('Delete user error: ', error.message);
+
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error.'
+        });
+    }
+}
+
+export { createUser, userList, userProfile, updateUser, deleteUser }
