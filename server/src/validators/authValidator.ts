@@ -14,7 +14,7 @@ export const createUserValidator = z.object({
         .max(50, "Name must be less than 50 characters")
         .toLowerCase(),
 
-    role: z.string().optional(),
+    role: z.string().toLowerCase().optional(),
 
     isActive: z.boolean().optional().default(true)
 });
