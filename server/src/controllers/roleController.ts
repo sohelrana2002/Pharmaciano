@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Response } from 'express';
-import Role from '../models/Role';
-import Feature from '../models/Feature';
+import Role from '../models/RoleModel';
+import Feature from '../models/FeatureModel';
 import { AuthRequest } from '../types';
 import { roleSchemaValidator } from '../validators/roleValidator';
 
