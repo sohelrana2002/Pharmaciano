@@ -36,7 +36,10 @@
 }
 
 # Delete user
--Pending
+-Authentication / Authorization : authenticate & authorize(["user:delete"])
+-Method: DELETE
+-Endpoint: /api/v1/users/:id
+-Note: Provide dynamic id for update
 
 # Login User
 -Method: POST
