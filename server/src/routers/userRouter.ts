@@ -1,5 +1,5 @@
 import { Router } from 'express';
-import { createUser, userList, userProfile, updateUser } from '../controllers/userController';
+import { createUser, userList, userProfile, updateUser, deleteUser } from '../controllers/userController';
 import { authenticate } from '../middlewares/authMiddleware';
 import { createUserValidator, updateUserValidator } from '../validators/authValidator';
 import { validate } from '../middlewares/validateMiddleware';
@@ -19,5 +19,7 @@ router.get("/profile", authenticate, authorize(["user:read"]), userProfile);
 // update user 
 router.put("/:id", authenticate, authorize(["user:update"]), validate(updateUserValidator), updateUser);
 
+// delete user
+router.delete("/:id", authenticate, authorize(["user:delete"]), deleteUser);
 
 export default router;
