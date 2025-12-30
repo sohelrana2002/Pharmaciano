@@ -3,7 +3,8 @@ import { Response } from 'express';
 import Role from '../models/RoleModel';
 import Feature from '../models/FeatureModel';
 import { AuthRequest } from '../types';
-import { roleSchemaValidator } from '../validators/roleValidator';
+import { roleSchemaValidator, updateRoleValidator } from '../validators/roleValidator';
+import mongoose from 'mongoose';
 
 // create role 
 const createRole = async (req: AuthRequest, res: Response) => {
@@ -94,6 +95,7 @@ const roleList = async (req: AuthRequest, res: Response) => {
         });
     } catch (error) {
         console.error('Get roles error:', error);
+
         res.status(500).json({
             success: false,
             message: 'Internal server error.'
@@ -101,6 +103,119 @@ const roleList = async (req: AuthRequest, res: Response) => {
     }
 };
 
+// update role 
+const updateRole = async (req: AuthRequest, res: Response) => {
+    try {
+        const roleId = req.params.id;
+
+        if (!mongoose.Types.ObjectId.isValid(roleId)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid role ID."
+            })
+        }
+
+        // Validate request body using Zod
+        const validationResult = updateRoleValidator.safeParse(req.body);
+
+        if (!validationResult.success) {
+            return res.status(400).json({
+                success: false,
+                message: 'Validation failed',
+                errors: validationResult.error.issues.map((err: { path: any[]; message: any; }) => ({
+                    field: err.path.join('.'),
+                    message: err.message
+                }))
+            });
+        }
+
+        const { name, description, features } = validationResult.data;
+
+        // check role exist 
+        const role = await Role.findOne({ _id: roleId });
+
+        if (!role) {
+            return res.status(400).json({
+                success: false,
+                message: "Role not found."
+            })
+        }
+
+        // prevent duplicate role name 
+        if (name && name !== role.name) {
+            const existingRole = await Role.findOne({ name });
+
+            if (existingRole) {
+                return res.status(409).json({
+                    success: false,
+                    message: "Role name already exist"
+                })
+            }
+        }
+
+        // validate features 
+        if (features) {
+            if (!Array.isArray(features)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Features must be an array."
+                })
+            }
+        }
+
+        // ensure features exist in DB 
+        const validFeatures = await Feature.find({ name: { $in: features } }).select("name");
+        console.log("validFeatures", validFeatures);
+
+
+        const validFeatureNames = validFeatures.map(f => f.name);
+
+        if (features && Array.isArray(features)) {
+            const invalidFeatures = features.filter(
+                f => !validFeatureNames.includes(f)
+            );
+
+            if (invalidFeatures.length > 0) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid features provided",
+                    invalidFeatures
+                })
+            }
+        }
+
+        // build update object 
+        const updateData: any = {};
+
+        if (name) updateData.name = name;
+        if (description) updateData.description = description;
+        if (features) updateData.features = features;
+
+        // update role 
+        const updateResult = await Role.findByIdAndUpdate(
+            roleId,
+            updateData,
+            { new: true }
+        );
+
+        return res.status(200).json({
+            success: true,
+            message: "Role updated successfully.",
+            data: updateResult
+        })
+
+
+    } catch (error) {
+        console.error('Update role error: ', error);
+
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error.'
+        });
+    }
+}
+
+// get all feature 
 const getFeatures = async (req: AuthRequest, res: Response) => {
     try {
         const features = await Feature.find({ isActive: true }).sort({ category: 1, name: 1 });
@@ -118,4 +233,4 @@ const getFeatures = async (req: AuthRequest, res: Response) => {
     }
 };
 
-export { createRole, roleList, getFeatures }
+export { createRole, roleList, getFeatures, updateRole }
