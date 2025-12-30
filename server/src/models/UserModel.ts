@@ -24,7 +24,8 @@ const userSchema = new Schema<IUser>({
     role: {
         type: Schema.Types.ObjectId,
         ref: 'Role',
-        required: true
+        required: true,
+        lowercase: true
     },
     isActive: {
         type: Boolean,
