@@ -5,7 +5,8 @@ import Feature from '../models/FeatureModel';
 import { AuthRequest } from '../types';
 import { roleSchemaValidator } from '../validators/roleValidator';
 
-export const createRole = async (req: AuthRequest, res: Response) => {
+// create role 
+const createRole = async (req: AuthRequest, res: Response) => {
     try {
         // Validate request body using Zod
         const validationResult = roleSchemaValidator.safeParse(req.body);
@@ -80,7 +81,8 @@ export const createRole = async (req: AuthRequest, res: Response) => {
     }
 };
 
-export const getRoles = async (req: AuthRequest, res: Response) => {
+// list of role 
+const roleList = async (req: AuthRequest, res: Response) => {
     try {
         const roles = await Role.find()
             .populate('createdBy', 'name email')
@@ -99,7 +101,7 @@ export const getRoles = async (req: AuthRequest, res: Response) => {
     }
 };
 
-export const getFeatures = async (req: AuthRequest, res: Response) => {
+const getFeatures = async (req: AuthRequest, res: Response) => {
     try {
         const features = await Feature.find({ isActive: true }).sort({ category: 1, name: 1 });
 
@@ -115,3 +117,5 @@ export const getFeatures = async (req: AuthRequest, res: Response) => {
         });
     }
 };
+
+export { createRole, roleList, getFeatures }

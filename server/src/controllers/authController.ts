@@ -23,7 +23,7 @@ export interface AuthRequest extends Request {
   };
 }
 
-export const login = async (req: Request, res: Response) => {
+const login = async (req: Request, res: Response) => {
   try {
     const { email, password } = req.body;
 
@@ -98,7 +98,7 @@ export const login = async (req: Request, res: Response) => {
   }
 };
 
-export const getProfile = async (req: AuthRequest, res: Response) => {
+const getProfile = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
 
@@ -153,3 +153,5 @@ export const getProfile = async (req: AuthRequest, res: Response) => {
     });
   }
 };
+
+export { login, getProfile }
