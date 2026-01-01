@@ -30,7 +30,7 @@ const createUser = async (req: AuthRequest, res: Response) => {
 
         const existingUser = await User.findOne({ email });
         if (existingUser) {
-            return res.status(400).json({
+            return res.status(404).json({
                 success: false,
                 message: 'User with this email already exists.'
             });
@@ -177,7 +177,7 @@ const updateUser = async (req: AuthRequest, res: Response) => {
 
         const existingUser = await User.findOne({ _id: userId });
         if (!existingUser) {
-            return res.status(400).json({
+            return res.status(404).json({
                 success: false,
                 message: 'No user found.'
             });
