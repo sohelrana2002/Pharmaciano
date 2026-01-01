@@ -240,23 +240,21 @@ const updateUser = async (req: AuthRequest, res: Response) => {
 // delete user 
 const deleteUser = async (req: AuthRequest, res: Response) => {
     try {
-        const userId = req.params.id;
+        const { id } = req.params;
 
-        const existingUser = await User.findOne({ _id: userId });
+        const deletedUser = await User.findByIdAndDelete(id);
 
-        if (!existingUser) {
-            return res.status(400).json({
+        if (!deletedUser) {
+            return res.status(404).json({
                 success: false,
                 message: "No user found."
             })
         }
 
-        await User.deleteOne({ _id: userId });
-
-        res.status(200).json({
+        return res.status(200).json({
             success: true,
             message: "User deleted successfully.",
-            id: userId
+            id
         })
 
     } catch (error: any) {
