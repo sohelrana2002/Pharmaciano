@@ -215,6 +215,43 @@ const updateRole = async (req: AuthRequest, res: Response) => {
     }
 }
 
+// delete role 
+const deleteRole = async (req: AuthRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid role ID."
+            })
+        }
+
+        const deletedRole = await Role.findByIdAndDelete(id);
+        // console.log("deletedRole", deletedRole);
+
+        if (!deletedRole) {
+            return res.status(404).json({
+                success: false,
+                message: "Role not found."
+            })
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Role deleted successfully.",
+            id
+        });
+    } catch (error) {
+        console.error('Update role error: ', error);
+
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error.'
+        });
+    }
+}
+
 // get all feature 
 const getFeatures = async (req: AuthRequest, res: Response) => {
     try {
@@ -233,4 +270,4 @@ const getFeatures = async (req: AuthRequest, res: Response) => {
     }
 };
 
-export { createRole, roleList, getFeatures, updateRole }
+export { createRole, roleList, getFeatures, updateRole, deleteRole }
