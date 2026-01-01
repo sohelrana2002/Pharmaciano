@@ -1,5 +1,6 @@
 import { Document, Types } from 'mongoose';
 import { Request } from 'express';
+// import mongoose from 'mongoose';
 
 // user interface 
 export interface IUser extends Document {
@@ -58,4 +59,16 @@ export interface CreateRoleRequest extends Request {
     name: string;
     description: string;
     features: string[];
+}
+
+// brand interface 
+export interface IBrand extends Document {
+    _id: Types.ObjectId;
+    name: string;
+    manufacturer: string;
+    country: string;
+    isActive: boolean;
+    createdBy: Types.ObjectId;
+    createdAt: Date;
+    updatedAt: Date;
 }
