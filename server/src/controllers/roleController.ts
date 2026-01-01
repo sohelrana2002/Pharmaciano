@@ -135,7 +135,7 @@ const updateRole = async (req: AuthRequest, res: Response) => {
         const role = await Role.findOne({ _id: roleId });
 
         if (!role) {
-            return res.status(400).json({
+            return res.status(404).json({
                 success: false,
                 message: "Role not found."
             })
