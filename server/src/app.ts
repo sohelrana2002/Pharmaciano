@@ -11,6 +11,7 @@ const app: Application = express();
 import authRoutes from "./routers/authRouter";
 import userRoutes from "./routers/userRouter"
 import roleRoutes from './routers/roleRouter';
+import brandRouters from "./routers/brandRoute";
 
 
 
@@ -26,6 +27,7 @@ const apiVersion: any = "v1";
 app.use(`/api/${apiVersion}/auth`, authRoutes);
 app.use(`/api/${apiVersion}/users`, userRoutes);
 app.use(`/api/${apiVersion}/roles`, roleRoutes);
+app.use(`/api/${apiVersion}/brands`, brandRouters);
 
 
 
