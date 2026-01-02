@@ -147,6 +147,7 @@ const getProfile = async (req: AuthRequest, res: Response) => {
     });
   } catch (error) {
     console.error('Get profile error:', error);
+
     res.status(500).json({
       success: false,
       message: 'Internal server error.'
