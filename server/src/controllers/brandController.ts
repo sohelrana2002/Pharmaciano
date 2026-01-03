@@ -54,4 +54,28 @@ const createBrand = async (req: AuthRequest, res: Response) => {
     }
 }
 
-export { createBrand }
+// list of brand 
+const brandList = async (req: AuthRequest, res: Response) => {
+    try {
+        const brands = await Brand.find({ isActive: true })
+            .populate("createdBy", "name email")
+            .sort({ name: 1 });
+
+        return res.status(200).json({
+            success: true,
+            message: "List of brands.",
+            length: brands.length,
+            data: { brands }
+        })
+    } catch (error) {
+        console.error('Get profile error:', error);
+
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error.'
+        });
+    }
+};
+
+
+export { createBrand, brandList }
