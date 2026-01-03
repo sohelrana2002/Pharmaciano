@@ -129,7 +129,7 @@ const userProfile = async (req: AuthRequest, res: Response) => {
                 path: "role",
                 populate: {
                     path: "createdBy",
-                    select: "name"
+                    select: "name email"
                 }
             }).select("-password");
 
