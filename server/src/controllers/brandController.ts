@@ -77,5 +77,37 @@ const brandList = async (req: AuthRequest, res: Response) => {
     }
 };
 
+// individual brand info 
+const brandInfo = async (req: AuthRequest, res: Response) => {
+    try {
+        const { id } = req.params;
 
-export { createBrand, brandList }
+        const brand = await Brand.findOne({ _id: id })
+            .populate({
+                path: "createdBy",
+                select: "name email"
+            });
+
+        if (!brand) {
+            return res.status(404).json({
+                success: false,
+                message: "Brand not found."
+            })
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Brand individul info",
+            data: { brand }
+        })
+    } catch (error) {
+        console.error('Get profile error:', error);
+
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error.'
+        });
+    }
+}
+
+export { createBrand, brandList, brandInfo }
