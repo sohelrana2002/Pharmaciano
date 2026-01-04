@@ -94,7 +94,7 @@ const roleList = async (req: AuthRequest, res: Response) => {
             data: { roles }
         });
     } catch (error) {
-        console.error('Get roles error:', error);
+        console.error('List of role error:', error);
 
         res.status(500).json({
             success: false,
@@ -243,7 +243,7 @@ const deleteRole = async (req: AuthRequest, res: Response) => {
             id
         });
     } catch (error) {
-        console.error('Update role error: ', error);
+        console.error('Delete role error: ', error);
 
         res.status(500).json({
             success: false,
