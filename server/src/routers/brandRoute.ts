@@ -1,7 +1,7 @@
 import { Router } from "express";
-import { createBrand, brandList, brandInfo } from "../controllers/brandController";
+import { createBrand, brandList, brandInfo, updateBrand } from "../controllers/brandController";
 import { validate } from "../middlewares/validateMiddleware";
-import { brandSchemaValidator } from "../validators/brandValidator";
+import { brandSchemaValidator, updateBrandValidator } from "../validators/brandValidator";
 import { authenticate, authorize } from "../middlewares/authMiddleware";
 
 const router = Router();
@@ -13,6 +13,9 @@ router.post("/", authenticate, authorize(["inventory:manage"]), validate(brandSc
 router.get("/", authenticate, authorize(["inventory:manage"]), brandList);
 
 // individual brand info 
-router.get("/:id", authenticate, authorize(["inventory:manage"]), brandInfo)
+router.get("/:id", authenticate, authorize(["inventory:manage"]), brandInfo);
+
+// update brand 
+router.put("/:id", authenticate, authorize(["inventory:manage"]), validate(updateBrandValidator), updateBrand);
 
 export default router;
