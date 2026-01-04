@@ -83,6 +83,13 @@ const brandInfo = async (req: AuthRequest, res: Response) => {
     try {
         const { id } = req.params;
 
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid brand ID."
+            })
+        }
+
         const brand = await Brand.findOne({ _id: id })
             .populate({
                 path: "createdBy",
@@ -119,7 +126,7 @@ const updateBrand = async (req: AuthRequest, res: Response) => {
         if (!mongoose.Types.ObjectId.isValid(id)) {
             return res.status(400).json({
                 success: false,
-                message: "Invalid role ID."
+                message: "Invalid brand ID."
             })
         }
         // Validate request body using Zod
