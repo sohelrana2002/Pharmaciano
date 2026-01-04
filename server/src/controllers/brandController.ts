@@ -46,7 +46,7 @@ const createBrand = async (req: AuthRequest, res: Response) => {
             id: brand._id
         })
     } catch (error) {
-        console.error('Get profile error:', error);
+        console.error('Create brand error:', error);
 
         res.status(500).json({
             success: false,
@@ -69,7 +69,7 @@ const brandList = async (req: AuthRequest, res: Response) => {
             data: { brands }
         })
     } catch (error) {
-        console.error('Get profile error:', error);
+        console.error('List of brand error:', error);
 
         res.status(500).json({
             success: false,
@@ -109,7 +109,7 @@ const brandInfo = async (req: AuthRequest, res: Response) => {
             data: { brand }
         })
     } catch (error) {
-        console.error('Get profile error:', error);
+        console.error('Individual brand info error:', error);
 
         res.status(500).json({
             success: false,
@@ -185,7 +185,7 @@ const updateBrand = async (req: AuthRequest, res: Response) => {
             data: { updateResult }
         })
     } catch (error) {
-        console.error('Get profile error:', error);
+        console.error('Update brand error:', error);
 
         res.status(500).json({
             success: false,
@@ -194,4 +194,6 @@ const updateBrand = async (req: AuthRequest, res: Response) => {
     }
 }
 
-export { createBrand, brandList, brandInfo, updateBrand }
+
+
+export { createBrand, brandList, brandInfo, updateBrand, deleteBrand }
