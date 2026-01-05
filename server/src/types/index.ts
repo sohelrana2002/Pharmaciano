@@ -72,3 +72,14 @@ export interface IBrand extends Document {
     createdAt: Date;
     updatedAt: Date;
 }
+
+// category interface 
+export interface ICategory extends Document {
+    _id: Types.ObjectId,
+    name: string,
+    description: string;
+    isActive: boolean;
+    createdBy: Types.ObjectId;
+    createdAt: Date;
+    updatedAt: Date;
+}
