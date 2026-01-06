@@ -75,11 +75,30 @@ export interface IBrand extends Document {
 
 // category interface 
 export interface ICategory extends Document {
-    _id: Types.ObjectId,
-    name: string,
+    _id: Types.ObjectId;
+    name: string;
     description: string;
     isActive: boolean;
     createdBy: Types.ObjectId;
     createdAt: Date;
     updatedAt: Date;
+}
+
+// organizarion interface 
+export interface IOrganizatio extends Document {
+    _id: Types.ObjectId;
+    name: string;
+    tradeLicenseNo: string;
+    drugLicenseNo: string;
+    vatRegistrationNo?: string;
+    address: string;
+    contact: {
+        phone: string;
+        email: string;
+    };
+    subscriptionPlan: "FREE" | "BASIC" | "PRO" | "ENTERPRISE";
+    isActive: boolean;
+    createdBy: Types.ObjectId;
+    createdAt?: Date;
+    updatedAt?: Date;
 }
