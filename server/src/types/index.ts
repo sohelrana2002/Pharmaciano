@@ -85,7 +85,7 @@ export interface ICategory extends Document {
 }
 
 // organizarion interface 
-export interface IOrganizatio extends Document {
+export interface IOrganization extends Document {
     _id: Types.ObjectId;
     name: string;
     tradeLicenseNo: string;
