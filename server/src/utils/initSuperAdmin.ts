@@ -19,7 +19,8 @@ export const initializeSuperAdmin = async () => {
       { name: 'role:delete', description: 'Delete roles', category: 'Roles' },
       { name: 'inventory:manage', description: 'Manage inventory', category: 'Inventory' },
       { name: 'sales:process', description: 'Process sales', category: 'Sales' },
-      { name: 'reports:view', description: 'View reports', category: 'Reports' }
+      { name: 'reports:view', description: 'View reports', category: 'Reports' },
+      { name: 'organization:manage', description: 'Manage organization', category: 'Organization' }
     ];
 
     for (const featureData of defaultFeatures) {
