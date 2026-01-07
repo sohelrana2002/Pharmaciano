@@ -12,6 +12,7 @@ import authRoutes from "./routers/authRouter";
 import userRoutes from "./routers/userRouter"
 import roleRoutes from './routers/roleRouter';
 import brandRouters from "./routers/brandRoute";
+import organizationRouter from "./routers/organizationRouter";
 
 
 
@@ -28,6 +29,7 @@ app.use(`/api/${apiVersion}/auth`, authRoutes);
 app.use(`/api/${apiVersion}/users`, userRoutes);
 app.use(`/api/${apiVersion}/roles`, roleRoutes);
 app.use(`/api/${apiVersion}/brands`, brandRouters);
+app.use(`/api/${apiVersion}/organizations`, organizationRouter);
 
 
 
