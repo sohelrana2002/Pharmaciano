@@ -4,6 +4,7 @@ import { AuthRequest } from "../types";
 import { Response } from "express";
 import { createOrganizationValidator } from "../validators/organizationValidator";
 import Organization from "../models/OrganizationModel";
+import mongoose from "mongoose";
 
 const createOrganization = async (req: AuthRequest, res: Response) => {
     try {
@@ -76,4 +77,42 @@ const createOrganization = async (req: AuthRequest, res: Response) => {
     }
 }
 
-export { createOrganization }
+
+// individual organization details info 
+const organizationInfo = async (req: AuthRequest, res: Response) => {
+    try {
+        const { id } = req.params;
+
+        if (!mongoose.Types.ObjectId.isValid(id)) {
+            return res.status(409).json({
+                success: false,
+                message: "Invalid organization ID."
+            })
+        }
+
+        const organization = await Organization.findOne({ _id: id })
+            .populate("createdBy", "name email");
+
+        if (!organization) {
+            return res.status(404).json({
+                success: false,
+                message: "Organization not found."
+            })
+        }
+
+        return res.status(200).json({
+            success: true,
+            message: "Individual organization info.",
+            data: { organization }
+        })
+    } catch (error) {
+        console.error('Individual organization info error:', error);
+
+        res.status(500).json({
+            success: false,
+            message: 'Internal server error.'
+        });
+    }
+}
+
+export { createOrganization, organizationInfo }
