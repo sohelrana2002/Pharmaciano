@@ -1,104 +1,104 @@
-import { Document, Types } from 'mongoose';
-import { Request } from 'express';
+import { Document, Types } from "mongoose";
+import { Request } from "express";
 // import mongoose from 'mongoose';
 
-// user interface 
+// user interface
 export interface IUser extends Document {
-    _id: Types.ObjectId;
-    email: string;
-    password: string;
-    name: string;
-    role: Types.ObjectId | IRole;
-    isActive: boolean;
-    createdAt: Date;
-    updatedAt: Date;
+  _id: Types.ObjectId;
+  email: string;
+  password: string;
+  name: string;
+  role: Types.ObjectId | IRole;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-// role interface 
+// role interface
 export interface IRole extends Document {
-    _id: Types.ObjectId;
-    name: string;
-    description: string;
-    features: string[];
-    createdBy: Types.ObjectId | IUser;
-    isActive: boolean;
-    createdAt: Date;
-    updatedAt: Date;
+  _id: Types.ObjectId;
+  name: string;
+  description: string;
+  features: string[];
+  createdBy: Types.ObjectId | IUser;
+  isActive: boolean;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-// feature interface 
+// feature interface
 export interface IFeature extends Document {
-    _id: Types.ObjectId;
-    name: string;
-    description: string;
-    category: string;
-    isActive: boolean;
-    createdAt: Date;
+  _id: Types.ObjectId;
+  name: string;
+  description: string;
+  category: string;
+  isActive: boolean;
+  createdAt: Date;
 }
 
-// authrequest interface 
+// authrequest interface
 export interface AuthRequest extends Request {
-    user?: {
-        userId: string;
-        email: string;
-        role: string;
-        features: string[];
-    };
+  user?: {
+    userId: string;
+    email: string;
+    role: string;
+    features: string[];
+  };
 }
 
-// create user request interface 
+// create user request interface
 export interface CreateUserRequest {
-    email: string;
-    password: string;
-    name: string;
-    role: string;
+  email: string;
+  password: string;
+  name: string;
+  role: string;
 }
 
 // create role request interface
 export interface CreateRoleRequest extends Request {
-    name: string;
-    description: string;
-    features: string[];
+  name: string;
+  description: string;
+  features: string[];
 }
 
-// brand interface 
+// brand interface
 export interface IBrand extends Document {
-    _id: Types.ObjectId;
-    name: string;
-    manufacturer: string;
-    country: string;
-    isActive: boolean;
-    createdBy: Types.ObjectId;
-    createdAt: Date;
-    updatedAt: Date;
+  _id: Types.ObjectId;
+  name: string;
+  manufacturer: string;
+  country: string;
+  isActive: boolean;
+  createdBy: Types.ObjectId;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-// category interface 
+// category interface
 export interface ICategory extends Document {
-    _id: Types.ObjectId;
-    name: string;
-    description: string;
-    isActive: boolean;
-    createdBy: Types.ObjectId;
-    createdAt: Date;
-    updatedAt: Date;
+  _id: Types.ObjectId;
+  name: string;
+  description: string;
+  isActive: boolean;
+  createdBy: Types.ObjectId;
+  createdAt: Date;
+  updatedAt: Date;
 }
 
-// organizarion interface 
+// organizarion interface
 export interface IOrganization extends Document {
-    _id: Types.ObjectId;
-    name: string;
-    tradeLicenseNo: string;
-    drugLicenseNo: string;
-    vatRegistrationNo?: string;
-    address: string;
-    contact: {
-        phone: string;
-        email: string;
-    };
-    subscriptionPlan: "FREE" | "BASIC" | "PRO" | "ENTERPRISE";
-    isActive: boolean;
-    createdBy: Types.ObjectId;
-    createdAt?: Date;
-    updatedAt?: Date;
+  _id: Types.ObjectId;
+  name: string;
+  tradeLicenseNo: string;
+  drugLicenseNo: string;
+  vatRegistrationNo?: string;
+  address: string;
+  contact: {
+    phone: string;
+    email: string;
+  };
+  subscriptionPlan: "FREE" | "BASIC" | "PRO" | "ENTERPRISE";
+  isActive: boolean;
+  createdBy: Types.ObjectId;
+  createdAt?: Date;
+  updatedAt?: Date;
 }

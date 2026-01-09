@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Request, Response } from 'express';
-import jwt from 'jsonwebtoken';
-import User from '../models/UserModel';
-import Role from '../models/RoleModel';
+import { Request, Response } from "express";
+import jwt from "jsonwebtoken";
+import User from "../models/UserModel";
+import Role from "../models/RoleModel";
 
 // Define the User type with comparePassword method
 interface UserWithMethods {
@@ -30,19 +30,20 @@ const login = async (req: Request, res: Response) => {
     if (!email || !password) {
       return res.status(400).json({
         success: false,
-        message: 'Email and password are required.'
+        message: "Email and password are required.",
       });
     }
 
-    const user = await User.findOne({ email, isActive: true })
-      .populate<{ role: any }>('role') as unknown as (UserWithMethods & { role: any }) | null;
+    const user = (await User.findOne({ email, isActive: true }).populate<{
+      role: any;
+    }>("role")) as unknown as (UserWithMethods & { role: any }) | null;
 
     // console.log("user info", user);
 
     if (!user) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid credentials.'
+        message: "Invalid credentials.",
       });
     }
 
@@ -50,7 +51,7 @@ const login = async (req: Request, res: Response) => {
     if (!isPasswordValid) {
       return res.status(401).json({
         success: false,
-        message: 'Invalid credentials.'
+        message: "Invalid credentials.",
       });
     }
 
@@ -58,27 +59,26 @@ const login = async (req: Request, res: Response) => {
     if (!role || !role.isActive) {
       return res.status(401).json({
         success: false,
-        message: 'User role is invalid or inactive.'
+        message: "User role is invalid or inactive.",
       });
     }
 
     // console.log("Role info", role);
-
 
     const token = jwt.sign(
       {
         userId: user._id,
         email: user.email,
         role: role.name,
-        features: role.features
+        features: role.features,
       },
       process.env.JWT_SECRET!,
-      { expiresIn: '7d' }
+      { expiresIn: "7d" }
     );
 
     res.json({
       success: true,
-      message: 'Login successful.',
+      message: "Login successful.",
       data: {
         token,
         user: {
@@ -86,14 +86,14 @@ const login = async (req: Request, res: Response) => {
           email: user.email,
           name: user.name,
           role: role.name,
-        }
-      }
+        },
+      },
     });
   } catch (error) {
-    console.error('Login error:', error);
+    console.error("Login error:", error);
     res.status(500).json({
       success: false,
-      message: 'Internal server error.'
+      message: "Internal server error.",
     });
   }
 };
@@ -102,33 +102,34 @@ const getProfile = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
 
-    const user = await User.findById(userId)
-      .populate<{ role: any }>('role')
-      .select('-password') as unknown as (UserWithMethods & { role: any }) | null;
+    const user = (await User.findById(userId)
+      .populate<{ role: any }>("role")
+      .select("-password")) as unknown as
+      | (UserWithMethods & { role: any })
+      | null;
 
     // console.log("user", user);
-
 
     if (!user) {
       return res.status(404).json({
         success: false,
-        message: 'User not found.'
+        message: "User not found.",
       });
     }
 
-    const role = await Role.findById(user.role._id)
-      .populate<{ createdBy: any }>({
-        path: "createdBy",
-        select: "-password"
-      });
+    const role = await Role.findById(user.role._id).populate<{
+      createdBy: any;
+    }>({
+      path: "createdBy",
+      select: "-password",
+    });
 
     // console.log("role info:", role);
-
 
     if (!role) {
       return res.status(404).json({
         success: false,
-        message: 'Role not found.'
+        message: "Role not found.",
       });
     }
 
@@ -142,17 +143,17 @@ const getProfile = async (req: AuthRequest, res: Response) => {
           role: role.name,
           features: role.features,
           createdBy: role.createdBy.name,
-        }
-      }
+        },
+      },
     });
   } catch (error) {
-    console.error('Get profile error:', error);
+    console.error("Get profile error:", error);
 
     res.status(500).json({
       success: false,
-      message: 'Internal server error.'
+      message: "Internal server error.",
     });
   }
 };
 
-export { login, getProfile }
+export { login, getProfile };
