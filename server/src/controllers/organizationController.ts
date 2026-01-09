@@ -6,6 +6,7 @@ import { createOrganizationValidator } from "../validators/organizationValidator
 import Organization from "../models/OrganizationModel";
 import mongoose from "mongoose";
 
+// create organization
 const createOrganization = async (req: AuthRequest, res: Response) => {
   try {
     // Validate request body using Zod
