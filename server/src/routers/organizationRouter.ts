@@ -5,6 +5,7 @@ import { createOrganizationValidator } from "../validators/organizationValidator
 import {
   createOrganization,
   organizationInfo,
+  organizationList,
 } from "../controllers/organizationController";
 
 const router = Router();
@@ -16,6 +17,14 @@ router.post(
   authorize(["organization:manage"]),
   validate(createOrganizationValidator),
   createOrganization
+);
+
+// list of organization
+router.get(
+  "/",
+  authenticate,
+  authorize(["organization:manage"]),
+  organizationList
 );
 
 // individual organization details
