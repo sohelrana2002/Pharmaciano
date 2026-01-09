@@ -75,6 +75,35 @@ const createOrganization = async (req: AuthRequest, res: Response) => {
   }
 };
 
+// list of organization
+const organizationList = async (req: AuthRequest, res: Response) => {
+  try {
+    const organization = await Organization.find({ isActive: true }).select(
+      "-createdBy"
+    );
+
+    if (!organization) {
+      return res.status(404).json({
+        success: false,
+        message: "No organization found.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "List of organization.",
+      data: { organization },
+    });
+  } catch (error) {
+    console.error("List of organization error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Internal server error.",
+    });
+  }
+};
+
 // individual organization details info
 const organizationInfo = async (req: AuthRequest, res: Response) => {
   try {
@@ -114,4 +143,4 @@ const organizationInfo = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export { createOrganization, organizationInfo };
+export { createOrganization, organizationList, organizationInfo };
