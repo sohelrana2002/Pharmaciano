@@ -66,7 +66,23 @@ const createOrganization = async (req: AuthRequest, res: Response) => {
       message: "Organization created successfully.",
       data: { organization },
     });
-  } catch (error) {
+  } catch (error: any) {
+    //MongoDB Duplicate Key Error
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyValue)[0];
+      const value = error.keyValue[field];
+
+      return res.status(409).json({
+        success: false,
+        message: `${value} already exists`,
+        error: {
+          field,
+          value,
+          reason: `${field} already exists`,
+        },
+      });
+    }
+
     console.error("Create organization error:", error);
 
     res.status(500).json({
