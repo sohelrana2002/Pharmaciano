@@ -6,6 +6,7 @@ import {
   createOrganization,
   organizationInfo,
   organizationList,
+  deleteOrganization,
 } from "../controllers/organizationController";
 
 const router = Router();
@@ -33,6 +34,14 @@ router.get(
   authenticate,
   authorize(["organization:manage"]),
   organizationInfo
+);
+
+// delete organization
+router.delete(
+  "/:id",
+  authenticate,
+  authorize(["organization:manage"]),
+  deleteOrganization
 );
 
 export default router;
