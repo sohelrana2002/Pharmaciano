@@ -144,4 +144,45 @@ const organizationInfo = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export { createOrganization, organizationList, organizationInfo };
+// delete Organization
+const deleteOrganization = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(409).json({
+        success: false,
+        message: "Invalid organization ID.",
+      });
+    }
+
+    const organization = await Organization.findByIdAndDelete(id);
+
+    if (!organization) {
+      return res.status(404).json({
+        success: false,
+        message: "Organization not found.",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Organization deleted successfully!",
+      id,
+    });
+  } catch (error) {
+    console.error("Delete organization error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Internal server error.",
+    });
+  }
+};
+
+export {
+  createOrganization,
+  organizationList,
+  organizationInfo,
+  deleteOrganization,
+};
