@@ -2,7 +2,10 @@
 
 import { AuthRequest } from "../types";
 import { Response } from "express";
-import { createOrganizationValidator } from "../validators/organizationValidator";
+import {
+  createOrganizationValidator,
+  updateOrganizationVaidator,
+} from "../validators/organizationValidator";
 import Organization from "../models/OrganizationModel";
 import mongoose from "mongoose";
 
@@ -160,6 +163,134 @@ const organizationInfo = async (req: AuthRequest, res: Response) => {
   }
 };
 
+// update Organization
+const updateOrganization = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid brand ID.",
+      });
+    }
+
+    // Validate request body using Zod
+    const validationResult = updateOrganizationVaidator.safeParse(req.body);
+
+    if (!validationResult.success) {
+      return res.status(400).json({
+        success: false,
+        message: "Validation failed",
+        errors: validationResult.error.issues.map(
+          (err: { path: any[]; message: any }) => ({
+            field: err.path.join("."),
+            message: err.message,
+          })
+        ),
+      });
+    }
+
+    const {
+      name,
+      tradeLicenseNo,
+      drugLicenseNo,
+      vatRegistrationNo,
+      address,
+      contact,
+      subscriptionPlan,
+    } = validationResult.data;
+
+    const organization = await Organization.findOne({ _id: id });
+
+    if (!organization) {
+      return res.status(404).json({
+        success: false,
+        message: "Organization not found!",
+      });
+    }
+
+    // Prevent duplicate fields (industry practice)
+    if (name && name !== organization.name) {
+      const existing = await Organization.findOne({ name });
+      if (existing) {
+        return res.status(409).json({
+          success: false,
+          message: "Organization name already exists.",
+        });
+      }
+    }
+
+    if (tradeLicenseNo && tradeLicenseNo !== organization.tradeLicenseNo) {
+      const existing = await Organization.findOne({
+        tradeLicenseNo,
+      });
+      if (existing) {
+        return res.status(409).json({
+          success: false,
+          message: "Trade license number already exists.",
+        });
+      }
+    }
+
+    if (drugLicenseNo && drugLicenseNo !== organization.drugLicenseNo) {
+      const existing = await Organization.findOne({
+        drugLicenseNo,
+      });
+      if (existing) {
+        return res.status(409).json({
+          success: false,
+          message: "Drug license number already exists.",
+        });
+      }
+    }
+
+    // Build update data dynamically
+    const updateData: any = {};
+
+    if (name) updateData.name = name;
+    if (tradeLicenseNo) updateData.tradeLicenseNo = tradeLicenseNo;
+    if (drugLicenseNo) updateData.drugLicenseNo = drugLicenseNo;
+    if (vatRegistrationNo) updateData.vatRegistrationNo = vatRegistrationNo;
+    if (address) updateData.address = address;
+    if (contact) updateData.contact = contact;
+    if (subscriptionPlan) updateData.subscriptionPlan = subscriptionPlan;
+
+    // Update organization
+    const updateResult = await Organization.findByIdAndUpdate(id, updateData, {
+      new: true,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Organization updated successfully.",
+      data: updateResult,
+    });
+  } catch (error: any) {
+    //MongoDB Duplicate Key Error
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyValue)[0];
+      const value = error.keyValue[field];
+
+      return res.status(409).json({
+        success: false,
+        message: `${value} already exists`,
+        error: {
+          field,
+          value,
+          reason: `${field} already exists`,
+        },
+      });
+    }
+
+    console.error("Create organization error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Internal server error.",
+    });
+  }
+};
 // delete Organization
 const deleteOrganization = async (req: AuthRequest, res: Response) => {
   try {
@@ -200,5 +331,6 @@ export {
   createOrganization,
   organizationList,
   organizationInfo,
+  updateOrganization,
   deleteOrganization,
 };
