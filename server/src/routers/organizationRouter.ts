@@ -1,11 +1,15 @@
 import { Router } from "express";
 import { authenticate, authorize } from "../middlewares/authMiddleware";
 import { validate } from "../middlewares/validateMiddleware";
-import { createOrganizationValidator } from "../validators/organizationValidator";
+import {
+  createOrganizationValidator,
+  updateOrganizationVaidator,
+} from "../validators/organizationValidator";
 import {
   createOrganization,
   organizationInfo,
   organizationList,
+  updateOrganization,
   deleteOrganization,
 } from "../controllers/organizationController";
 
@@ -34,6 +38,15 @@ router.get(
   authenticate,
   authorize(["organization:manage"]),
   organizationInfo
+);
+
+// update organization
+router.put(
+  "/:id",
+  authenticate,
+  authorize(["organization:manage"]),
+  validate(updateOrganizationVaidator),
+  updateOrganization
 );
 
 // delete organization
