@@ -110,7 +110,10 @@ export interface IBranch extends Document {
   createdBy: Types.ObjectId;
   name: string;
   address: string;
-  phone: string;
+  contact: {
+    phone: string;
+    email: string;
+  };
   isActive: boolean;
   createdAt?: Date;
   updatedAt?: Date;
