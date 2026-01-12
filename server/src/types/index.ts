@@ -102,3 +102,16 @@ export interface IOrganization extends Document {
   createdAt?: Date;
   updatedAt?: Date;
 }
+
+// Branch Interface
+export interface IBranch extends Document {
+  _id: Types.ObjectId;
+  organization: Types.ObjectId;
+  createdBy: Types.ObjectId;
+  name: string;
+  address: string;
+  phone: string;
+  isActive: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
