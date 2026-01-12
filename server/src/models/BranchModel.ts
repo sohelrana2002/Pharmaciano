@@ -18,10 +18,17 @@ const BranchSchema = new Schema<IBranch>(
       lowercase: true,
     },
 
-    phone: {
-      type: String,
-      required: true,
-      unique: true,
+    contact: {
+      phone: {
+        type: String,
+        required: true,
+        unique: true,
+      },
+      email: {
+        type: String,
+        required: true,
+        unique: true,
+      },
     },
 
     isActive: {
