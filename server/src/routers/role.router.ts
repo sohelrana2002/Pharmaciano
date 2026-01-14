@@ -5,13 +5,13 @@ import {
   getFeatures,
   updateRole,
   deleteRole,
-} from "../controllers/roleController";
-import { authenticate, authorize } from "../middlewares/authMiddleware";
-import { validate } from "../middlewares/validateMiddleware";
+} from "../controllers/role.controller";
+import { authenticate, authorize } from "../middlewares/auth.middleware";
+import { validate } from "../middlewares/validate.middleware";
 import {
   roleSchemaValidator,
   updateRoleValidator,
-} from "../validators/roleValidator";
+} from "../validators/role.validator";
 
 const router = Router();
 

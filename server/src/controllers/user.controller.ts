@@ -1,13 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Response } from "express";
 import mongoose from "mongoose";
-import User from "../models/UserModel";
-import Role from "../models/RoleModel";
+import User from "../models/User.model";
+import Role from "../models/Role.model";
 import { AuthRequest, IRole, IUser } from "../types";
 import {
   createUserValidator,
   updateUserValidator,
-} from "../validators/authValidator";
+} from "../validators/auth.validator";
 import { success } from "zod";
 // import { CreateUserRequest } from '../types';
 

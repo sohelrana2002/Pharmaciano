@@ -5,14 +5,14 @@ import {
   userProfile,
   updateUser,
   deleteUser,
-} from "../controllers/userController";
-import { authenticate } from "../middlewares/authMiddleware";
+} from "../controllers/user.controller";
+import { authenticate } from "../middlewares/auth.middleware";
 import {
   createUserValidator,
   updateUserValidator,
-} from "../validators/authValidator";
-import { validate } from "../middlewares/validateMiddleware";
-import { authorize } from "../middlewares/authMiddleware";
+} from "../validators/auth.validator";
+import { validate } from "../middlewares/validate.middleware";
+import { authorize } from "../middlewares/auth.middleware";
 
 const router = Router();
 

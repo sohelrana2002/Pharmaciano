@@ -1,8 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Response, NextFunction } from "express";
 import jwt from "jsonwebtoken";
-import User from "../models/UserModel";
-import Role from "../models/RoleModel";
+import User from "../models/User.model";
+import Role from "../models/Role.model";
 import { AuthRequest } from "../types";
 
 export const authenticate = async (

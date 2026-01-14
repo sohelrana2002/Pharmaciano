@@ -5,8 +5,8 @@ import { Response } from "express";
 import {
   createOrganizationValidator,
   updateOrganizationVaidator,
-} from "../validators/organizationValidator";
-import Organization from "../models/OrganizationModel";
+} from "../validators/organization.validator";
+import Organization from "../models/Organization.model";
 import mongoose from "mongoose";
 
 // create organization

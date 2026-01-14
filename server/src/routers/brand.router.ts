@@ -5,13 +5,13 @@ import {
   brandInfo,
   updateBrand,
   deleteBrand,
-} from "../controllers/brandController";
-import { validate } from "../middlewares/validateMiddleware";
+} from "../controllers/brand.controller";
+import { validate } from "../middlewares/validate.middleware";
 import {
   brandSchemaValidator,
   updateBrandValidator,
-} from "../validators/brandValidator";
-import { authenticate, authorize } from "../middlewares/authMiddleware";
+} from "../validators/brand.validator";
+import { authenticate, authorize } from "../middlewares/auth.middleware";
 
 const router = Router();
 

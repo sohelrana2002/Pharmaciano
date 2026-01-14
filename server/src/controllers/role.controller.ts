@@ -1,12 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Response } from "express";
-import Role from "../models/RoleModel";
-import Feature from "../models/FeatureModel";
+import Role from "../models/Role.model";
+import Feature from "../models/Feature.model";
 import { AuthRequest } from "../types";
 import {
   roleSchemaValidator,
   updateRoleValidator,
-} from "../validators/roleValidator";
+} from "../validators/role.validator";
 import mongoose from "mongoose";
 
 // create role

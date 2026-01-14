@@ -1,17 +1,17 @@
 import { Router } from "express";
-import { authenticate, authorize } from "../middlewares/authMiddleware";
-import { validate } from "../middlewares/validateMiddleware";
+import { authenticate, authorize } from "../middlewares/auth.middleware";
+import { validate } from "../middlewares/validate.middleware";
 import {
   createOrganizationValidator,
   updateOrganizationVaidator,
-} from "../validators/organizationValidator";
+} from "../validators/organization.validator";
 import {
   createOrganization,
   organizationInfo,
   organizationList,
   updateOrganization,
   deleteOrganization,
-} from "../controllers/organizationController";
+} from "../controllers/organization.controller";
 
 const router = Router();
 

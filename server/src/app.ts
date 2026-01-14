@@ -8,11 +8,11 @@ dotenv.config();
 const app: Application = express();
 
 // Import routes
-import authRoutes from "./routers/authRouter";
-import userRoutes from "./routers/userRouter";
-import roleRoutes from "./routers/roleRouter";
-import brandRouters from "./routers/brandRoute";
-import organizationRouter from "./routers/organizationRouter";
+import authRoutes from "./routers/auth.router";
+import userRoutes from "./routers/user.router";
+import roleRoutes from "./routers/role.router";
+import brandRouters from "./routers/brand.router";
+import organizationRouter from "./routers/organization.router";
 
 const allowedOrigins = [
   "http://localhost:3000",

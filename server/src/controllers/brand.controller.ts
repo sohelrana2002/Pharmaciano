@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { AuthRequest } from "../types";
 import { Response } from "express";
-import Brand from "../models/BrandModel";
+import Brand from "../models/Brand.model";
 import {
   brandSchemaValidator,
   updateBrandValidator,
-} from "../validators/brandValidator";
+} from "../validators/brand.validator";
 import mongoose from "mongoose";
 
 // create brand
