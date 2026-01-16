@@ -3,6 +3,7 @@ import { Request, Response } from "express";
 import jwt from "jsonwebtoken";
 import User from "../models/User.model";
 import Role from "../models/Role.model";
+import { config } from "../config/config";
 
 // Define the User type with comparePassword method
 interface UserWithMethods {
@@ -72,8 +73,8 @@ const login = async (req: Request, res: Response) => {
         role: role.name,
         features: role.features,
       },
-      process.env.JWT_SECRET!,
-      { expiresIn: "7d" }
+      config.jwtSecret,
+      { expiresIn: config.tokenExpireIn }
     );
 
     res.json({
