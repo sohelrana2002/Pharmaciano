@@ -114,6 +114,7 @@ export interface IBranch extends Document {
     phone: string;
     email: string;
   };
+  orgName: string;
   isActive: boolean;
   createdAt?: Date;
   updatedAt?: Date;

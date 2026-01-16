@@ -22,6 +22,12 @@ export const branchSchemaValidator = z.object({
       .string({ error: "Email is required!" })
       .email({ error: "Invalid email address" }),
   }),
+
+  orgName: z
+    .string({ error: "Organization name is required." })
+    .min(1, "Organization name must be at least 1 characters long")
+    .toLowerCase()
+    .trim(),
 });
 
 // Validator for updating a organization (all fields optional)
