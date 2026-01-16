@@ -38,22 +38,26 @@ const createRole = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    // Validate that all features exist and are active
-    const availableFeatures = await Feature.find({
-      name: { $in: features },
-      isActive: true,
-    });
+    // Fetch all ACTIVE features
+    const activeFeatures = await Feature.find({ isActive: true }).select(
+      "name"
+    );
 
-    // console.log("availableFeatures", availableFeatures);
+    // Extract active feature names
+    const activeFeatureNames = activeFeatures.map((f) => f.name);
 
-    if (availableFeatures.length !== features.length) {
-      const invalidFeatures = features.filter(
-        (feature) => !availableFeatures.some((af) => af.name === feature)
-      );
+    // Find invalid features provided by client
+    const invalidFeatures = features.filter(
+      (feature) => !activeFeatureNames.includes(feature)
+    );
 
+    // If invalid features exist, return error with suggestions
+    if (invalidFeatures.length > 0) {
       return res.status(400).json({
         success: false,
-        message: `Invalid or inactive features: ${invalidFeatures.join(", ")}`,
+        message: "Some provided features are invalid or inactive.",
+        invalidFeatures,
+        availableFeatures: activeFeatureNames,
       });
     }
 
