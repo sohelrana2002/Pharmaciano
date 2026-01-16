@@ -33,8 +33,6 @@ const BranchSchema = new Schema<IBranch>(
 
     orgName: {
       type: String,
-      required: true,
-      unique: true,
     },
 
     isActive: {
