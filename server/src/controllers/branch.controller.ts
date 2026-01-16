@@ -27,7 +27,7 @@ const createBranch = async (req: AuthRequest, res: Response) => {
 
     const { name, address, contact, orgName } = validationResult.data;
 
-    //   Check if role already exists
+    //   Check if branch already exists
     const branchExist = await Branch.findOne({ name });
 
     if (branchExist) {
