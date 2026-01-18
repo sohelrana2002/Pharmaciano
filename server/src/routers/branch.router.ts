@@ -2,7 +2,7 @@ import { Router } from "express";
 import { validate } from "../middlewares/validate.middleware";
 import { branchSchemaValidator } from "../validators/branch.validator";
 import { authenticate, authorize } from "../middlewares/auth.middleware";
-import { createBranch } from "../controllers/branch.controller";
+import { createBranch, branchList } from "../controllers/branch.controller";
 
 const router = Router();
 
@@ -12,7 +12,10 @@ router.post(
   authenticate,
   authorize(["organization:manage"]),
   validate(branchSchemaValidator),
-  createBranch
+  createBranch,
 );
+
+// list of branch
+router.get("/", authenticate, authorize(["organization:manage"]), branchList);
 
 export default router;
