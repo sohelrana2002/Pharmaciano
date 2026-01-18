@@ -20,7 +20,7 @@ const createBranch = async (req: AuthRequest, res: Response) => {
           (err: { path: any[]; message: any }) => ({
             field: err.path.join("."),
             message: err.message,
-          })
+          }),
         ),
       });
     }
@@ -52,7 +52,7 @@ const createBranch = async (req: AuthRequest, res: Response) => {
         success: false,
         message: "Invalid organization name",
         hint: `Available organization names are ${activeOrganization.map(
-          (org) => org.name
+          (org) => org.name,
         )}`,
       });
     }
@@ -98,4 +98,33 @@ const createBranch = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export { createBranch };
+// list of branch
+const branchList = async (req: AuthRequest, res: Response) => {
+  try {
+    const branch = await Branch.find({ isActive: true }).select(
+      "-createdBy -organization",
+    );
+
+    if (!branch) {
+      res.status(404).json({
+        success: false,
+        message: "Branch not found!",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Branch list",
+      data: { branch },
+    });
+  } catch (error: any) {
+    console.error("Create organization error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Internal server error.",
+    });
+  }
+};
+
+export { createBranch, branchList };
