@@ -5,6 +5,7 @@ import { Response } from "express";
 import { branchSchemaValidator } from "../validators/branch.validator";
 import Organization from "../models/Organization.model";
 import Branch from "../models/Branch.model";
+import mongoose from "mongoose";
 
 // create branch
 const createBranch = async (req: AuthRequest, res: Response) => {
@@ -89,7 +90,7 @@ const createBranch = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    console.error("Create organization error:", error);
+    console.error("Create branch error:", error);
 
     res.status(500).json({
       success: false,
@@ -118,7 +119,7 @@ const branchList = async (req: AuthRequest, res: Response) => {
       data: { branch },
     });
   } catch (error: any) {
-    console.error("Create organization error:", error);
+    console.error("List of branch error:", error);
 
     res.status(500).json({
       success: false,
@@ -127,4 +128,46 @@ const branchList = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export { createBranch, branchList };
+// individual branch info
+const branchInfo = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(409).json({
+        success: false,
+        message: "Invalid organization ID.",
+      });
+    }
+
+    const branch = await Branch.findOne({ _id: id }).populate({
+      path: "organization",
+      select: "-_id",
+      populate: {
+        path: "createdBy",
+        select: "name email",
+      },
+    });
+
+    if (!branch) {
+      return res.status(404).json({
+        success: false,
+        message: "Branch not found!",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Individual branch info.",
+      data: { branch },
+    });
+  } catch (error: any) {
+    console.error("Individual branch info error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Internal server error.",
+    });
+  }
+};
+export { createBranch, branchList, branchInfo };
