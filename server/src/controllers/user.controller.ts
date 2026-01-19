@@ -25,7 +25,7 @@ const createUser = async (req: AuthRequest, res: Response) => {
           (err: { path: any[]; message: any }) => ({
             field: err.path.join("."),
             message: err.message,
-          })
+          }),
         ),
       });
     }
@@ -156,7 +156,14 @@ const userProfile = async (req: AuthRequest, res: Response) => {
       })
       .select("-password");
 
-    res.status(200).json({
+    if (!profile) {
+      return res.status(404).json({
+        success: false,
+        message: "Profie not found!",
+      });
+    }
+
+    return res.status(200).json({
       success: success,
       data: { profile },
     });
@@ -192,7 +199,7 @@ const updateUser = async (req: AuthRequest, res: Response) => {
           (err: { path: any[]; message: any }) => ({
             field: err.path.join("."),
             message: err.message,
-          })
+          }),
         ),
       });
     }
@@ -223,7 +230,7 @@ const updateUser = async (req: AuthRequest, res: Response) => {
       if (!role) {
         // Get available roles for better error message
         const availableRoles = await Role.find({ isActive: true }).select(
-          "name"
+          "name",
         );
         // console.log("availableRoles", availableRoles);
 
@@ -240,7 +247,7 @@ const updateUser = async (req: AuthRequest, res: Response) => {
     const updateUser = await User.findByIdAndUpdate(
       existingUser._id,
       updateData,
-      { new: true }
+      { new: true },
     );
     // console.log("updateUser: ", updateUser);
 
