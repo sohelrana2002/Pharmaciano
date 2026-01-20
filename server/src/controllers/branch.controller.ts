@@ -170,4 +170,41 @@ const branchInfo = async (req: AuthRequest, res: Response) => {
     });
   }
 };
-export { createBranch, branchList, branchInfo };
+
+// delete branch
+const deleteBranch = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(409).json({
+        success: false,
+        message: "Invalid organization ID.",
+      });
+    }
+
+    const branch = await Branch.findByIdAndDelete(id);
+
+    if (!branch) {
+      return res.status(404).json({
+        success: false,
+        message: "Branch not found!",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Branch deleted successfully!",
+      id,
+    });
+  } catch (error: any) {
+    console.error("Delete branch error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Internal server error.",
+    });
+  }
+};
+
+export { createBranch, branchList, branchInfo, deleteBranch };
