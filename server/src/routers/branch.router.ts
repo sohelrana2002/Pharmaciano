@@ -6,6 +6,7 @@ import {
   createBranch,
   branchList,
   branchInfo,
+  deleteBranch,
 } from "../controllers/branch.controller";
 
 const router = Router();
@@ -28,6 +29,14 @@ router.get(
   authenticate,
   authorize(["organization:manage"]),
   branchInfo,
+);
+
+// delete branch
+router.delete(
+  "/:id",
+  authenticate,
+  authorize(["organization:manage"]),
+  deleteBranch,
 );
 
 export default router;
