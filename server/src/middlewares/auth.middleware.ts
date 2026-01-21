@@ -4,11 +4,12 @@ import jwt from "jsonwebtoken";
 import User from "../models/User.model";
 import Role from "../models/Role.model";
 import { AuthRequest } from "../types";
+import { config } from "../config/config";
 
 export const authenticate = async (
   req: AuthRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   try {
     const token = req.header("Authorization")?.replace("Bearer ", "");
@@ -20,7 +21,7 @@ export const authenticate = async (
       });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET!) as any;
+    const decoded = jwt.verify(token, config.jwtSecret) as any;
     // console.log("decoded", decoded);
 
     const user = await User.findById(decoded.userId)
@@ -96,7 +97,7 @@ export const authorize = (requiredFeatures: string[]) => {
 export const isSuperAdmin = (
   req: AuthRequest,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ) => {
   if (!req.user || req.user.role !== "Super Admin") {
     return res.status(403).json({
