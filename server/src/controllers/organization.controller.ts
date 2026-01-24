@@ -23,7 +23,7 @@ const createOrganization = async (req: AuthRequest, res: Response) => {
           (err: { path: any[]; message: any }) => ({
             field: err.path.join("."),
             message: err.message,
-          })
+          }),
         ),
       });
     }
@@ -99,7 +99,7 @@ const createOrganization = async (req: AuthRequest, res: Response) => {
 const organizationList = async (req: AuthRequest, res: Response) => {
   try {
     const organization = await Organization.find({ isActive: true }).select(
-      "-createdBy"
+      "-createdBy",
     );
 
     if (!organization) {
@@ -138,7 +138,7 @@ const organizationInfo = async (req: AuthRequest, res: Response) => {
 
     const organization = await Organization.findOne({ _id: id }).populate(
       "createdBy",
-      "name email"
+      "name email",
     );
 
     if (!organization) {
@@ -186,7 +186,7 @@ const updateOrganization = async (req: AuthRequest, res: Response) => {
           (err: { path: any[]; message: any }) => ({
             field: err.path.join("."),
             message: err.message,
-          })
+          }),
         ),
       });
     }
@@ -291,6 +291,7 @@ const updateOrganization = async (req: AuthRequest, res: Response) => {
     });
   }
 };
+
 // delete Organization
 const deleteOrganization = async (req: AuthRequest, res: Response) => {
   try {
