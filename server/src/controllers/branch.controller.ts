@@ -2,7 +2,10 @@
 
 import { AuthRequest } from "../types";
 import { Response } from "express";
-import { branchSchemaValidator } from "../validators/branch.validator";
+import {
+  branchSchemaValidator,
+  updateBranchVaidator,
+} from "../validators/branch.validator";
 import Organization from "../models/Organization.model";
 import Branch from "../models/Branch.model";
 import mongoose from "mongoose";
@@ -42,7 +45,6 @@ const createBranch = async (req: AuthRequest, res: Response) => {
     const activeOrganization = await Organization.find({
       isActive: true,
     }).select("name");
-
     // console.log("activeOrganization", activeOrganization);
 
     const organization = await Organization.findOne({ name: orgName });
@@ -171,6 +173,120 @@ const branchInfo = async (req: AuthRequest, res: Response) => {
   }
 };
 
+// update branch
+const updateBranch = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(409).json({
+        success: false,
+        message: "Invalid organization ID.",
+      });
+    }
+
+    // Validate request body using Zod
+    const validationResult = updateBranchVaidator.safeParse(req.body);
+
+    if (!validationResult.success) {
+      return res.status(400).json({
+        success: false,
+        message: "Validation failed",
+        errors: validationResult.error.issues.map(
+          (err: { path: any[]; message: any }) => ({
+            field: err.path.join("."),
+            message: err.message,
+          }),
+        ),
+      });
+    }
+
+    const { name, address, contact, orgName } = validationResult.data;
+
+    const branchExist = await Branch.findById(id);
+
+    if (!branchExist) {
+      return res.status(404).json({
+        success: false,
+        message: "Branch not found!",
+      });
+    }
+
+    // Prevent duplicate fields (industry practice)
+    if (name && name != branchExist.name) {
+      const existing = await Branch.findOne({ name });
+
+      if (existing) {
+        return res.status(409).json({
+          success: false,
+          message: "Branch name already exist.",
+        });
+      }
+    }
+
+    //   Fetch all active organization
+    const activeOrganization = await Organization.find({
+      isActive: true,
+    }).select("name");
+
+    // console.log("activeOrganization", activeOrganization);
+
+    const organization = await Organization.findOne({ name: orgName });
+    // console.log("organization", organization);
+
+    if (!organization) {
+      return res.status(404).json({
+        success: false,
+        message: "Invalid organization name",
+        hint: `Available organization names are ${activeOrganization.map(
+          (org) => org.name,
+        )}`,
+      });
+    }
+
+    // Build update data dynamically
+    const updateData: any = {};
+
+    if (name) updateData.name = name;
+    if (address) updateData.address = address;
+    if (contact) updateData.contact = contact;
+
+    // Update Branch
+    const updateResult = await Branch.findByIdAndUpdate(id, updateData, {
+      new: true,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Branch updated successfully.",
+      data: updateResult,
+    });
+  } catch (error: any) {
+    //MongoDB Duplicate Key Error
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyValue)[0];
+      const value = error.keyValue[field];
+
+      return res.status(409).json({
+        success: false,
+        message: `${value} already exists`,
+        error: {
+          field,
+          value,
+          reason: `${field} already exists`,
+        },
+      });
+    }
+
+    console.error("update branch error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Internal server error.",
+    });
+  }
+};
+
 // delete branch
 const deleteBranch = async (req: AuthRequest, res: Response) => {
   try {
@@ -207,4 +323,4 @@ const deleteBranch = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export { createBranch, branchList, branchInfo, deleteBranch };
+export { createBranch, branchList, branchInfo, deleteBranch, updateBranch };
