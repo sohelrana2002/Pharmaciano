@@ -1,11 +1,15 @@
 import { Router } from "express";
 import { validate } from "../middlewares/validate.middleware";
-import { branchSchemaValidator } from "../validators/branch.validator";
+import {
+  branchSchemaValidator,
+  updateBranchVaidator,
+} from "../validators/branch.validator";
 import { authenticate, authorize } from "../middlewares/auth.middleware";
 import {
   createBranch,
   branchList,
   branchInfo,
+  updateBranch,
   deleteBranch,
 } from "../controllers/branch.controller";
 
@@ -29,6 +33,15 @@ router.get(
   authenticate,
   authorize(["organization:manage"]),
   branchInfo,
+);
+
+// update branch
+router.put(
+  "/:id",
+  authenticate,
+  authorize(["organization:manage"]),
+  validate(updateBranchVaidator),
+  updateBranch,
 );
 
 // delete branch
