@@ -10,6 +10,7 @@ interface IConfig {
   superAdminEmail: string;
   superAdminPassword: string;
   tokenExpireIn: StringValue;
+  apiVersion: string;
 }
 
 // define port
@@ -45,6 +46,12 @@ if (!process.env.TOKEN_EXPIRE_IN) {
 }
 const tokenExpireIn = process.env.TOKEN_EXPIRE_IN as StringValue;
 
+// define api version
+if (!process.env.API_VERSION) {
+  throw new Error("API VERSION is required in environment variables");
+}
+const apiVersion = process.env.API_VERSION;
+
 const _config: IConfig = {
   port,
   databaseURI,
@@ -52,6 +59,7 @@ const _config: IConfig = {
   superAdminEmail,
   superAdminPassword,
   tokenExpireIn,
+  apiVersion,
 };
 
 // freeze to prevent accidental modification

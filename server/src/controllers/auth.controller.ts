@@ -74,7 +74,7 @@ const login = async (req: Request, res: Response) => {
         features: role.features,
       },
       config.jwtSecret,
-      { expiresIn: config.tokenExpireIn }
+      { expiresIn: config.tokenExpireIn },
     );
 
     res.json({
