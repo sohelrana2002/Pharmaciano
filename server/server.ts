@@ -1,6 +1,6 @@
 import app from "./src/app";
 import { config } from "./src/config/config";
-import connectDatabase from "./src/config/db";
+import connectDatabase from "./src/config/db.config";
 
 const PORT = config.port;
 
@@ -10,6 +10,6 @@ const startServer = async (): Promise<void> => {
   app.listen(PORT, () => {
     console.log(`Listening on port:${PORT}`);
   });
-}
+};
 
 startServer();
