@@ -12,7 +12,20 @@ export const authenticate = async (
   next: NextFunction,
 ) => {
   try {
-    const token = req.header("Authorization")?.replace("Bearer ", "");
+    // In your auth middleware
+    const authHeader = req.header("Authorization");
+
+    if (!authHeader) {
+      return res.status(401).json({
+        success: false,
+        message: "Access denied. No token provided.",
+      });
+    }
+
+    // Remove "Bearer " prefix if present, otherwise use the entire header
+    const token = authHeader.startsWith("Bearer ")
+      ? authHeader.replace("Bearer ", "")
+      : authHeader;
 
     if (!token) {
       return res.status(401).json({
