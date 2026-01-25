@@ -172,13 +172,9 @@
  *   put:
  *     summary: Update an existing organization
  *     tags: [Organizations]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
- *       - name: Authorization
- *         in: header
- *         required: true
- *         description: JWT token in format `Bearer <token>`
- *         schema:
- *           type: string
  *       - in: path
  *         name: id
  *         required: true
@@ -235,13 +231,9 @@
  *   delete:
  *     summary: Delete an organization
  *     tags: [Organizations]
+ *     security:
+ *       - bearerAuth: []
  *     parameters:
- *       - name: Authorization
- *         in: header
- *         required: true
- *         description: JWT token in format `Bearer <token>`
- *         schema:
- *           type: string
  *       - in: path
  *         name: id
  *         required: true
