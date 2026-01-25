@@ -11,6 +11,7 @@ interface IConfig {
   superAdminPassword: string;
   tokenExpireIn: StringValue;
   apiVersion: string;
+  backEndBaseUrl: string;
 }
 
 // define port
@@ -52,6 +53,12 @@ if (!process.env.API_VERSION) {
 }
 const apiVersion = process.env.API_VERSION;
 
+// define back End Base Url
+if (!process.env.BACK_END_BASE_URL) {
+  throw new Error("Back End Base Url is required in environment variables");
+}
+const backEndBaseUrl = process.env.BACK_END_BASE_URL;
+
 const _config: IConfig = {
   port,
   databaseURI,
@@ -60,6 +67,7 @@ const _config: IConfig = {
   superAdminPassword,
   tokenExpireIn,
   apiVersion,
+  backEndBaseUrl,
 };
 
 // freeze to prevent accidental modification
