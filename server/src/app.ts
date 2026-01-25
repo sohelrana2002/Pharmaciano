@@ -3,20 +3,33 @@ import express, { Application, Request, Response } from "express";
 import cors from "cors";
 import helmet from "helmet";
 import dotenv from "dotenv";
+import swaggerUi from "swagger-ui-express";
+// import swaggerDocument from "../swagger-output.json";
+import swaggerJsdoc from "swagger-jsdoc";
+import options from "./config/swagger.config";
+
 dotenv.config();
 
 const app: Application = express();
+const apiRouter = express.Router();
+
+// swagger ui setup
+const swaggerDocs = swaggerJsdoc(options);
+// console.log("swaggerDocs", swaggerDocs);
+
+app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 
 // Import routes
-import authRoutes from "./routers/auth.router";
-import userRoutes from "./routers/user.router";
-import roleRoutes from "./routers/role.router";
-import brandRouters from "./routers/brand.router";
-import organizationRouter from "./routers/organization.router";
-import branchRouter from "./routers/branch.router";
+import authRoutes from "./routes/auth.route";
+import userRoutes from "./routes/user.route";
+import roleRoutes from "./routes/role.route";
+import brandRouters from "./routes/brand.route";
+import organizationRouter from "./routes/organization.route";
+import branchRouter from "./routes/branch.route";
 
 const allowedOrigins = [
   "http://localhost:3000",
+  "http://localhost:5000",
   "https://pharmaciano.vercel.app",
 ];
 
@@ -39,15 +52,16 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(helmet());
 
-// Routes
-const apiVersion: any = "v1";
+// base url
+app.use("/api/v1", apiRouter);
 
-app.use(`/api/${apiVersion}/auth`, authRoutes);
-app.use(`/api/${apiVersion}/users`, userRoutes);
-app.use(`/api/${apiVersion}/roles`, roleRoutes);
-app.use(`/api/${apiVersion}/brands`, brandRouters);
-app.use(`/api/${apiVersion}/organizations`, organizationRouter);
-app.use(`/api/${apiVersion}/branchs`, branchRouter);
+// Routes
+apiRouter.use("/auth", authRoutes);
+apiRouter.use("/users", userRoutes);
+apiRouter.use("/roles", roleRoutes);
+apiRouter.use("/brands", brandRouters);
+apiRouter.use("/organizations", organizationRouter);
+apiRouter.use("/branchs", branchRouter);
 
 // Test route
 app.get("/", (req: Request, res: Response) => {
