@@ -70,7 +70,8 @@ app.use(express.json({ limit: "10mb" }));
 app.use(express.urlencoded({ extended: true, limit: "10mb" }));
 app.use(
   helmet({
-    contentSecurityPolicy: false,
+    contentSecurityPolicy: false, // Required so the browser allows the CDN CSS/JS
+    crossOriginResourcePolicy: { policy: "cross-origin" },
   }),
 );
 
