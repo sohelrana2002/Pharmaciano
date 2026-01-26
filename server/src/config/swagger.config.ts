@@ -43,7 +43,7 @@ APIs for managing all entities in the system.
     ],
   },
 
-  apis: [path.join(process.cwd(), "src/**/*.ts")],
+  apis: [path.join(process.cwd(), "src/swagger/*.{ts,js}")],
 };
 
 export default options;
