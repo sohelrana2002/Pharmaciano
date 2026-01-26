@@ -18,20 +18,15 @@ const apiRouter = express.Router();
 const swaggerDocs = swaggerJsdoc(options);
 // console.log("swaggerDocs", swaggerDocs);
 
-if (envConfig.nodeEnv === "production") {
-  // Vercel-safe (NO static serve)
-  app.use(
-    "/api-docs",
-    swaggerUi.setup(swaggerDocs, {
-      swaggerOptions: {
-        persistAuthorization: true,
-      },
-    }),
-  );
-} else {
-  // Local development (needs static files)
-  app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
-}
+app.use(
+  "/api-docs",
+  swaggerUi.serveFiles(swaggerDocs),
+  swaggerUi.setup(swaggerDocs, {
+    swaggerOptions: {
+      persistAuthorization: true,
+    },
+  }),
+);
 
 // Import routes
 import authRoutes from "./routes/auth.route";
