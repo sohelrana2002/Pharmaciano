@@ -9,6 +9,7 @@ import swaggerJsdoc from "swagger-jsdoc";
 import options from "./config/swagger.config";
 
 dotenv.config();
+import { config as envConfig } from "./config/config";
 
 const app: Application = express();
 const apiRouter = express.Router();
@@ -17,7 +18,20 @@ const apiRouter = express.Router();
 const swaggerDocs = swaggerJsdoc(options);
 // console.log("swaggerDocs", swaggerDocs);
 
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+if (envConfig.nodeEnv === "production") {
+  // Vercel-safe (NO static serve)
+  app.use(
+    "/api-docs",
+    swaggerUi.setup(swaggerDocs, {
+      swaggerOptions: {
+        persistAuthorization: true,
+      },
+    }),
+  );
+} else {
+  // Local development (needs static files)
+  app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+}
 
 // Import routes
 import authRoutes from "./routes/auth.route";
