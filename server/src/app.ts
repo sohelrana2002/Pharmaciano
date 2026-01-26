@@ -61,7 +61,7 @@ apiRouter.use("/users", userRoutes);
 apiRouter.use("/roles", roleRoutes);
 apiRouter.use("/brands", brandRouters);
 apiRouter.use("/organizations", organizationRouter);
-apiRouter.use("/branchs", branchRouter);
+apiRouter.use("/branches", branchRouter);
 
 // Test route
 app.get("/", (req: Request, res: Response) => {
