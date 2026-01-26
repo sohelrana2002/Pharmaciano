@@ -12,7 +12,6 @@ interface IConfig {
   tokenExpireIn: StringValue;
   apiVersion: string;
   backEndBaseUrl: string;
-  nodeEnv: string;
 }
 
 // define port
@@ -60,12 +59,6 @@ if (!process.env.BACK_END_BASE_URL) {
 }
 const backEndBaseUrl = process.env.BACK_END_BASE_URL;
 
-// define node env
-if (!process.env.NODE_ENV) {
-  throw new Error("Node env is required in environment variables");
-}
-const nodeEnv = process.env.NODE_ENV;
-
 const _config: IConfig = {
   port,
   databaseURI,
@@ -75,7 +68,6 @@ const _config: IConfig = {
   tokenExpireIn,
   apiVersion,
   backEndBaseUrl,
-  nodeEnv,
 };
 
 // freeze to prevent accidental modification
