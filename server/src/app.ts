@@ -7,6 +7,7 @@ import swaggerUi from "swagger-ui-express";
 // import swaggerDocument from "../swagger-output.json";
 import swaggerJsdoc from "swagger-jsdoc";
 import options from "./config/swagger.config";
+import "./swagger/organization.swagger";
 
 dotenv.config();
 // import { config as envConfig } from "./config/config";
