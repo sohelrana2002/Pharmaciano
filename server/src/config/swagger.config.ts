@@ -1,5 +1,4 @@
 import { config } from "./config";
-import path from "path";
 
 const options = {
   definition: {
@@ -43,7 +42,7 @@ APIs for managing all entities in the system.
     ],
   },
 
-  apis: [path.join(process.cwd(), "src/swagger/*.{ts,js}")],
+  apis: ["./src/**/*.{ts,js}"], // files containing annotations
 };
 
 export default options;
