@@ -42,11 +42,7 @@ APIs for managing all entities in the system.
     ],
   },
 
-  apis: [
-    "./src/**/*.{ts,js}",
-    "!./src/**/node_modules/**",
-    "!./src/**/dist/**",
-  ],
+  apis: ["./src/**/*.ts", "./dist/**/*.js"], // files containing annotations
 };
 
 export default options;
