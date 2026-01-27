@@ -1,5 +1,6 @@
 import { config } from "./config";
 import path from "path";
+const isProd = process.env.NODE_ENV === "production";
 
 const options = {
   definition: {
@@ -43,7 +44,9 @@ APIs for managing all entities in the system.
     ],
   },
 
-  apis: [path.resolve(__dirname, "../../src/**/*.ts")], // files containing annotations
+  apis: isProd
+    ? [path.resolve(__dirname, "../**/*.js")] // dist
+    : [path.resolve(__dirname, "../../src/**/*.ts")], // local
 };
 
 export default options;
