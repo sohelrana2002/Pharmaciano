@@ -1,6 +1,6 @@
 import { config } from "./config";
 import path from "path";
-const isProd = process.env.NODE_ENV === "production";
+// const isProd = process.env.NODE_ENV === "production";
 
 const options = {
   definition: {
@@ -44,9 +44,10 @@ APIs for managing all entities in the system.
     ],
   },
 
-  apis: isProd
-    ? [path.resolve(__dirname, "../**/*.js")] // dist
-    : [path.resolve(__dirname, "../../src/**/*.ts")], // local
+  apis: [
+    path.resolve(process.cwd(), "src/swagger/*.ts"), // For local dev
+    path.resolve(process.cwd(), "dist/swagger/*.js"), // For production/builds
+  ],
 };
 
 export default options;
