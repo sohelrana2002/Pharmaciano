@@ -3,8 +3,7 @@ import express, { Application, Request, Response } from "express";
 import cors from "cors";
 import helmet from "helmet";
 import dotenv from "dotenv";
-import fs from "fs";
-import path from "path";
+import swaggerDocument from "../public/swagger.json";
 
 dotenv.config();
 
@@ -14,9 +13,6 @@ const apiRouter = express.Router();
 // swagger ui setup
 // const swaggerDocs = swaggerJsdoc(options);
 // console.log("swaggerDocs", swaggerDocs);
-
-const swaggerPath = path.join(process.cwd(), "swagger.json");
-const swaggerDocument = JSON.parse(fs.readFileSync(swaggerPath, "utf-8"));
 
 // app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
 app.get("/api-docs", (req, res) => {
