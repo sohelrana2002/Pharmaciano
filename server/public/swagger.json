@@ -11,7 +11,7 @@
       "description": "Local server"
     },
     {
-      "url": "http://localhost:5000",
+      "url": "https://pharmaciano-backend.vercel.app",
       "description": "Production server"
     }
   ],
