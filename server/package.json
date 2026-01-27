@@ -6,7 +6,8 @@
     "build": "tsc",
     "start": "node dist/server.js",
     "test": "echo \"Error: no test specified\" && exit 1",
-    "dev": "ts-node-dev --respawn --transpile-only server.ts"
+    "dev": "ts-node-dev --respawn --transpile-only server.ts",
+    "genDocs": "npx ts-node src/helper/generate-swagger.ts"
   },
   "keywords": [],
   "author": "",

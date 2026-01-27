@@ -1,4 +1,3 @@
-import { config } from "./config";
 import swaggerJsdoc from "swagger-jsdoc";
 
 const options = {
@@ -21,7 +20,7 @@ APIs for managing all entities in the system.
         description: "Local server",
       },
       {
-        url: `${config.backEndBaseUrl}`, // Replace with your production URL
+        url: "https://pharmaciano-backend.vercel.app", // Replace with your production URL
         description: "Production server",
       },
     ],
