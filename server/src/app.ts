@@ -3,7 +3,7 @@ import express, { Application, Request, Response } from "express";
 import cors from "cors";
 import helmet from "helmet";
 import dotenv from "dotenv";
-import swaggerUi from "swagger-ui-express";
+// import swaggerUi from "swagger-ui-express";
 // import swaggerDocument from "../swagger-output.json";
 import swaggerJsdoc from "swagger-jsdoc";
 import options from "./config/swagger.config";
@@ -17,7 +17,33 @@ const apiRouter = express.Router();
 const swaggerDocs = swaggerJsdoc(options);
 // console.log("swaggerDocs", swaggerDocs);
 
-app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+// app.use("/api-docs", swaggerUi.serve, swaggerUi.setup(swaggerDocs));
+app.get("/api-docs", (req, res) => {
+  res.send(`
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Pharmaciano API Docs</title>
+  <link rel="stylesheet" href="https://unpkg.com/swagger-ui-dist/swagger-ui.css" />
+</head>
+<body>
+  <div id="swagger-ui"></div>
+
+  <script src="https://unpkg.com/swagger-ui-dist/swagger-ui-bundle.js"></script>
+  <script>
+    window.onload = () => {
+      SwaggerUIBundle({
+        spec: ${JSON.stringify(swaggerDocs)},
+        dom_id: '#swagger-ui',
+        persistAuthorization: true,
+      });
+    };
+  </script>
+</body>
+</html>
+  `);
+});
 
 // Import routes
 import authRoutes from "./routes/auth.route";
