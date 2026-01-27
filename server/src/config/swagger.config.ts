@@ -1,6 +1,5 @@
 import { config } from "./config";
-import path from "path";
-// const isProd = process.env.NODE_ENV === "production";
+import swaggerJsdoc from "swagger-jsdoc";
 
 const options = {
   definition: {
@@ -44,10 +43,7 @@ APIs for managing all entities in the system.
     ],
   },
 
-  apis: [
-    path.resolve(process.cwd(), "src/swagger/*.ts"), // For local dev
-    path.resolve(process.cwd(), "dist/swagger/*.js"), // For production/builds
-  ],
+  apis: ["./src/swagger/**/*.ts"], // files containing annotations
 };
 
-export default options;
+export const swaggerSpec = swaggerJsdoc(options);
