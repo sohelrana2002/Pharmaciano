@@ -54,6 +54,7 @@ const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:5000",
   "https://pharmaciano.vercel.app",
+  "https://pharmaciano-backend.vercel.app",
 ];
 
 const corsOptions = {
