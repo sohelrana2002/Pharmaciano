@@ -1,4 +1,5 @@
 import { config } from "./config";
+import path from "path";
 
 const options = {
   definition: {
@@ -42,7 +43,7 @@ APIs for managing all entities in the system.
     ],
   },
 
-  apis: ["./src/**/*.ts"], // files containing annotations
+  apis: [path.resolve(__dirname, "../../src/**/*.ts")], // files containing annotations
 };
 
 export default options;
