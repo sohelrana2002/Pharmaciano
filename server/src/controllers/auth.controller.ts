@@ -4,6 +4,7 @@ import jwt from "jsonwebtoken";
 import User from "../models/User.model";
 import Role from "../models/Role.model";
 import { config } from "../config/config";
+import dayjs from "dayjs";
 
 export interface AuthRequest extends Request {
   user?: {
@@ -42,7 +43,9 @@ const login = async (req: Request, res: Response) => {
       });
     }
     // update last login
-    user.lastLogin = new Date().toLocaleString();
+    const date = new Date(); // lastLogin
+    const formatted = dayjs(date).format("DD-MMM-YYYY hh:mm:ss A");
+    user.lastLogin = formatted;
     await user.save();
 
     const role = await Role.findById(user.role._id);
