@@ -3,19 +3,21 @@ import { Response } from "express";
 import mongoose from "mongoose";
 import User from "../models/User.model";
 import Role from "../models/Role.model";
-import { AuthRequest, IRole, IUser } from "../types";
+import { AuthRequest } from "../types";
 import {
   createUserValidator,
   updateUserValidator,
 } from "../validators/auth.validator";
-import { success } from "zod";
-// import { CreateUserRequest } from '../types';
+import Organization from "../models/Organization.model";
+import Branch from "../models/Branch.model";
 
 // create user
 const createUser = async (req: AuthRequest, res: Response) => {
   try {
     // // Validate request body using Zod
     const validationResult = createUserValidator.safeParse(req.body);
+
+    console.log("req.user", req.user);
 
     if (!validationResult.success) {
       return res.status(400).json({
@@ -30,7 +32,14 @@ const createUser = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const { email, password, name, role: roleName } = validationResult.data;
+    const {
+      email,
+      password,
+      name,
+      role: roleName,
+      orgName,
+      branchName,
+    } = validationResult.data;
     // const { email, password, name, role: roleName }: CreateUserRequest = req.body;
 
     const existingUser = await User.findOne({ email });
@@ -38,6 +47,34 @@ const createUser = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({
         success: false,
         message: "User with this email already exists.",
+      });
+    }
+
+    // fetch active organization
+    const activeOrganization = await Organization.find({
+      isActive: true,
+    }).select("name");
+
+    const organization = await Organization.findOne({ name: orgName });
+
+    if (!organization) {
+      return res.status(404).json({
+        success: false,
+        message: "Invalid organization name",
+        hint: `Available organization names are ${activeOrganization.map((org) => org.name)}`,
+      });
+    }
+
+    // fetch active branch
+    const activeBranch = await Branch.find({ isActive: true }).select("name");
+
+    const branch = await Branch.findOne({ name: branchName });
+
+    if (!branch) {
+      return res.status(404).json({
+        success: false,
+        message: "Invalid branch name.",
+        hint: `Available branch names are ${activeBranch.map((branch) => branch.name)}`,
       });
     }
 
@@ -63,7 +100,9 @@ const createUser = async (req: AuthRequest, res: Response) => {
       email,
       password,
       name,
-      role: role._id, // Use the role ID from the found role
+      role: role._id,
+      organization: organization._id,
+      branch: branch._id,
       createdBy: req.user!.userId,
     });
 
@@ -116,14 +155,24 @@ const createUser = async (req: AuthRequest, res: Response) => {
 const userList = async (req: AuthRequest, res: Response) => {
   try {
     const users = await User.find()
-      .populate<{ role: IRole & { createdBy: IUser } }>({
-        path: "role",
-        select: "-description",
-        populate: {
-          path: "createdBy",
-          select: "name",
+      .populate([
+        {
+          path: "role",
+          select: "name features -_id",
         },
-      })
+        {
+          path: "createdBy",
+          select: "name -_id",
+        },
+        {
+          path: "organization",
+          select: "name address -_id",
+        },
+        {
+          path: "branch",
+          select: "name address -_id",
+        },
+      ])
       .select("-password")
       .sort({ createdAt: -1 });
 
@@ -147,13 +196,24 @@ const userProfile = async (req: AuthRequest, res: Response) => {
     const userId = req.user?.userId;
 
     const profile = await User.findOne({ _id: userId })
-      .populate<{ role: IRole & { createdBy: IUser } }>({
-        path: "role",
-        populate: {
-          path: "createdBy",
-          select: "name email",
+      .populate([
+        {
+          path: "role",
+          select: "name description features -_id",
         },
-      })
+        {
+          path: "createdBy",
+          select: "name name -_id",
+        },
+        {
+          path: "organization",
+          select: "name address contact -_id",
+        },
+        {
+          path: "branch",
+          select: "name contact address -_id",
+        },
+      ])
       .select("-password");
 
     if (!profile) {
@@ -164,7 +224,7 @@ const userProfile = async (req: AuthRequest, res: Response) => {
     }
 
     return res.status(200).json({
-      success: success,
+      success: true,
       data: { profile },
     });
   } catch (error) {
@@ -204,7 +264,14 @@ const updateUser = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const { email, password, name, role: roleName } = validationResult.data;
+    const {
+      email,
+      password,
+      name,
+      role: roleName,
+      orgName,
+      branchName,
+    } = validationResult.data;
 
     const existingUser = await User.findOne({ _id: userId });
     if (!existingUser) {
@@ -214,11 +281,53 @@ const updateUser = async (req: AuthRequest, res: Response) => {
       });
     }
 
+    // Prevent duplicate fields (industry practice)
+    if (email && email != existingUser.email) {
+      const existing = await User.findOne({ email });
+
+      if (existing) {
+        return res.status(409).json({
+          success: false,
+          message: "User email already exist.",
+        });
+      }
+    }
+
     //Build update object
     const updateData: any = {};
     if (email) updateData.email = email;
     if (name) updateData.name = name;
     if (password) updateData.password = password;
+
+    // fetch active organization
+    const activeOrganization = await Organization.find({
+      isActive: true,
+    }).select("name");
+
+    const organization = await Organization.findOne({ name: orgName });
+
+    if (!organization) {
+      return res.status(404).json({
+        success: false,
+        message: "Invalid organization name",
+        hint: `Available organization names are ${activeOrganization.map((org) => org.name)}`,
+      });
+    }
+    updateData.organization = organization._id;
+
+    // fetch active branch
+    const activeBranch = await Branch.find({ isActive: true }).select("name");
+
+    const branch = await Branch.findOne({ name: branchName });
+
+    if (!branch) {
+      return res.status(404).json({
+        success: false,
+        message: "Invalid branch name.",
+        hint: `Available branch names are ${activeBranch.map((branch) => branch.name)}`,
+      });
+    }
+    updateData.branch = branch._id;
 
     // Optional role change
     if (roleName) {
