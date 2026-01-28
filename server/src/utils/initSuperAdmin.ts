@@ -33,7 +33,7 @@ export const initializeSuperAdmin = async () => {
         category: "Reports",
       },
       {
-        name: "organization:manage",
+        name: "`organization:manage`",
         description: "Manage organization",
         category: "Organization",
       },
@@ -60,7 +60,7 @@ export const initializeSuperAdmin = async () => {
       {
         upsert: true,
         new: true,
-      }
+      },
     );
     // console.log("superAdminRole", superAdminRole);
 
@@ -69,7 +69,7 @@ export const initializeSuperAdmin = async () => {
     const superAdminPassword = config.superAdminPassword!;
 
     let superAdminUser = await User.findOne({ email: superAdminEmail }).select(
-      "-password"
+      "-password",
     );
     // console.log("superAdminUser", superAdminUser);
 
@@ -78,7 +78,11 @@ export const initializeSuperAdmin = async () => {
         email: superAdminEmail,
         password: superAdminPassword,
         name: "Super Administrator",
+        orgName: null,
+        branchName: null,
         role: superAdminRole._id,
+        organization: null,
+        branch: null,
       });
       await superAdminUser.save();
 
