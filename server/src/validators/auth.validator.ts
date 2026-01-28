@@ -17,6 +17,20 @@ export const createUserValidator = z.object({
     .max(50, "Name must be less than 50 characters")
     .toLowerCase(),
 
+  orgName: z
+    .string({ error: "Organization name is required!" })
+    .min(1, "Organization name is required")
+    .min(3, "Organization name must be at least 3 characters long")
+    .max(50, "Organization name must be less than 50 characters")
+    .toLowerCase(),
+
+  branchName: z
+    .string({ error: "Branch name is required!" })
+    .min(1, "Branch name is required")
+    .min(3, "Branch name must be at least 3 characters long")
+    .max(50, "Branch name must be less than 50 characters")
+    .toLowerCase(),
+
   role: z.string().toLowerCase().optional(),
 
   isActive: z.boolean().optional().default(true),
