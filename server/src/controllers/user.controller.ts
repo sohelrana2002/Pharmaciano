@@ -10,6 +10,7 @@ import {
 } from "../validators/auth.validator";
 import Organization from "../models/Organization.model";
 import Branch from "../models/Branch.model";
+import { config } from "../config/config";
 
 // create user
 const createUser = async (req: AuthRequest, res: Response) => {
@@ -154,7 +155,7 @@ const createUser = async (req: AuthRequest, res: Response) => {
 // list of users
 const userList = async (req: AuthRequest, res: Response) => {
   try {
-    const users = await User.find()
+    const users = await User.find({ email: { $ne: config.superAdminEmail } })
       .populate([
         {
           path: "role",
