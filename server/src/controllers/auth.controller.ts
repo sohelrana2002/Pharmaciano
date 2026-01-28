@@ -5,16 +5,6 @@ import User from "../models/User.model";
 import Role from "../models/Role.model";
 import { config } from "../config/config";
 
-// Define the User type with comparePassword method
-interface UserWithMethods {
-  _id: any;
-  email: string;
-  name: string;
-  isActive: boolean;
-  role: any;
-  comparePassword(password: string): Promise<boolean>;
-}
-
 export interface AuthRequest extends Request {
   user?: {
     userId: string;
@@ -35,11 +25,7 @@ const login = async (req: Request, res: Response) => {
       });
     }
 
-    const user = (await User.findOne({ email, isActive: true }).populate<{
-      role: any;
-    }>("role")) as unknown as (UserWithMethods & { role: any }) | null;
-
-    // console.log("user info", user);
+    const user = await User.findOne({ email, isActive: true }).populate("role");
 
     if (!user) {
       return res.status(401).json({
@@ -55,6 +41,9 @@ const login = async (req: Request, res: Response) => {
         message: "Invalid credentials.",
       });
     }
+    // update last login
+    user.lastLogin = new Date();
+    await user.save();
 
     const role = await Role.findById(user.role._id);
     if (!role || !role.isActive) {
@@ -63,7 +52,6 @@ const login = async (req: Request, res: Response) => {
         message: "User role is invalid or inactive.",
       });
     }
-
     // console.log("Role info", role);
 
     const token = jwt.sign(
@@ -72,6 +60,7 @@ const login = async (req: Request, res: Response) => {
         email: user.email,
         role: role.name,
         features: role.features,
+        lastLogin: user.lastLogin,
       },
       config.jwtSecret,
       { expiresIn: config.tokenExpireIn },
@@ -87,6 +76,7 @@ const login = async (req: Request, res: Response) => {
           email: user.email,
           name: user.name,
           role: role.name,
+          lastLogin: user.lastLogin,
         },
       },
     });
@@ -118,12 +108,9 @@ const getProfile = async (req: AuthRequest, res: Response) => {
   try {
     const userId = req.user!.userId;
 
-    const user = (await User.findById(userId)
-      .populate<{ role: any }>("role")
-      .select("-password")) as unknown as
-      | (UserWithMethods & { role: any })
-      | null;
-
+    const user = await User.findById(userId)
+      .populate("role")
+      .select("-password");
     // console.log("user", user);
 
     if (!user) {
