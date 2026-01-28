@@ -123,7 +123,7 @@ const userSchema = new Schema<IUser>(
     },
 
     lastLogin: {
-      type: Date,
+      type: String,
       default: null,
     },
   },

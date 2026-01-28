@@ -42,7 +42,7 @@ const login = async (req: Request, res: Response) => {
       });
     }
     // update last login
-    user.lastLogin = new Date();
+    user.lastLogin = new Date().toLocaleString();
     await user.save();
 
     const role = await Role.findById(user.role._id);
