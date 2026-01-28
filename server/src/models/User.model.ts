@@ -117,6 +117,11 @@ const userSchema = new Schema<IUser>(
       default: true,
     },
 
+    createdBy: {
+      type: Schema.Types.ObjectId,
+      ref: "User",
+    },
+
     lastLogin: {
       type: Date,
       default: null,

@@ -15,6 +15,7 @@ export interface IUser extends Document {
   branch: Types.ObjectId;
   isActive: boolean;
   lastLogin: Date;
+  createdBy: Types.ObjectId;
   createdAt: Date;
   updatedAt: Date;
 }
