@@ -8,8 +8,13 @@ export interface IUser extends Document {
   email: string;
   password: string;
   name: string;
+  orgName: string;
+  branchName: string;
   role: Types.ObjectId | IRole;
+  organization: Types.ObjectId;
+  branch: Types.ObjectId;
   isActive: boolean;
+  lastLogin: Date;
   createdAt: Date;
   updatedAt: Date;
 }
