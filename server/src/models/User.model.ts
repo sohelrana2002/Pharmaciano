@@ -2,6 +2,7 @@
 import { Schema, model } from "mongoose";
 import bcrypt from "bcryptjs";
 import { IUser } from "../types";
+import Role from "./Role.model";
 
 const userSchema = new Schema<IUser>(
   {
@@ -21,16 +22,104 @@ const userSchema = new Schema<IUser>(
       type: String,
       required: true,
       trim: true,
+      lowercase: true,
     },
+
+    orgName: {
+      type: String,
+      validate: {
+        validator: async function (this: any, value: string | null) {
+          const role = await Role.findById(this.role).lean();
+
+          if (!role) return false;
+
+          if (role.name === "Super Admin") {
+            return value === null;
+          }
+
+          return Boolean(value);
+        },
+        message: "Organization name is required for non-super-admin users",
+      },
+      trim: true,
+      lowercase: true,
+    },
+
+    branchName: {
+      type: String,
+      validate: {
+        validator: async function (this: any, value: string | null) {
+          const role = await Role.findById(this.role).lean();
+
+          if (!role) return false;
+
+          if (role.name === "Super Admin") {
+            return value === null;
+          }
+
+          return Boolean(value);
+        },
+        message: "Branch name is required for non-super-admin users",
+      },
+      trim: true,
+      lowercase: true,
+    },
+
     role: {
       type: Schema.Types.ObjectId,
       ref: "Role",
       required: true,
       lowercase: true,
     },
+
+    organization: {
+      type: Schema.Types.ObjectId,
+      ref: "Organization",
+      validate: {
+        validator: async function (this: any, value: string | null) {
+          const role = await Role.findById(this.role).lean();
+
+          if (!role) return false;
+
+          if (role.name === "Super Admin") {
+            return value === null;
+          }
+
+          return Boolean(value);
+        },
+        message: "Organization is required for non-super-admin users",
+      },
+      lowercase: true,
+    },
+
+    branch: {
+      type: Schema.Types.ObjectId,
+      ref: "Branch",
+      validate: {
+        validator: async function (this: any, value: string | null) {
+          const role = await Role.findById(this.role).lean();
+
+          if (!role) return false;
+
+          if (role.name === "Super Admin") {
+            return value === null;
+          }
+
+          return Boolean(value);
+        },
+        message: "Branch name is required for non-super-admin users",
+      },
+      lowercase: true,
+    },
+
     isActive: {
       type: Boolean,
       default: true,
+    },
+
+    lastLogin: {
+      type: Date,
+      default: null,
     },
   },
   {
