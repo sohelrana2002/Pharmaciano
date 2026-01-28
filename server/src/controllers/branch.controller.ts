@@ -224,6 +224,13 @@ const updateBranch = async (req: AuthRequest, res: Response) => {
       }
     }
 
+    // Build update data dynamically
+    const updateData: any = {};
+
+    if (name) updateData.name = name;
+    if (address) updateData.address = address;
+    if (contact) updateData.contact = contact;
+
     //   Fetch all active organization
     const activeOrganization = await Organization.find({
       isActive: true,
@@ -243,13 +250,7 @@ const updateBranch = async (req: AuthRequest, res: Response) => {
         )}`,
       });
     }
-
-    // Build update data dynamically
-    const updateData: any = {};
-
-    if (name) updateData.name = name;
-    if (address) updateData.address = address;
-    if (contact) updateData.contact = contact;
+    updateData.organization = organization._id;
 
     // Update Branch
     const updateResult = await Branch.findByIdAndUpdate(id, updateData, {
