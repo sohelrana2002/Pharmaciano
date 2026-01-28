@@ -92,6 +92,11 @@ export const initializeSuperAdmin = async () => {
         await superAdminRole.save();
       }
 
+      if (!superAdminUser.createdBy) {
+        superAdminUser.createdBy = superAdminUser._id;
+        await superAdminUser.save();
+      }
+
       console.log("Super admin user created successfully");
     } else {
       console.log("Super admin user already exists");
