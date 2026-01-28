@@ -33,7 +33,7 @@ export const initializeSuperAdmin = async () => {
         category: "Reports",
       },
       {
-        name: "`organization:manage`",
+        name: "organization:manage",
         description: "Manage organization",
         category: "Organization",
       },
