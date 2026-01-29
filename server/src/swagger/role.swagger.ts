@@ -99,7 +99,7 @@
  *                     role:
  *                       $ref: '#/components/schemas/Role'
  *       400:
- *         description: Validation failed or invalid features
+ *         description: Validation failed or invalid permissions
  *       409:
  *         description: Role name already exists
  *       500:
@@ -163,7 +163,7 @@
  *               description:
  *                 type: string
  *                 example: Updated admin role
- *               features:
+ *               permissions:
  *                 type: array
  *                 items:
  *                   type: string

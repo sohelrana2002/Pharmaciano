@@ -27,7 +27,7 @@
  *             name:
  *               type: string
  *               example: ADMIN
- *             features:
+ *             permissions:
  *               type: array
  *               items:
  *                 type: string

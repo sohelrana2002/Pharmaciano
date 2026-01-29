@@ -5,15 +5,7 @@ import User from "../models/User.model";
 import Role from "../models/Role.model";
 import { config } from "../config/config";
 import dayjs from "dayjs";
-
-export interface AuthRequest extends Request {
-  user?: {
-    userId: string;
-    email: string;
-    role: string;
-    features: string[];
-  };
-}
+import { AuthRequest } from "../types";
 
 const login = async (req: Request, res: Response) => {
   try {
@@ -62,7 +54,7 @@ const login = async (req: Request, res: Response) => {
         userId: user._id,
         email: user.email,
         role: role.name,
-        features: role.features,
+        permissions: role.permissions,
         lastLogin: user.lastLogin,
       },
       config.jwtSecret,
@@ -147,7 +139,7 @@ const getProfile = async (req: AuthRequest, res: Response) => {
           email: user.email,
           name: user.name,
           role: role.name,
-          features: role.features,
+          permissions: role.permissions,
           createdBy: role.createdBy.name,
         },
       },

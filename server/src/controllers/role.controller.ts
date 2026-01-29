@@ -46,7 +46,7 @@ const createRole = async (req: AuthRequest, res: Response) => {
     // Extract active feature names
     const activeFeatureNames = activeFeatures.map((f) => f.name);
 
-    // Find invalid features provided by client
+    // Find invalid permissions provided by client
     const invalidPermissions = permissions.filter(
       (permission) => !activeFeatureNames.includes(permission),
     );

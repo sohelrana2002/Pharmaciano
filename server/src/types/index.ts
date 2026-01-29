@@ -53,21 +53,6 @@ export interface AuthRequest extends Request {
   };
 }
 
-// create user request interface
-export interface CreateUserRequest {
-  email: string;
-  password: string;
-  name: string;
-  role: string;
-}
-
-// create role request interface
-export interface CreateRoleRequest extends Request {
-  name: string;
-  description: string;
-  features: string[];
-}
-
 // brand interface
 export interface IBrand extends Document {
   _id: Types.ObjectId;

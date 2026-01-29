@@ -110,7 +110,7 @@ const createUser = async (req: AuthRequest, res: Response) => {
     await user.save();
 
     const savedUser = await User.findById(user._id)
-      .populate<{ role: any }>("role", "name description features")
+      .populate<{ role: any }>("role", "name description permissions")
       .select("-password");
 
     // console.log("savedUser", savedUser);
@@ -159,7 +159,7 @@ const userList = async (req: AuthRequest, res: Response) => {
       .populate([
         {
           path: "role",
-          select: "name features -_id",
+          select: "name permissions -_id",
         },
         {
           path: "createdBy",
@@ -200,11 +200,11 @@ const userProfile = async (req: AuthRequest, res: Response) => {
       .populate([
         {
           path: "role",
-          select: "name description features -_id",
+          select: "name description permissions -_id",
         },
         {
           path: "createdBy",
-          select: "name name -_id",
+          select: "name email -_id",
         },
         {
           path: "organization",

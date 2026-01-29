@@ -8,11 +8,11 @@ export const requireFeature = (feature: string) => {
       const user = (req as any).user;
       if (!user) return res.status(401).json({ message: "Unauthorized" });
 
-      // superadmin shortcut: features ['*'] equals full access
+      // superadmin shortcut: permissions ['*'] equals full access
       const role = await Role.findById(user.role);
       if (!role) return res.status(403).json({ message: "No role assigned" });
 
-      if (role.features.includes("*") || role.features.includes(feature))
+      if (role.permissions.includes("*") || role.permissions.includes(feature))
         return next();
 
       return res
