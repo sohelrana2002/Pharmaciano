@@ -26,7 +26,7 @@ export interface IRole extends Document {
   _id: Types.ObjectId;
   name: string;
   description: string;
-  features: string[];
+  permissions: string[];
   createdBy: Types.ObjectId | IUser;
   isActive: boolean;
   createdAt: Date;
@@ -49,7 +49,7 @@ export interface AuthRequest extends Request {
     userId: string;
     email: string;
     role: string;
-    features: string[];
+    permissions: string[];
   };
 }
 

@@ -12,11 +12,11 @@ export const roleSchemaValidator = z.object({
     .min(1, "Description must be at least 1 characters long")
     .toLowerCase(),
 
-  features: z.preprocess(
+  permissions: z.preprocess(
     (arg) => (typeof arg === "string" ? arg.split(",") : arg),
     z
       .array(z.string().min(1, "Feature must be required."))
-      .nonempty("At least one feature is required")
+      .nonempty("At least one feature is required"),
   ),
 
   createdBy: z.any().optional(),

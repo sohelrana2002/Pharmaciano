@@ -64,7 +64,7 @@ export const authenticate = async (
       userId: user._id.toString(),
       email: user.email,
       role: role.name,
-      features: role.features,
+      permissions: role.permissions,
     };
 
     next();
@@ -78,7 +78,7 @@ export const authenticate = async (
   }
 };
 
-export const authorize = (requiredFeatures: string[]) => {
+export const authorize = (requiredPermissions: string[]) => {
   return (req: AuthRequest, res: Response, next: NextFunction) => {
     // get user info from jwt payload. payload name is user
     const existUser = req.user;
@@ -91,8 +91,8 @@ export const authorize = (requiredFeatures: string[]) => {
       });
     }
 
-    const hasAccess = requiredFeatures.every((feature) => {
-      return existUser!.features.includes(feature);
+    const hasAccess = requiredPermissions.every((permission) => {
+      return existUser!.permissions.includes(permission);
     });
     // console.log("hasAccess", hasAccess);
 

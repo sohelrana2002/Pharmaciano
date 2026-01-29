@@ -55,7 +55,7 @@ export const initializeSuperAdmin = async () => {
       {
         name: "Super Admin",
         description: "System administrator with full access",
-        features: allFeatures,
+        permissions: allFeatures,
       },
       {
         upsert: true,

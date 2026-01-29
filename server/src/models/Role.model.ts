@@ -13,7 +13,7 @@ const roleSchema = new Schema<IRole>(
       type: String,
       required: true,
     },
-    features: [
+    permissions: [
       {
         type: String,
         required: true,
@@ -31,7 +31,7 @@ const roleSchema = new Schema<IRole>(
   },
   {
     timestamps: true,
-  }
+  },
 );
 
 export default model<IRole>("Role", roleSchema);

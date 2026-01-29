@@ -23,11 +23,11 @@ const createRole = async (req: AuthRequest, res: Response) => {
           (err: { path: any[]; message: any }) => ({
             field: err.path.join("."),
             message: err.message,
-          })
+          }),
         ),
       });
     }
-    const { name, description, features } = validationResult.data;
+    const { name, description, permissions } = validationResult.data;
 
     // Check if role already exists
     const existingRole = await Role.findOne({ name });
@@ -40,24 +40,24 @@ const createRole = async (req: AuthRequest, res: Response) => {
 
     // Fetch all ACTIVE features
     const activeFeatures = await Feature.find({ isActive: true }).select(
-      "name"
+      "name",
     );
 
     // Extract active feature names
     const activeFeatureNames = activeFeatures.map((f) => f.name);
 
     // Find invalid features provided by client
-    const invalidFeatures = features.filter(
-      (feature) => !activeFeatureNames.includes(feature)
+    const invalidPermissions = permissions.filter(
+      (permission) => !activeFeatureNames.includes(permission),
     );
 
     // If invalid features exist, return error with suggestions
-    if (invalidFeatures.length > 0) {
+    if (invalidPermissions.length > 0) {
       return res.status(400).json({
         success: false,
-        message: "Some provided features are invalid or inactive.",
-        invalidFeatures,
-        availableFeatures: activeFeatureNames,
+        message: "Some provided permissions are invalid or inactive.",
+        invalidPermissions,
+        availablePermissions: activeFeatureNames,
       });
     }
 
@@ -65,7 +65,7 @@ const createRole = async (req: AuthRequest, res: Response) => {
     const role = new Role({
       name,
       description,
-      features,
+      permissions,
       createdBy: req.user!.userId,
     });
 
@@ -74,7 +74,7 @@ const createRole = async (req: AuthRequest, res: Response) => {
     // Populate the createdBy field for response
     const savedRole = await Role.findById(role._id).populate(
       "createdBy",
-      "name email"
+      "name email",
     );
 
     res.status(201).json({
@@ -151,12 +151,12 @@ const updateRole = async (req: AuthRequest, res: Response) => {
           (err: { path: any[]; message: any }) => ({
             field: err.path.join("."),
             message: err.message,
-          })
+          }),
         ),
       });
     }
 
-    const { name, description, features } = validationResult.data;
+    const { name, description, permissions } = validationResult.data;
 
     // check role exist
     const role = await Role.findOne({ _id: roleId });
@@ -181,33 +181,33 @@ const updateRole = async (req: AuthRequest, res: Response) => {
     }
 
     // validate features
-    if (features) {
-      if (!Array.isArray(features)) {
+    if (permissions) {
+      if (!Array.isArray(permissions)) {
         return res.status(400).json({
           success: false,
-          message: "Features must be an array.",
+          message: "Permissions must be an array.",
         });
       }
     }
 
     // ensure features exist in DB
     const validFeatures = await Feature.find({
-      name: { $in: features },
+      name: { $in: permissions },
     }).select("name");
-    console.log("validFeatures", validFeatures);
+    // console.log("validFeatures", validFeatures);
 
     const validFeatureNames = validFeatures.map((f) => f.name);
 
-    if (features && Array.isArray(features)) {
-      const invalidFeatures = features.filter(
-        (f) => !validFeatureNames.includes(f)
+    if (permissions && Array.isArray(permissions)) {
+      const invalidPermissions = permissions.filter(
+        (p) => !validFeatureNames.includes(p),
       );
 
-      if (invalidFeatures.length > 0) {
+      if (invalidPermissions.length > 0) {
         return res.status(400).json({
           success: false,
-          message: "Invalid features provided",
-          invalidFeatures,
+          message: "Invalid permissions provided",
+          invalidPermissions,
         });
       }
     }
@@ -217,7 +217,7 @@ const updateRole = async (req: AuthRequest, res: Response) => {
 
     if (name) updateData.name = name;
     if (description) updateData.description = description;
-    if (features) updateData.features = features;
+    if (permissions) updateData.permissions = permissions;
 
     // update role
     const updateResult = await Role.findByIdAndUpdate(roleId, updateData, {

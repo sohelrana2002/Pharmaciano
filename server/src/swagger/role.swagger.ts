@@ -21,7 +21,7 @@
  *         description:
  *           type: string
  *           example: Administrator role with full access
- *         features:
+ *         permissions:
  *           type: array
  *           items:
  *             type: string
@@ -68,7 +68,7 @@
  *             required:
  *               - name
  *               - description
- *               - features
+ *               - permissions
  *             properties:
  *               name:
  *                 type: string
@@ -76,7 +76,7 @@
  *               description:
  *                 type: string
  *                 example: Manager role with limited permissions
- *               features:
+ *               permissions:
  *                 type: array
  *                 items:
  *                   type: string
