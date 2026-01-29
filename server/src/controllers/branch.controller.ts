@@ -142,14 +142,16 @@ const branchInfo = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const branch = await Branch.findOne({ _id: id }).populate({
-      path: "organization",
-      select: "-_id",
-      populate: {
-        path: "createdBy",
-        select: "name email",
+    const branch = await Branch.findOne({ _id: id }).populate([
+      {
+        path: "organization",
+        select: "name address contact-_id",
       },
-    });
+      {
+        path: "createdBy",
+        select: "name email -_id",
+      },
+    ]);
 
     if (!branch) {
       return res.status(404).json({
