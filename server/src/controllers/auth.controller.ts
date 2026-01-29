@@ -4,8 +4,8 @@ import jwt from "jsonwebtoken";
 import User from "../models/User.model";
 import Role from "../models/Role.model";
 import { config } from "../config/config";
-import dayjs from "dayjs";
 import { AuthRequest } from "../types";
+import { formattedDate } from "../helper/formattedDate";
 
 const login = async (req: Request, res: Response) => {
   try {
@@ -36,8 +36,7 @@ const login = async (req: Request, res: Response) => {
     }
     // update last login
     const date = new Date(); // lastLogin
-    const formatted = dayjs(date).format("DD-MMM-YYYY hh:mm:ss A");
-    user.lastLogin = formatted;
+    user.lastLogin = formattedDate(date);
     await user.save();
 
     const role = await Role.findById(user.role._id);
