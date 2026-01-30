@@ -20,6 +20,7 @@ import roleRoutes from "./routes/role.route";
 import brandRouters from "./routes/brand.route";
 import organizationRouter from "./routes/organization.route";
 import branchRouter from "./routes/branch.route";
+import categoryRouter from "./routes/category.route";
 
 const allowedOrigins = [
   "http://localhost:3000",
@@ -57,6 +58,7 @@ apiRouter.use("/roles", roleRoutes);
 apiRouter.use("/brands", brandRouters);
 apiRouter.use("/organizations", organizationRouter);
 apiRouter.use("/branches", branchRouter);
+apiRouter.use("/categories", categoryRouter);
 
 // Test route
 app.get("/", (req: Request, res: Response) => {
