@@ -8,12 +8,13 @@ const categorySchema = new Schema<ICategory>(
       required: true,
       unique: true,
       trim: true,
-      uppercase: true,
+      lowercase: true,
     },
 
     description: {
       type: String,
       trim: true,
+      lowercase: true,
     },
 
     isActive: {
@@ -27,7 +28,7 @@ const categorySchema = new Schema<ICategory>(
       required: true,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export default model<ICategory>("Category", categorySchema);
