@@ -8,8 +8,8 @@ export const categorySchemaValidator = z.object({
     .trim(),
 
   description: z
-    .string({ error: "Description is required." })
-    .min(1, "Description must be at least 1 characters long")
+    .string({ error: "category description is required." })
+    .min(1, "category description must be at least 1 characters long")
     .toLowerCase(),
 });
 
