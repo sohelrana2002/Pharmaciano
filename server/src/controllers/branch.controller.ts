@@ -118,6 +118,7 @@ const branchList = async (req: AuthRequest, res: Response) => {
     return res.status(200).json({
       success: true,
       message: "Branch list",
+      length: branch.length,
       data: { branch },
     });
   } catch (error: any) {
@@ -142,10 +143,10 @@ const branchInfo = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const branch = await Branch.findOne({ _id: id }).populate([
+    const branch = await Branch.findById(id).populate([
       {
         path: "organization",
-        select: "name address contact-_id",
+        select: "name address contact -_id",
       },
       {
         path: "createdBy",
@@ -262,7 +263,7 @@ const updateBranch = async (req: AuthRequest, res: Response) => {
     return res.status(200).json({
       success: true,
       message: "Branch updated successfully.",
-      data: updateResult,
+      id: updateResult!._id,
     });
   } catch (error: any) {
     //MongoDB Duplicate Key Error
