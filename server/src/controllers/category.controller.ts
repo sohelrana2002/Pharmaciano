@@ -3,6 +3,7 @@ import { AuthRequest } from "../types";
 import { Response } from "express";
 import { categorySchemaValidator } from "../validators/category.validator";
 import Category from "../models/Category.model";
+import mongoose from "mongoose";
 
 // create category
 const createCategory = async (req: AuthRequest, res: Response) => {
@@ -89,7 +90,7 @@ const categoryList = async (req: AuthRequest, res: Response) => {
       data: { category },
     });
   } catch (error: any) {
-    console.error("Create categories error:", error);
+    console.error("List of categories error:", error);
 
     res.status(500).json({
       success: false,
@@ -98,4 +99,43 @@ const categoryList = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export { createCategory, categoryList };
+// individual category info
+const categoryInfo = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: "Invalid category ID!",
+      });
+    }
+
+    const category = await Category.findById(id).populate(
+      "createdBy",
+      "name email -_id",
+    );
+
+    if (!category) {
+      return res.status(404).json({
+        success: false,
+        message: "Category not found!",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Individual category info!",
+      data: { category },
+    });
+  } catch (error: any) {
+    console.error("Individual categories info error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Internal server error.",
+    });
+  }
+};
+
+export { createCategory, categoryList, categoryInfo };
