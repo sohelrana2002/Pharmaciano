@@ -69,4 +69,33 @@ const createCategory = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export { createCategory };
+// list of category
+const categoryList = async (req: AuthRequest, res: Response) => {
+  try {
+    const category = await Category.find({ isActive: true }).select(
+      "-createdBy",
+    );
+
+    if (!category) {
+      return res.status(404).json({
+        success: false,
+        message: "Category not found!",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      length: category.length,
+      data: { category },
+    });
+  } catch (error: any) {
+    console.error("Create categories error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Internal server error.",
+    });
+  }
+};
+
+export { createCategory, categoryList };
