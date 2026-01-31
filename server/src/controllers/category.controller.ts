@@ -179,6 +179,7 @@ const updateCategory = async (req: AuthRequest, res: Response) => {
       });
     }
 
+    // Prevent duplicate fields (industry practice)
     if (name && name !== category.name) {
       const existingName = await Category.findOne({ name });
 
@@ -190,6 +191,7 @@ const updateCategory = async (req: AuthRequest, res: Response) => {
       }
     }
 
+    // Build update data dynamically
     const updateData: any = {};
 
     if (name) updateData.name = name;
@@ -229,4 +231,46 @@ const updateCategory = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export { createCategory, categoryList, categoryInfo, updateCategory };
+// delete category
+const deleteCategory = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(409).json({
+        success: false,
+        message: "Invalid category ID!",
+      });
+    }
+
+    const category = await Category.findByIdAndDelete(id);
+
+    if (!category) {
+      return res.status(404).json({
+        success: false,
+        message: "Category not found!",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Category deleted successfully!",
+      id,
+    });
+  } catch (error) {
+    console.error("Delete categories error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Internal server error.",
+    });
+  }
+};
+
+export {
+  createCategory,
+  categoryList,
+  categoryInfo,
+  updateCategory,
+  deleteCategory,
+};
