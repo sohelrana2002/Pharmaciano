@@ -10,6 +10,7 @@ import {
   categoryList,
   categoryInfo,
   updateCategory,
+  deleteCategory,
 } from "../controllers/category.controller";
 
 const router = Router();
@@ -36,6 +37,14 @@ router.put(
   authorize(["inventory:manage"]),
   validate(updateCategoryValidator),
   updateCategory,
+);
+
+// delete category
+router.delete(
+  "/:id",
+  authenticate,
+  authorize(["inventory:manage"]),
+  deleteCategory,
 );
 
 export default router;
