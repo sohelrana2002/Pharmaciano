@@ -5,6 +5,7 @@ import { categorySchemaValidator } from "../validators/category.validator";
 import {
   createCategory,
   categoryList,
+  categoryInfo,
 } from "../controllers/category.controller";
 
 const router = Router();
@@ -20,5 +21,8 @@ router.post(
 
 // list of category
 router.get("/", authenticate, authorize(["inventory:manage"]), categoryList);
+
+// individual category info
+router.get("/:id", authenticate, authorize(["inventory:manage"]), categoryInfo);
 
 export default router;
