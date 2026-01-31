@@ -79,7 +79,7 @@ const createBrand = async (req: AuthRequest, res: Response) => {
 const brandList = async (req: AuthRequest, res: Response) => {
   try {
     const brands = await Brand.find({ isActive: true })
-      .populate("createdBy", "name email")
+      .select("-createdBy")
       .sort({ name: 1 });
 
     if (!brands) {
@@ -119,7 +119,7 @@ const brandInfo = async (req: AuthRequest, res: Response) => {
 
     const brand = await Brand.findOne({ _id: id }).populate({
       path: "createdBy",
-      select: "name email",
+      select: "name email -_id",
     });
 
     if (!brand) {
@@ -173,7 +173,7 @@ const updateBrand = async (req: AuthRequest, res: Response) => {
 
     const { name, manufacturer, country } = validationResult.data;
 
-    const brand = await Brand.findOne({ _id: id });
+    const brand = await Brand.findById(id);
 
     if (!brand) {
       return res.status(404).json({
@@ -208,7 +208,7 @@ const updateBrand = async (req: AuthRequest, res: Response) => {
     return res.status(200).json({
       success: true,
       message: "Brand update successfully.",
-      data: { updateResult },
+      id: updateResult!._id,
     });
   } catch (error: any) {
     //MongoDB Duplicate Key Error
