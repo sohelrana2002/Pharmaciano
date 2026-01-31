@@ -2,7 +2,10 @@ import { Router } from "express";
 import { authenticate, authorize } from "../middlewares/auth.middleware";
 import { validate } from "../middlewares/validate.middleware";
 import { categorySchemaValidator } from "../validators/category.validator";
-import { createCategory } from "../controllers/category.controller";
+import {
+  createCategory,
+  categoryList,
+} from "../controllers/category.controller";
 
 const router = Router();
 
@@ -14,5 +17,8 @@ router.post(
   validate(categorySchemaValidator),
   createCategory,
 );
+
+// list of category
+router.get("/", authenticate, authorize(["inventory:manage"]), categoryList);
 
 export default router;
