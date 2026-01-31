@@ -22,7 +22,7 @@ const createBrand = async (req: AuthRequest, res: Response) => {
           (err: { path: any[]; message: any }) => ({
             field: err.path.join("."),
             message: err.message,
-          })
+          }),
         ),
       });
     }
@@ -81,6 +81,13 @@ const brandList = async (req: AuthRequest, res: Response) => {
     const brands = await Brand.find({ isActive: true })
       .populate("createdBy", "name email")
       .sort({ name: 1 });
+
+    if (!brands) {
+      return res.status(404).json({
+        success: false,
+        message: "Brands not found!",
+      });
+    }
 
     return res.status(200).json({
       success: true,
@@ -159,7 +166,7 @@ const updateBrand = async (req: AuthRequest, res: Response) => {
           (err: { path: any[]; message: any }) => ({
             field: err.path.join("."),
             message: err.message,
-          })
+          }),
         ),
       });
     }
