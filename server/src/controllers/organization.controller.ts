@@ -67,7 +67,7 @@ const createOrganization = async (req: AuthRequest, res: Response) => {
     return res.status(201).json({
       success: true,
       message: "Organization created successfully.",
-      data: { organization },
+      id: organization._id,
     });
   } catch (error: any) {
     //MongoDB Duplicate Key Error
@@ -112,6 +112,7 @@ const organizationList = async (req: AuthRequest, res: Response) => {
     return res.status(200).json({
       success: true,
       message: "List of organization.",
+      length: organization.length,
       data: { organization },
     });
   } catch (error) {
@@ -136,15 +137,15 @@ const organizationInfo = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const organization = await Organization.findOne({ _id: id }).populate(
+    const organization = await Organization.findById(id).populate(
       "createdBy",
-      "name email",
+      "name email -_id",
     );
 
     if (!organization) {
       return res.status(404).json({
         success: false,
-        message: "Organization not found.",
+        message: `Organization with ID ${id} does not exist. Please check the ID and try again.`,
       });
     }
 
@@ -201,12 +202,12 @@ const updateOrganization = async (req: AuthRequest, res: Response) => {
       subscriptionPlan,
     } = validationResult.data;
 
-    const organization = await Organization.findOne({ _id: id });
+    const organization = await Organization.findById(id);
 
     if (!organization) {
       return res.status(404).json({
         success: false,
-        message: "Organization not found!",
+        message: `Organization with ID ${id} does not exist. Please check the ID and try again.`,
       });
     }
 
@@ -264,7 +265,7 @@ const updateOrganization = async (req: AuthRequest, res: Response) => {
     return res.status(200).json({
       success: true,
       message: "Organization updated successfully.",
-      data: updateResult,
+      id: updateResult!._id,
     });
   } catch (error: any) {
     //MongoDB Duplicate Key Error
@@ -283,7 +284,7 @@ const updateOrganization = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    console.error("Create organization error:", error);
+    console.error("update organization error:", error);
 
     res.status(500).json({
       success: false,
@@ -309,7 +310,7 @@ const deleteOrganization = async (req: AuthRequest, res: Response) => {
     if (!organization) {
       return res.status(404).json({
         success: false,
-        message: "Organization not found.",
+        message: `Organization with ID ${id} does not exist. Please check the ID and try again.`,
       });
     }
 
