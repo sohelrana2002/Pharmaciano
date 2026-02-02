@@ -39,6 +39,8 @@ export const medicineSchemaValidator = z.object({
   mrp: z
     .number({ error: "MRP is required!" })
     .min(0, "MRP must be non-negative!"),
+  isPrescriptionRequired: z.boolean().optional().default(false),
+  taxRate: z.number().min(0).optional().default(0),
 });
 
 // Validator for updating a brand (all fields optional)
