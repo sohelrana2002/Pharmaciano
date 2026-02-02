@@ -36,9 +36,13 @@ export const medicineSchemaValidator = z.object({
     .min(1, "Unit is at least 1 character!")
     .toLowerCase()
     .trim(),
-  mrp: z
-    .number({ error: "MRP is required!" })
-    .min(0, "MRP must be non-negative!"),
+  unitPrice: z
+    .number({ error: "Unit price is required!" })
+    .min(0, "Unit price must be non-negative!"),
+  unitsPerStrip: z
+    .number({ error: "Units per strip is required!" })
+    .min(0, "Units per strip must be non-negative!"),
+  stripPrice: z.number().optional().default(0),
   isPrescriptionRequired: z.boolean().optional().default(false),
   taxRate: z.number().min(0).optional().default(0),
 });
