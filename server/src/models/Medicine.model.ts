@@ -17,13 +17,11 @@ const medicineSchema = new Schema<IMedicine>(
 
     categoryName: {
       type: String,
-      required: true,
       trim: true,
     },
 
     brandName: {
       type: String,
-      required: true,
       trim: true,
     },
 
@@ -44,9 +42,17 @@ const medicineSchema = new Schema<IMedicine>(
       trim: true,
     },
 
-    mrp: {
+    unitPrice: {
       type: Number,
-      required: true,
+    },
+
+    unitsPerStrip: {
+      type: Number,
+    },
+
+    stripPrice: {
+      type: Number,
+      default: 0,
     },
 
     isPrescriptionRequired: {

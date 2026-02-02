@@ -122,7 +122,9 @@ export interface IMedicine extends Document {
   dosageForm: string;
   strength: string;
   unit: string;
-  mrp: number;
+  unitPrice: number;
+  unitsPerStrip: number;
+  stripPrice: number;
   isPrescriptionRequired: boolean;
   taxRate: number;
   category: Types.ObjectId;
