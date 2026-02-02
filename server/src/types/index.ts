@@ -111,3 +111,23 @@ export interface IBranch extends Document {
   createdAt?: Date;
   updatedAt?: Date;
 }
+
+// medicine interface
+export interface IMedicine extends Document {
+  _id: Types.ObjectId;
+  name: string;
+  genericName: string;
+  categoryName: string;
+  brandName: string;
+  dosageForm: string;
+  strength: string;
+  unit: string;
+  mrp: number;
+  isPrescriptionRequired: boolean;
+  taxRate: number;
+  category: Types.ObjectId;
+  brand: Types.ObjectId;
+  createdBy: Types.ObjectId;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
