@@ -5,6 +5,7 @@ import { medicineSchemaValidator } from "../validators/medicine.validator";
 import Medicine from "../models/Medicine.model";
 import Category from "../models/Category.model";
 import Brand from "../models/Brand.model";
+import mongoose from "mongoose";
 
 // create medicine
 const createMedicine = async (req: AuthRequest, res: Response) => {
@@ -155,7 +156,7 @@ const medicineList = async (req: AuthRequest, res: Response) => {
       data: { medicine },
     });
   } catch (error) {
-    console.error("List od medicine error:", error);
+    console.error("List of medicine error:", error);
 
     res.status(500).json({
       success: false,
@@ -164,4 +165,53 @@ const medicineList = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export { createMedicine, medicineList };
+// individual medicine info
+const medicineInfo = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(409).json({
+        success: false,
+        message: "Invalid organization ID.",
+      });
+    }
+
+    const medicine = await Medicine.findById(id).populate([
+      {
+        path: "category",
+        select: "name description -_id",
+      },
+      {
+        path: "brand",
+        select: "name manufacturer country -_id",
+      },
+      {
+        path: "createdBy",
+        select: "name email -_id",
+      },
+    ]);
+
+    if (!medicine) {
+      return res.status(404).json({
+        success: false,
+        message: "Medicine not found!",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Individual medicine info!",
+      data: { medicine },
+    });
+  } catch (error) {
+    console.error("Individual medicine info error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Internal server error.",
+    });
+  }
+};
+
+export { createMedicine, medicineList, medicineInfo };
