@@ -130,6 +130,7 @@ export interface IMedicine extends Document {
   category: Types.ObjectId;
   brand: Types.ObjectId;
   createdBy: Types.ObjectId;
+  isActive: boolean;
   createdAt?: Date;
   updatedAt?: Date;
 }
