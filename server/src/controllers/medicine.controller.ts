@@ -37,6 +37,7 @@ const createMedicine = async (req: AuthRequest, res: Response) => {
       unitsPerStrip,
       isPrescriptionRequired,
       taxRate,
+      isActive,
     } = validationResult.data;
 
     //   check valid category
@@ -98,6 +99,7 @@ const createMedicine = async (req: AuthRequest, res: Response) => {
       unitPrice,
       unitsPerStrip,
       stripPrice: unitPrice * unitsPerStrip,
+      isActive,
     });
 
     //   success response
@@ -132,4 +134,34 @@ const createMedicine = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export { createMedicine };
+// list of medicine
+const medicineList = async (req: AuthRequest, res: Response) => {
+  try {
+    const medicine = await Medicine.find({ isActive: true }).select(
+      "-category -brand -createdBy",
+    );
+
+    if (!medicine) {
+      return res.status(404).json({
+        success: false,
+        message: "No medicine found!",
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "List of medicine.",
+      length: medicine.length,
+      data: { medicine },
+    });
+  } catch (error) {
+    console.error("List od medicine error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Internal server error.",
+    });
+  }
+};
+
+export { createMedicine, medicineList };
