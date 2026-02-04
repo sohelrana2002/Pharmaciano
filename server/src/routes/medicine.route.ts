@@ -5,6 +5,7 @@ import { medicineSchemaValidator } from "../validators/medicine.validator";
 import {
   createMedicine,
   medicineList,
+  medicineInfo,
 } from "../controllers/medicine.controller";
 
 const router = Router();
@@ -20,5 +21,8 @@ router.post(
 
 // list of medicine
 router.get("/", authenticate, authorize(["inventory:manage"]), medicineList);
+
+// individual medicine info
+router.get("/:id", authenticate, authorize(["inventory:manage"]), medicineInfo);
 
 export default router;
