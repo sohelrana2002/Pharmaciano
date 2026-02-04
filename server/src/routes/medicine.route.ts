@@ -2,7 +2,10 @@ import { Router } from "express";
 import { authenticate, authorize } from "../middlewares/auth.middleware";
 import { validate } from "../middlewares/validate.middleware";
 import { medicineSchemaValidator } from "../validators/medicine.validator";
-import { createMedicine } from "../controllers/medicine.controller";
+import {
+  createMedicine,
+  medicineList,
+} from "../controllers/medicine.controller";
 
 const router = Router();
 
@@ -14,5 +17,8 @@ router.post(
   validate(medicineSchemaValidator),
   createMedicine,
 );
+
+// list of medicine
+router.get("/", authenticate, authorize(["inventory:manage"]), medicineList);
 
 export default router;
