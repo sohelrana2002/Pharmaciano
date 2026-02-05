@@ -214,4 +214,40 @@ const medicineInfo = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export { createMedicine, medicineList, medicineInfo };
+// delete medicine
+const deleteMedicine = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(409).json({
+        success: false,
+        message: "Invalid organization ID.",
+      });
+    }
+
+    const medicine = await Medicine.findByIdAndUpdate(id);
+
+    if (!medicine) {
+      return res.status(404).json({
+        success: false,
+        message: `Medicine with ID ${id} does not exist. Please check the ID and try again.`,
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: "Medicine deleted successfully!",
+      id,
+    });
+  } catch (error) {
+    console.error("Delete medicine error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Internal server error.",
+    });
+  }
+};
+
+export { createMedicine, medicineList, medicineInfo, deleteMedicine };
