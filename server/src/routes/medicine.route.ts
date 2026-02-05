@@ -6,6 +6,7 @@ import {
   createMedicine,
   medicineList,
   medicineInfo,
+  deleteMedicine,
 } from "../controllers/medicine.controller";
 
 const router = Router();
@@ -24,5 +25,13 @@ router.get("/", authenticate, authorize(["inventory:manage"]), medicineList);
 
 // individual medicine info
 router.get("/:id", authenticate, authorize(["inventory:manage"]), medicineInfo);
+
+// delete medicine
+router.delete(
+  "/:id",
+  authenticate,
+  authorize(["inventory:manage"]),
+  deleteMedicine,
+);
 
 export default router;
