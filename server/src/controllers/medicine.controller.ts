@@ -1,7 +1,10 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { AuthRequest } from "../types";
 import { Response } from "express";
-import { medicineSchemaValidator } from "../validators/medicine.validator";
+import {
+  medicineSchemaValidator,
+  updateMedicineValidator,
+} from "../validators/medicine.validator";
 import Medicine from "../models/Medicine.model";
 import Category from "../models/Category.model";
 import Brand from "../models/Brand.model";
@@ -214,6 +217,161 @@ const medicineInfo = async (req: AuthRequest, res: Response) => {
   }
 };
 
+// update medicine
+const updateMedicine = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(409).json({
+        success: false,
+        message: "Invalid organization ID.",
+      });
+    }
+
+    // Validate request body using Zod
+    const validationResult = updateMedicineValidator.safeParse(req.body);
+
+    if (!validationResult.success) {
+      return res.status(400).json({
+        success: false,
+        message: "Validation failed",
+        errors: validationResult.error.issues.map(
+          (err: { path: any[]; message: any }) => ({
+            field: err.path.join("."),
+            message: err.message,
+          }),
+        ),
+      });
+    }
+
+    const {
+      name,
+      genericName,
+      categoryName,
+      brandName,
+      dosageForm,
+      strength,
+      unit,
+      unitPrice,
+      unitsPerStrip,
+      isPrescriptionRequired,
+      taxRate,
+      isActive,
+    } = validationResult.data;
+
+    const medicine = await Medicine.findById(id);
+
+    if (!medicine) {
+      return res.status(404).json({
+        success: false,
+        message: "Medicine not found!",
+      });
+    }
+
+    // revent duplicate medicine name (industry practice)
+    if (name && name !== medicine.name) {
+      const existingMedicine = await Medicine.findOne({ name });
+
+      if (existingMedicine) {
+        return res.status(409).json({
+          success: false,
+          message: "Medicine name already exists.",
+        });
+      }
+    }
+
+    //Build update object dynamically
+    const updateData: any = {};
+
+    if (name) updateData.name = name;
+    if (genericName) updateData.genericName = genericName;
+    if (dosageForm) updateData.dosageForm = dosageForm;
+    if (strength) updateData.strength = strength;
+    if (unit) updateData.unit = unit;
+    if (unitPrice !== undefined) updateData.unitPrice = unitPrice;
+    if (unitsPerStrip !== undefined) updateData.unitsPerStrip = unitsPerStrip;
+    if (isPrescriptionRequired !== undefined)
+      updateData.isPrescriptionRequired = isPrescriptionRequired;
+    if (taxRate !== undefined) updateData.taxRate = taxRate;
+    if (isActive !== undefined) updateData.isActive = isActive;
+
+    if (unitPrice && unitsPerStrip) {
+      updateData.stripPrice = unitPrice * unitsPerStrip;
+    }
+
+    //   check valid category
+    const activeCategory = await Category.find({
+      isActive: true,
+    }).select("name");
+
+    const category = await Category.findOne({ name: categoryName });
+
+    if (!category) {
+      return res.status(404).json({
+        success: false,
+        message: "Invalid category name.",
+        hints: `Active category names are ${activeCategory.map((c) => c.name).join(", ")}`,
+      });
+    }
+
+    // valid category name update
+    updateData.category = category._id;
+
+    //   check valid brand
+    const activeBrand = await Brand.find({
+      isActive: true,
+    }).select("name");
+
+    const brand = await Brand.findOne({ name: brandName });
+
+    if (!brand) {
+      return res.status(404).json({
+        success: false,
+        message: "Invalid brand name.",
+        hints: `Active brand names are ${activeBrand.map((b) => b.name).join(", ")}`,
+      });
+    }
+
+    // valid brand name
+    updateData.brand = brand._id;
+
+    // Update medicine
+    const updatedMedicine = await Medicine.findByIdAndUpdate(id, updateData, {
+      new: true,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: "Medicine updated successfully!",
+      id: updatedMedicine!._id,
+    });
+  } catch (error: any) {
+    //MongoDB Duplicate Key Error
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyValue)[0];
+      const value = error.keyValue[field];
+
+      return res.status(409).json({
+        success: false,
+        message: `${value} already exists`,
+        error: {
+          field,
+          value,
+          reason: `${field} already exists`,
+        },
+      });
+    }
+
+    console.error("Update medicine error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: "Internal server error.",
+    });
+  }
+};
+
 // delete medicine
 const deleteMedicine = async (req: AuthRequest, res: Response) => {
   try {
@@ -250,4 +408,10 @@ const deleteMedicine = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export { createMedicine, medicineList, medicineInfo, deleteMedicine };
+export {
+  createMedicine,
+  medicineList,
+  medicineInfo,
+  updateMedicine,
+  deleteMedicine,
+};
