@@ -134,3 +134,17 @@ export interface IMedicine extends Document {
   createdAt?: Date;
   updatedAt?: Date;
 }
+
+// warehouses interface
+export interface IWarehouses extends Document {
+  _id: Types.ObjectId;
+  name: string;
+  location: string;
+  capacity: number;
+  branchName: string;
+  isActive: boolean;
+  branch: Types.ObjectId;
+  createdBy: Types.ObjectId;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
