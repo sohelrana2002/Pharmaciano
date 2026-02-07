@@ -136,7 +136,7 @@ export interface IMedicine extends Document {
 }
 
 // warehouses interface
-export interface IWarehouses extends Document {
+export interface IWarehouse extends Document {
   _id: Types.ObjectId;
   name: string;
   location: string;

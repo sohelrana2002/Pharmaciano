@@ -1,7 +1,7 @@
 import { Schema, model } from "mongoose";
-import { IWarehouses } from "../types";
+import { IWarehouse } from "../types";
 
-const wareHousesSchema = new Schema<IWarehouses>(
+const wareHousesSchema = new Schema<IWarehouse>(
   {
     name: {
       type: String,
@@ -46,4 +46,4 @@ const wareHousesSchema = new Schema<IWarehouses>(
   },
 );
 
-export default model<IWarehouses>("Warehouse", wareHousesSchema);
+export default model<IWarehouse>("Warehouse", wareHousesSchema);
