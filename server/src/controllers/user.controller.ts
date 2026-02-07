@@ -11,14 +11,15 @@ import {
 import Organization from "../models/Organization.model";
 import Branch from "../models/Branch.model";
 import { config } from "../config/config";
+import Warehouse from "../models/Warehouse.model";
+import { customMessage } from "../constants/customMessage";
 
 // create user
 const createUser = async (req: AuthRequest, res: Response) => {
   try {
     // // Validate request body using Zod
     const validationResult = createUserValidator.safeParse(req.body);
-
-    console.log("req.user", req.user);
+    // console.log("req.user", req.user);
 
     if (!validationResult.success) {
       return res.status(400).json({
@@ -40,6 +41,9 @@ const createUser = async (req: AuthRequest, res: Response) => {
       role: roleName,
       orgName,
       branchName,
+      isActive,
+      phone,
+      warehouseName,
     } = validationResult.data;
     // const { email, password, name, role: roleName }: CreateUserRequest = req.body;
 
@@ -62,7 +66,9 @@ const createUser = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({
         success: false,
         message: "Invalid organization name",
-        hint: `Available organization names are ${activeOrganization.map((org) => org.name)}`,
+        hint: `Available organization names are ${activeOrganization
+          .map((org) => org.name)
+          .join(", ")}`,
       });
     }
 
@@ -75,8 +81,31 @@ const createUser = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({
         success: false,
         message: "Invalid branch name.",
-        hint: `Available branch names are ${activeBranch.map((branch) => branch.name)}`,
+        hint: `Available branch names are ${activeBranch
+          .map((branch) => branch.name)
+          .join(", ")}`,
       });
+    }
+
+    //  if warehouse name provide then
+    let warehouse;
+    if (warehouseName) {
+      // fetch active warehouse
+      const activeWarehouse = await Warehouse.find({ isActive: true }).select(
+        "name",
+      );
+
+      warehouse = await Warehouse.findOne({ name: warehouseName });
+
+      if (!warehouse) {
+        return res.status(404).json({
+          success: false,
+          message: "Invalid warehouse name.",
+          hint: `Available warehouse name are ${activeWarehouse
+            .map((warehouse) => warehouse.name)
+            .join(", ")}`,
+        });
+      }
     }
 
     // Find role by name instead of ID
@@ -105,6 +134,9 @@ const createUser = async (req: AuthRequest, res: Response) => {
       organization: organization._id,
       branch: branch._id,
       createdBy: req.user!.userId,
+      phone,
+      warehouse: warehouse ? warehouse._id : null,
+      isActive,
     });
 
     await user.save();
@@ -117,7 +149,7 @@ const createUser = async (req: AuthRequest, res: Response) => {
 
     res.status(201).json({
       success: true,
-      message: "User created successfully.",
+      message: customMessage.created("User"),
       data: {
         user: {
           id: savedUser!._id.toString(),
@@ -134,11 +166,11 @@ const createUser = async (req: AuthRequest, res: Response) => {
 
       return res.status(409).json({
         success: false,
-        message: `${value} already exists`,
+        message: customMessage.alreadyExists(value),
         error: {
           field,
           value,
-          reason: `${field} already exists`,
+          reason: customMessage.alreadyExists(field),
         },
       });
     }
@@ -147,7 +179,7 @@ const createUser = async (req: AuthRequest, res: Response) => {
 
     res.status(500).json({
       success: false,
-      message: "Internal server error.",
+      message: customMessage.serverError(),
     });
   }
 };
@@ -174,11 +206,12 @@ const userList = async (req: AuthRequest, res: Response) => {
           select: "name address -_id",
         },
       ])
-      .select("-password")
+      .select("-password -warehouse")
       .sort({ createdAt: -1 });
 
     res.status(200).json({
       success: true,
+      message: customMessage.found("User profile"),
       length: users.length,
       data: { users },
     });
@@ -186,7 +219,7 @@ const userList = async (req: AuthRequest, res: Response) => {
     console.error("Get users error:", error);
     res.status(500).json({
       success: false,
-      message: "Internal server error.",
+      message: customMessage.serverError(),
     });
   }
 };
@@ -214,25 +247,30 @@ const userProfile = async (req: AuthRequest, res: Response) => {
           path: "branch",
           select: "name contact address -_id",
         },
+        {
+          path: "warehouse",
+          select: "name location capacity -_id",
+        },
       ])
       .select("-password");
 
     if (!profile) {
       return res.status(404).json({
         success: false,
-        message: "Profie not found!",
+        message: customMessage.notFound("User profile"),
       });
     }
 
     return res.status(200).json({
       success: true,
+      message: customMessage.found("User profile"),
       data: { profile },
     });
   } catch (error) {
     console.error("Get users error:", error);
     res.status(500).json({
       success: false,
-      message: "Internal server error.",
+      message: customMessage.serverError(),
     });
   }
 };
@@ -245,7 +283,7 @@ const updateUser = async (req: AuthRequest, res: Response) => {
     if (!mongoose.Types.ObjectId.isValid(userId)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid user ID.",
+        message: customMessage.invalidId("mongoose", userId),
       });
     }
 
@@ -272,13 +310,16 @@ const updateUser = async (req: AuthRequest, res: Response) => {
       role: roleName,
       orgName,
       branchName,
+      isActive,
+      phone,
+      warehouseName,
     } = validationResult.data;
 
     const existingUser = await User.findOne({ _id: userId });
     if (!existingUser) {
       return res.status(404).json({
         success: false,
-        message: "No user found.",
+        message: customMessage.notFound("User", userId),
       });
     }
 
@@ -289,7 +330,7 @@ const updateUser = async (req: AuthRequest, res: Response) => {
       if (existing) {
         return res.status(409).json({
           success: false,
-          message: "User email already exist.",
+          message: customMessage.alreadyExists("User email"),
         });
       }
     }
@@ -299,6 +340,8 @@ const updateUser = async (req: AuthRequest, res: Response) => {
     if (email) updateData.email = email;
     if (name) updateData.name = name;
     if (password) updateData.password = password;
+    if (phone) updateData.phone = phone;
+    if (typeof isActive !== "undefined") updateData.isActive = isActive;
 
     // fetch active organization
     const activeOrganization = await Organization.find({
@@ -330,11 +373,35 @@ const updateUser = async (req: AuthRequest, res: Response) => {
     }
     updateData.branch = branch._id;
 
+    //  if warehouse name provide then
+    let warehouse;
+    if (warehouseName) {
+      // fetch active warehouse
+      const activeWarehouse = await Warehouse.find({ isActive: true }).select(
+        "name",
+      );
+
+      warehouse = await Warehouse.findOne({ name: warehouseName });
+
+      if (!warehouse) {
+        return res.status(404).json({
+          success: false,
+          message: "Invalid warehouse name.",
+          hint: `Available warehouse name are ${activeWarehouse
+            .map((warehouse) => warehouse.name)
+            .join(", ")}`,
+        });
+      }
+    }
+
+    if (typeof warehouseName !== "undefined") {
+      updateData.warehouse = warehouse ? warehouse._id : null;
+    }
+
     // Optional role change
     if (roleName) {
       // Find role by name instead of ID
       const role = await Role.findOne({ name: roleName, isActive: true });
-
       // console.log("role", role);
 
       if (!role) {
@@ -363,7 +430,7 @@ const updateUser = async (req: AuthRequest, res: Response) => {
 
     res.status(201).json({
       success: true,
-      message: "User update successfully.",
+      message: customMessage.updated("User", userId),
       data: {
         user: {
           id: updateUser!._id.toString(),
@@ -379,20 +446,20 @@ const updateUser = async (req: AuthRequest, res: Response) => {
 
       return res.status(409).json({
         success: false,
-        message: `${value} already exists`,
+        message: customMessage.alreadyExists(value),
         error: {
           field,
           value,
-          reason: `${field} already exists`,
+          reason: customMessage.alreadyExists(field),
         },
       });
     }
 
-    console.error("Create user error: ", error.message);
+    console.error("update user error: ", error.message);
 
     res.status(500).json({
       success: false,
-      message: "Internal server error.",
+      message: customMessage.serverError(),
     });
   }
 };
@@ -407,13 +474,13 @@ const deleteUser = async (req: AuthRequest, res: Response) => {
     if (!deletedUser) {
       return res.status(404).json({
         success: false,
-        message: "No user found.",
+        message: customMessage.notFound("User", id),
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: "User deleted successfully.",
+      message: customMessage.deleted("User", id),
       id,
     });
   } catch (error: any) {
@@ -421,7 +488,7 @@ const deleteUser = async (req: AuthRequest, res: Response) => {
 
     res.status(500).json({
       success: false,
-      message: "Internal server error.",
+      message: customMessage.serverError(),
     });
   }
 };
