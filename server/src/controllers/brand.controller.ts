@@ -7,6 +7,7 @@ import {
   updateBrandValidator,
 } from "../validators/brand.validator";
 import mongoose from "mongoose";
+import { customMessage } from "../constants/customMessage";
 
 // create brand
 const createBrand = async (req: AuthRequest, res: Response) => {
@@ -34,7 +35,7 @@ const createBrand = async (req: AuthRequest, res: Response) => {
     if (existingBrand) {
       return res.status(409).json({
         success: false,
-        message: "Brand already exist.",
+        message: customMessage.alreadyExists("Brand"),
       });
     }
 
@@ -47,7 +48,7 @@ const createBrand = async (req: AuthRequest, res: Response) => {
 
     return res.status(201).json({
       success: true,
-      message: "Brand created successfully.",
+      message: customMessage.created("Brand"),
       id: brand._id,
     });
   } catch (error: any) {
@@ -58,7 +59,7 @@ const createBrand = async (req: AuthRequest, res: Response) => {
 
       return res.status(409).json({
         success: false,
-        message: `${value} already exists`,
+        message: customMessage.alreadyExists(value),
         error: {
           field,
           value,
@@ -70,7 +71,7 @@ const createBrand = async (req: AuthRequest, res: Response) => {
 
     res.status(500).json({
       success: false,
-      message: "Internal server error.",
+      message: customMessage.serverError(),
     });
   }
 };
