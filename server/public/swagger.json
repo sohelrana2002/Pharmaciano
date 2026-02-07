@@ -2400,7 +2400,10 @@
                   "name",
                   "role",
                   "orgName",
-                  "branchName"
+                  "branchName",
+                  "isActive",
+                  "phone",
+                  "warehouseName"
                 ],
                 "properties": {
                   "email": {
@@ -2426,6 +2429,18 @@
                   "branchName": {
                     "type": "string",
                     "example": "Dhaka Branch"
+                  },
+                  "isActive": {
+                    "type": "boolean",
+                    "example": true
+                  },
+                  "phone": {
+                    "type": "string",
+                    "example": 1751070860
+                  },
+                  "warehouseName": {
+                    "type": "string",
+                    "example": "Central warehouse"
                   }
                 }
               }

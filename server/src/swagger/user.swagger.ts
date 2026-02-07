@@ -84,6 +84,9 @@
  *               - role
  *               - orgName
  *               - branchName
+ *               - isActive
+ *               - phone
+ *               - warehouseName
  *             properties:
  *               email:
  *                 type: string
@@ -103,6 +106,15 @@
  *               branchName:
  *                 type: string
  *                 example: Dhaka Branch
+ *               isActive:
+ *                 type: boolean
+ *                 example: true
+ *               phone:
+ *                 type: string
+ *                 example: 01751070860
+ *               warehouseName:
+ *                 type: string
+ *                 example: Central warehouse
  *     responses:
  *       201:
  *         description: User created successfully
