@@ -37,6 +37,11 @@ export const initializeSuperAdmin = async () => {
         description: "Manage organization",
         category: "Organization",
       },
+      {
+        name: "warehouse:manage",
+        description: "Manage warehouse",
+        category: "Warehouse",
+      },
     ];
 
     for (const featureData of defaultFeatures) {
