@@ -22,6 +22,7 @@ import organizationRouter from "./routes/organization.route";
 import branchRouter from "./routes/branch.route";
 import categoryRouter from "./routes/category.route";
 import medicineRouter from "./routes/medicine.route";
+import warehouseRouter from "./routes/warehouse.route";
 
 const allowedOrigins = [
   "http://localhost:3000",
@@ -61,6 +62,7 @@ apiRouter.use("/organizations", organizationRouter);
 apiRouter.use("/branches", branchRouter);
 apiRouter.use("/categories", categoryRouter);
 apiRouter.use("/medicines", medicineRouter);
+apiRouter.use("/warehouses", warehouseRouter);
 
 // Test route
 app.get("/", (req: Request, res: Response) => {
