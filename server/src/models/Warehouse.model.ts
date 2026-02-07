@@ -22,7 +22,6 @@ const wareHousesSchema = new Schema<IWarehouse>(
     },
     branchName: {
       type: String,
-      required: true,
       trim: true,
       lowercase: true,
     },
