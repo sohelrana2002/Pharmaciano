@@ -24,7 +24,6 @@ const userSchema = new Schema<IUser>(
       trim: true,
       lowercase: true,
     },
-
     orgName: {
       type: String,
       validate: {
@@ -44,7 +43,6 @@ const userSchema = new Schema<IUser>(
       trim: true,
       lowercase: true,
     },
-
     branchName: {
       type: String,
       validate: {
@@ -64,14 +62,12 @@ const userSchema = new Schema<IUser>(
       trim: true,
       lowercase: true,
     },
-
     role: {
       type: Schema.Types.ObjectId,
       ref: "Role",
       required: true,
       lowercase: true,
     },
-
     organization: {
       type: Schema.Types.ObjectId,
       ref: "Organization",
@@ -91,7 +87,6 @@ const userSchema = new Schema<IUser>(
       },
       lowercase: true,
     },
-
     branch: {
       type: Schema.Types.ObjectId,
       ref: "Branch",
@@ -111,20 +106,42 @@ const userSchema = new Schema<IUser>(
       },
       lowercase: true,
     },
-
     isActive: {
       type: Boolean,
       default: true,
     },
-
     createdBy: {
       type: Schema.Types.ObjectId,
       ref: "User",
     },
-
     lastLogin: {
       type: String,
       default: null,
+    },
+    phone: {
+      type: String,
+      validate: {
+        validator: async function (this: any, value: string | null) {
+          const role = await Role.findById(this.role).lean();
+
+          if (!role) return false;
+
+          if (role.name === "Super Admin") {
+            return value === null;
+          }
+
+          return Boolean(value);
+        },
+        message: "Phone number is required for non-super-admin users",
+      },
+    },
+    warehouseName: {
+      type: String,
+      required: false,
+    },
+    warehouse: {
+      type: Schema.Types.ObjectId,
+      ref: "Warehouse",
     },
   },
   {

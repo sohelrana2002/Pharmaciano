@@ -19,6 +19,9 @@ export interface IUser extends Document {
   createdAt: Date;
   updatedAt: Date;
   comparePassword(password: string): Promise<boolean>;
+  phone: string;
+  warehouseName: string;
+  warehouse?: Types.ObjectId | null;
 }
 
 // role interface
