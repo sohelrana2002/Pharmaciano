@@ -29,7 +29,7 @@ const wareHousesSchema = new Schema<IWarehouse>(
       type: Boolean,
       default: true,
     },
-    branch: {
+    branchId: {
       type: Schema.Types.ObjectId,
       ref: "Branch",
       required: true,

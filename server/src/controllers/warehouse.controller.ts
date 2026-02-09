@@ -58,7 +58,7 @@ const createWarehouse = async (req: AuthRequest, res: Response) => {
       name,
       location,
       capacity,
-      branch: branch._id,
+      branchId: branch._id,
       isActive,
       createdBy: req.user!.userId,
     });
