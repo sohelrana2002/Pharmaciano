@@ -54,9 +54,9 @@ const createBranch = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({
         success: false,
         message: "Invalid organization name",
-        hint: `Available organization names are ${activeOrganization.map(
-          (org) => org.name,
-        )}`,
+        hint: `Available organization names are ${activeOrganization
+          .map((org) => org.name)
+          .join(", ")}`,
       });
     }
 
@@ -64,7 +64,7 @@ const createBranch = async (req: AuthRequest, res: Response) => {
       name,
       address,
       contact,
-      organization: organization._id,
+      organizationId: organization._id,
       createdBy: req.user!.userId,
     });
 
@@ -105,7 +105,7 @@ const createBranch = async (req: AuthRequest, res: Response) => {
 const branchList = async (req: AuthRequest, res: Response) => {
   try {
     const branch = await Branch.find({ isActive: true }).select(
-      "-createdBy -organization",
+      "-createdBy -organizationId",
     );
 
     if (!branch) {
@@ -145,7 +145,7 @@ const branchInfo = async (req: AuthRequest, res: Response) => {
 
     const branch = await Branch.findById(id).populate([
       {
-        path: "organization",
+        path: "organizationId",
         select: "name address contact -_id",
       },
       {
@@ -253,7 +253,7 @@ const updateBranch = async (req: AuthRequest, res: Response) => {
         )}`,
       });
     }
-    updateData.organization = organization._id;
+    updateData.organizationId = organization._id;
 
     // Update Branch
     const updateResult = await Branch.findByIdAndUpdate(id, updateData, {

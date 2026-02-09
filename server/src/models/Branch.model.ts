@@ -40,7 +40,7 @@ const BranchSchema = new Schema<IBranch>(
       default: true,
     },
 
-    organization: {
+    organizationId: {
       type: Schema.Types.ObjectId,
       ref: "Organization",
       required: true,
@@ -52,7 +52,7 @@ const BranchSchema = new Schema<IBranch>(
       required: true,
     },
   },
-  { timestamps: true }
+  { timestamps: true },
 );
 
 export default model<IBranch>("Branch", BranchSchema);
