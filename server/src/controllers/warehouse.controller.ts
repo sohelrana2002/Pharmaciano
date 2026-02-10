@@ -94,4 +94,33 @@ const createWarehouse = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export { createWarehouse };
+// list of Warehouse
+const warehouseList = async (req: AuthRequest, res: Response) => {
+  try {
+    const warehouse = await Warehouse.find({ isActive: true }).select(
+      "-branchId -createdBy",
+    );
+
+    if (!warehouse) {
+      return res.status(404).json({
+        success: false,
+        message: customMessage.notFound("Warehouse"),
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: customMessage.found("Warehouse"),
+      length: warehouse.length,
+      data: { warehouse },
+    });
+  } catch (error: any) {
+    console.error("list of  warehouse error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: customMessage.serverError(),
+    });
+  }
+};
+export { createWarehouse, warehouseList };
