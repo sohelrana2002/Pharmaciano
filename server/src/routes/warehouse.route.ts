@@ -5,6 +5,7 @@ import { warehousSchemaValidator } from "../validators/warehouse.validator";
 import {
   createWarehouse,
   warehouseList,
+  warehouseInfo,
 } from "../controllers/warehouse.controller";
 
 const router = Router();
@@ -20,5 +21,13 @@ router.post(
 
 // list of warehouse
 router.get("/", authenticate, authorize(["warehouse:manage"]), warehouseList);
+
+// individual warehouse info
+router.get(
+  "/:id",
+  authenticate,
+  authorize(["warehouse:manage"]),
+  warehouseInfo,
+);
 
 export default router;
