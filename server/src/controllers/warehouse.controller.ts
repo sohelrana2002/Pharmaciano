@@ -5,6 +5,9 @@ import { customMessage } from "../constants/customMessage";
 import { warehousSchemaValidator } from "../validators/warehouse.validator";
 import Warehouse from "../models/Warehouse.model";
 import Branch from "../models/Branch.model";
+import mongoose from "mongoose";
+import Role from "../models/Role.model";
+import User from "../models/User.model";
 
 // create warehouse
 const createWarehouse = async (req: AuthRequest, res: Response) => {
@@ -123,4 +126,58 @@ const warehouseList = async (req: AuthRequest, res: Response) => {
     });
   }
 };
-export { createWarehouse, warehouseList };
+
+// warehouse info
+const warehouseInfo = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(409).json({
+        success: false,
+        message: customMessage.invalidId("Mongoose", id),
+      });
+    }
+
+    const warehouse = await Warehouse.findById(id).populate([
+      {
+        path: "branchId",
+        select: "name address contact -_id",
+      },
+      {
+        path: "createdBy",
+        select: "name email phone -_id",
+      },
+    ]);
+
+    if (!warehouse) {
+      return res.status(404).json({
+        success: false,
+        message: customMessage.notFound("Warehouse", id),
+      });
+    }
+
+    const roleId = await Role.findOne({ name: "staff" });
+
+    const staffList = await User.find({
+      role: roleId?._id,
+      warehouse: warehouse?._id,
+    }).select("name email phone -_id");
+
+    return res.status(200).json({
+      success: true,
+      message: customMessage.found("Warehouse", id),
+      data: { warehouse },
+      staffList: staffList === null ? "No staff found!" : staffList,
+    });
+  } catch (error: any) {
+    console.error("warehouse info error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: customMessage.serverError(),
+    });
+  }
+};
+
+export { createWarehouse, warehouseList, warehouseInfo };
