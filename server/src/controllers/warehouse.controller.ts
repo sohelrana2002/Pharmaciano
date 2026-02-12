@@ -157,11 +157,11 @@ const warehouseInfo = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const roleId = await Role.findOne({ name: "staff" });
+    const role = await Role.findOne({ name: "staff" });
 
     const staffList = await User.find({
-      role: roleId?._id,
-      warehouse: warehouse?._id,
+      roleId: role?._id,
+      warehouseId: warehouse?._id,
     }).select("name email phone -_id");
 
     return res.status(200).json({
