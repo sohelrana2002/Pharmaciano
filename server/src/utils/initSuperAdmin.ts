@@ -85,9 +85,10 @@ export const initializeSuperAdmin = async () => {
         name: "Super Administrator",
         orgName: null,
         branchName: null,
-        role: superAdminRole._id,
-        organization: null,
-        branch: null,
+        roleId: superAdminRole._id,
+        organizationId: null,
+        branchId: null,
+        warehouseId: null,
       });
       await superAdminUser.save();
 
