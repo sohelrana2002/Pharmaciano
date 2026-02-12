@@ -2,26 +2,22 @@ import { Document, Types } from "mongoose";
 import { Request } from "express";
 // import mongoose from 'mongoose';
 
-// user interface
 export interface IUser extends Document {
   _id: Types.ObjectId;
   email: string;
   password: string;
   name: string;
-  orgName: string;
-  branchName: string;
-  role: Types.ObjectId | IRole;
-  organization: Types.ObjectId;
-  branch: Types.ObjectId;
+  roleId?: Types.ObjectId;
+  organizationId?: Types.ObjectId | null;
+  branchId?: Types.ObjectId | null;
+  warehouseId?: Types.ObjectId | null;
+  phone?: string | null;
   isActive: boolean;
-  lastLogin: string;
-  createdBy: Types.ObjectId;
+  createdBy?: Types.ObjectId;
+  lastLogin?: Date | string | null;
   createdAt: Date;
   updatedAt: Date;
   comparePassword(password: string): Promise<boolean>;
-  phone: string;
-  warehouseName: string;
-  warehouse?: Types.ObjectId | null;
 }
 
 // role interface

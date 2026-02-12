@@ -1,8 +1,8 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
+// models/User.model.ts
+
 import { Schema, model } from "mongoose";
 import bcrypt from "bcryptjs";
 import { IUser } from "../types";
-import Role from "./Role.model";
 
 const userSchema = new Schema<IUser>(
   {
@@ -24,146 +24,64 @@ const userSchema = new Schema<IUser>(
       trim: true,
       lowercase: true,
     },
-    orgName: {
-      type: String,
-      validate: {
-        validator: async function (this: any, value: string | null) {
-          const role = await Role.findById(this.role).lean();
 
-          if (!role) return false;
-
-          if (role.name === "Super Admin") {
-            return value === null;
-          }
-
-          return Boolean(value);
-        },
-        message: "Organization name is required for non-super-admin users",
-      },
-      trim: true,
-      lowercase: true,
-    },
-    branchName: {
-      type: String,
-      validate: {
-        validator: async function (this: any, value: string | null) {
-          const role = await Role.findById(this.role).lean();
-
-          if (!role) return false;
-
-          if (role.name === "Super Admin") {
-            return value === null;
-          }
-
-          return Boolean(value);
-        },
-        message: "Branch name is required for non-super-admin users",
-      },
-      trim: true,
-      lowercase: true,
-    },
-    role: {
+    roleId: {
       type: Schema.Types.ObjectId,
       ref: "Role",
-      required: true,
-      lowercase: true,
+      default: null,
     },
-    organization: {
+
+    organizationId: {
       type: Schema.Types.ObjectId,
       ref: "Organization",
-      validate: {
-        validator: async function (this: any, value: string | null) {
-          const role = await Role.findById(this.role).lean();
-
-          if (!role) return false;
-
-          if (role.name === "Super Admin") {
-            return value === null;
-          }
-
-          return Boolean(value);
-        },
-        message: "Organization is required for non-super-admin users",
-      },
-      lowercase: true,
+      default: null,
     },
-    branch: {
+
+    branchId: {
       type: Schema.Types.ObjectId,
       ref: "Branch",
-      validate: {
-        validator: async function (this: any, value: string | null) {
-          const role = await Role.findById(this.role).lean();
-
-          if (!role) return false;
-
-          if (role.name === "Super Admin") {
-            return value === null;
-          }
-
-          return Boolean(value);
-        },
-        message: "Branch name is required for non-super-admin users",
-      },
-      lowercase: true,
+      default: null,
     },
+
+    warehouseId: {
+      type: Schema.Types.ObjectId,
+      ref: "Warehouse",
+      default: null,
+    },
+
+    phone: {
+      type: String,
+      default: null,
+    },
+
     isActive: {
       type: Boolean,
       default: true,
     },
+
     createdBy: {
       type: Schema.Types.ObjectId,
       ref: "User",
     },
+
     lastLogin: {
-      type: String,
+      type: Date,
       default: null,
     },
-    phone: {
-      type: String,
-      validate: {
-        validator: async function (this: any, value: string | null) {
-          const role = await Role.findById(this.role).lean();
-
-          if (!role) return false;
-
-          if (role.name === "Super Admin") {
-            return value === null;
-          }
-
-          return Boolean(value);
-        },
-        message: "Phone number is required for non-super-admin users",
-      },
-    },
-    warehouseName: {
-      type: String,
-      required: false,
-    },
-    warehouse: {
-      type: Schema.Types.ObjectId,
-      ref: "Warehouse",
-    },
   },
-  {
-    timestamps: true,
-  },
+  { timestamps: true },
 );
 
+// Password Hash
 userSchema.pre("save", async function (next) {
-  if (!this.isModified("password")) {
-    return next();
-  }
+  if (!this.isModified("password")) return next();
 
-  try {
-    const saltRound = await bcrypt.genSalt(12);
-    const hashPassword = await bcrypt.hash(this.password, saltRound);
-    this.password = hashPassword;
-    next();
-  } catch (error: any) {
-    next(error);
-  }
+  const salt = await bcrypt.genSalt(12);
+  this.password = await bcrypt.hash(this.password, salt);
+  next();
 });
 
+// Compare Password
 userSchema.methods.comparePassword = async function (
   candidatePassword: string,
 ): Promise<boolean> {
