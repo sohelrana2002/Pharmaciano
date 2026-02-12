@@ -130,33 +130,25 @@ const createUser = async (req: AuthRequest, res: Response) => {
       email,
       password,
       name,
-      role: role._id,
-      organization: organization._id,
-      branch: branch._id,
+      roleId: role._id,
+      organizationId: organization._id,
+      branchId: branch._id,
       createdBy: req.user!.userId,
       phone,
-      warehouse: warehouse ? warehouse._id : null,
+      warehouseId: warehouse ? warehouse._id : null,
       isActive,
     });
 
     await user.save();
 
     const savedUser = await User.findById(user._id)
-      .populate<{ role: any }>("role", "name description permissions")
+      .populate("roleId", "name description permissions")
       .select("-password");
-
-    // console.log("savedUser", savedUser);
 
     res.status(201).json({
       success: true,
       message: customMessage.created("User"),
-      data: {
-        user: {
-          id: savedUser!._id.toString(),
-          name: savedUser!.name,
-          role: savedUser!.role.name,
-        },
-      },
+      id: savedUser!._id,
     });
   } catch (error: any) {
     //MongoDB Duplicate Key Error
@@ -190,7 +182,7 @@ const userList = async (req: AuthRequest, res: Response) => {
     const users = await User.find({ email: { $ne: config.superAdminEmail } })
       .populate([
         {
-          path: "role",
+          path: "roleId",
           select: "name permissions -_id",
         },
         {
@@ -198,15 +190,15 @@ const userList = async (req: AuthRequest, res: Response) => {
           select: "name -_id",
         },
         {
-          path: "organization",
+          path: "organizationId",
           select: "name address -_id",
         },
         {
-          path: "branch",
+          path: "branchId",
           select: "name address -_id",
         },
       ])
-      .select("-password -warehouse")
+      .select("-password -warehouseId")
       .sort({ createdAt: -1 });
 
     res.status(200).json({
@@ -232,7 +224,7 @@ const userProfile = async (req: AuthRequest, res: Response) => {
     const profile = await User.findOne({ _id: userId })
       .populate([
         {
-          path: "role",
+          path: "roleId",
           select: "name description permissions -_id",
         },
         {
@@ -240,15 +232,15 @@ const userProfile = async (req: AuthRequest, res: Response) => {
           select: "name email -_id",
         },
         {
-          path: "organization",
+          path: "organizationId",
           select: "name address contact -_id",
         },
         {
-          path: "branch",
+          path: "branchId",
           select: "name contact address -_id",
         },
         {
-          path: "warehouse",
+          path: "warehouseId",
           select: "name location capacity -_id",
         },
       ])
@@ -357,7 +349,7 @@ const updateUser = async (req: AuthRequest, res: Response) => {
         hint: `Available organization names are ${activeOrganization.map((org) => org.name)}`,
       });
     }
-    updateData.organization = organization._id;
+    updateData.organizationId = organization._id;
 
     // fetch active branch
     const activeBranch = await Branch.find({ isActive: true }).select("name");
@@ -371,7 +363,7 @@ const updateUser = async (req: AuthRequest, res: Response) => {
         hint: `Available branch names are ${activeBranch.map((branch) => branch.name)}`,
       });
     }
-    updateData.branch = branch._id;
+    updateData.branchId = branch._id;
 
     //  if warehouse name provide then
     let warehouse;
@@ -395,7 +387,7 @@ const updateUser = async (req: AuthRequest, res: Response) => {
     }
 
     if (typeof warehouseName !== "undefined") {
-      updateData.warehouse = warehouse ? warehouse._id : null;
+      updateData.warehouseId = warehouse ? warehouse._id : null;
     }
 
     // Optional role change
@@ -418,25 +410,16 @@ const updateUser = async (req: AuthRequest, res: Response) => {
             .join(", ")}`,
         });
       }
-      updateData.role = role._id;
+      updateData.roleId = role._id;
     }
 
-    const updateUser = await User.findByIdAndUpdate(
-      existingUser._id,
-      updateData,
-      { new: true },
-    );
+    await User.findByIdAndUpdate(existingUser._id, updateData, { new: true });
     // console.log("updateUser: ", updateUser);
 
     res.status(201).json({
       success: true,
       message: customMessage.updated("User", userId),
-      data: {
-        user: {
-          id: updateUser!._id.toString(),
-          name: updateUser!.name,
-        },
-      },
+      id: userId,
     });
   } catch (error: any) {
     //MongoDB Duplicate Key Error
