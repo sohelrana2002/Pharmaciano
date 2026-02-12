@@ -18,7 +18,9 @@ const login = async (req: Request, res: Response) => {
       });
     }
 
-    const user = await User.findOne({ email, isActive: true }).populate("role");
+    const user = await User.findOne({ email, isActive: true }).populate(
+      "roleId",
+    );
 
     if (!user) {
       return res.status(401).json({
@@ -39,7 +41,7 @@ const login = async (req: Request, res: Response) => {
     user.lastLogin = formattedDate(date);
     await user.save();
 
-    const role = await Role.findById(user.role._id);
+    const role = await Role.findById(user!.roleId!._id);
     if (!role || !role.isActive) {
       return res.status(401).json({
         success: false,
@@ -103,7 +105,7 @@ const getProfile = async (req: AuthRequest, res: Response) => {
     const userId = req.user!.userId;
 
     const user = await User.findById(userId)
-      .populate("role")
+      .populate("roleId")
       .select("-password");
     // console.log("user", user);
 
@@ -114,7 +116,7 @@ const getProfile = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const role = await Role.findById(user.role._id).populate<{
+    const role = await Role.findById(user!.roleId!._id).populate<{
       createdBy: any;
     }>({
       path: "createdBy",
