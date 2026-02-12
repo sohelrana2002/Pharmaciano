@@ -38,7 +38,7 @@ export const authenticate = async (
     // console.log("decoded", decoded);
 
     const user = await User.findById(decoded.userId)
-      .populate<{ role: any }>("role")
+      .populate("roleId")
       .select("-password");
 
     // console.log("user", user);
@@ -50,7 +50,7 @@ export const authenticate = async (
       });
     }
 
-    const role = await Role.findById(user.role._id);
+    const role = await Role.findById(user!.roleId!._id);
     if (!role || !role.isActive) {
       return res.status(401).json({
         success: false,
