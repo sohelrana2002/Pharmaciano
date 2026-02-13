@@ -15,8 +15,8 @@ export const roleSchemaValidator = z.object({
   permissions: z.preprocess(
     (arg) => (typeof arg === "string" ? arg.split(",") : arg),
     z
-      .array(z.string().min(1, "Feature must be required."))
-      .nonempty("At least one feature is required"),
+      .array(z.string().min(1, "Permissions must be required."))
+      .nonempty("At least one Permissions is required"),
   ),
 
   createdBy: z.any().optional(),
