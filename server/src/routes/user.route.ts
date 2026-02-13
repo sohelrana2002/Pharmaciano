@@ -20,13 +20,13 @@ const router = Router();
 router.post(
   "/",
   authenticate,
-  authorize(["user:create"]),
+  authorize(["user:manage"]),
   validate(createUserValidator),
-  createUser
+  createUser,
 );
 
 // list of users
-router.get("/", authenticate, authorize(["user:list"]), userList);
+router.get("/", authenticate, authorize(["user:manage"]), userList);
 
 // individual profile info
 router.get("/profile", authenticate, authorize(["user:read"]), userProfile);
@@ -35,12 +35,12 @@ router.get("/profile", authenticate, authorize(["user:read"]), userProfile);
 router.put(
   "/:id",
   authenticate,
-  authorize(["user:update"]),
+  authorize(["user:manage"]),
   validate(updateUserValidator),
-  updateUser
+  updateUser,
 );
 
 // delete user
-router.delete("/:id", authenticate, authorize(["user:delete"]), deleteUser);
+router.delete("/:id", authenticate, authorize(["user:manage"]), deleteUser);
 
 export default router;
