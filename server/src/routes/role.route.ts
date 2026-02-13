@@ -19,25 +19,25 @@ const router = Router();
 router.post(
   "/",
   authenticate,
-  authorize(["role:create"]),
+  authorize(["role:manage"]),
   validate(roleSchemaValidator),
-  createRole
+  createRole,
 );
 
 // list of role
-router.get("/", authenticate, authorize(["role:list"]), roleList);
+router.get("/", authenticate, authorize(["role:manage"]), roleList);
 
 // update role
 router.put(
   "/:id",
   authenticate,
-  authorize(["role:update"]),
+  authorize(["role:manage"]),
   validate(updateRoleValidator),
-  updateRole
+  updateRole,
 );
 
 // delete role
-router.delete("/:id", authenticate, authorize(["role:delete"]), deleteRole);
+router.delete("/:id", authenticate, authorize(["role:manage"]), deleteRole);
 
 // get all features
 router.get("/features", getFeatures);
