@@ -21,7 +21,7 @@ router.post(
   authenticate,
   authorize(["organization:manage"]),
   validate(createOrganizationValidator),
-  createOrganization
+  createOrganization,
 );
 
 // list of organization
@@ -29,7 +29,7 @@ router.get(
   "/",
   authenticate,
   authorize(["organization:manage"]),
-  organizationList
+  organizationList,
 );
 
 // individual organization details
@@ -37,7 +37,7 @@ router.get(
   "/:id",
   authenticate,
   authorize(["organization:manage"]),
-  organizationInfo
+  organizationInfo,
 );
 
 // update organization
@@ -46,7 +46,7 @@ router.put(
   authenticate,
   authorize(["organization:manage"]),
   validate(updateOrganizationVaidator),
-  updateOrganization
+  updateOrganization,
 );
 
 // delete organization
@@ -54,7 +54,7 @@ router.delete(
   "/:id",
   authenticate,
   authorize(["organization:manage"]),
-  deleteOrganization
+  deleteOrganization,
 );
 
 export default router;
