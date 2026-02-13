@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Schema, model } from "mongoose";
 import { IRole } from "../types";
 
@@ -33,5 +34,22 @@ const roleSchema = new Schema<IRole>(
     timestamps: true,
   },
 );
+
+// always save with "user:read" permissions
+roleSchema.pre("save", function (next) {
+  this.permissions = [...new Set([...this.permissions, "user:read"])];
+  next();
+});
+
+// always save with "user:read" permissions when update
+roleSchema.pre("findOneAndUpdate", function (next) {
+  const update: any = this.getUpdate();
+
+  if (update.permissions) {
+    update.permissions = [...new Set([...update.permissions, "user:read"])];
+  }
+
+  next();
+});
 
 export default model<IRole>("Role", roleSchema);
