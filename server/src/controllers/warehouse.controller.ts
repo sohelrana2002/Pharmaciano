@@ -180,4 +180,40 @@ const warehouseInfo = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export { createWarehouse, warehouseList, warehouseInfo };
+// delete warehouse
+const deleteWarehouse = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(409).json({
+        success: false,
+        message: customMessage.invalidId("Mongoose", id),
+      });
+    }
+
+    const warehouse = await Warehouse.findByIdAndDelete(id);
+
+    if (!warehouse) {
+      return res.status(404).json({
+        success: false,
+        message: customMessage.notFound("Warehouse", id),
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: customMessage.deleted("Warehouse", id),
+      id,
+    });
+  } catch (error: any) {
+    console.error("delete warehouse info:", error);
+
+    res.status(500).json({
+      success: false,
+      message: customMessage.serverError(),
+    });
+  }
+};
+
+export { createWarehouse, warehouseList, warehouseInfo, deleteWarehouse };
