@@ -6,6 +6,7 @@ import {
   createWarehouse,
   warehouseList,
   warehouseInfo,
+  deleteWarehouse,
 } from "../controllers/warehouse.controller";
 
 const router = Router();
@@ -28,6 +29,14 @@ router.get(
   authenticate,
   authorize(["warehouse:manage"]),
   warehouseInfo,
+);
+
+// delete warehouse
+router.delete(
+  "/:id",
+  authenticate,
+  authorize(["warehouse:manage"]),
+  deleteWarehouse,
 );
 
 export default router;
