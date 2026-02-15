@@ -16,14 +16,44 @@ export const initializeSuperAdmin = async () => {
         category: "Inventory",
       },
       {
-        name: "sales:process",
-        description: "Process sales",
+        name: "sales:manage",
+        description: "Manage sales",
         category: "Sales",
       },
       {
-        name: "reports:view",
-        description: "View reports",
+        name: "purchase:manage",
+        description: "Manage purchase",
+        category: "Purchase",
+      },
+      {
+        name: "accounting:manage",
+        description: "Manage accounting",
+        category: "Accounting",
+      },
+      {
+        name: "settings:manage",
+        description: "Manage settings",
+        category: "Settings",
+      },
+      {
+        name: "reports:manage",
+        description: "Manage reports",
         category: "Reports",
+      },
+      {
+        name: "backup:manage",
+        description: "Manage backup",
+        category: "Backup",
+      },
+      {
+        name: "audit:manage",
+        description: "Manage audit",
+        category: "Audit",
+      },
+      {
+        name: "ai:manage",
+        description: "Manage ai",
+        category: "Ai",
       },
       {
         name: "organization:manage",
@@ -49,9 +79,9 @@ export const initializeSuperAdmin = async () => {
     // console.log("allFeatures", allFeatures);
 
     const superAdminRole = await Role.findOneAndUpdate(
-      { name: "Super Admin" },
+      { name: "SUPER_ADMIN" },
       {
-        name: "Super Admin",
+        name: "SUPER_ADMIN",
         description: "System administrator with full access",
         permissions: allFeatures,
       },
