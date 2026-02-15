@@ -4,7 +4,7 @@ export const roleSchemaValidator = z.object({
   name: z
     .string({ error: "Role name is required!" })
     .min(1, "Role name must be at least 1 characters long")
-    .toLowerCase()
+    .toUpperCase()
     .trim(),
 
   description: z
