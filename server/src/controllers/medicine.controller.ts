@@ -78,7 +78,7 @@ const createMedicine = async (req: AuthRequest, res: Response) => {
       genericName,
       strength,
       dosageForm,
-      brand: brand._id,
+      brandId: brand._id,
     });
 
     if (existingMedicine) {
@@ -97,8 +97,8 @@ const createMedicine = async (req: AuthRequest, res: Response) => {
       unit,
       isPrescriptionRequired,
       taxRate,
-      category: category._id,
-      brand: brand._id,
+      categoryId: category._id,
+      brandId: brand._id,
       createdBy: req.user!.userId,
       unitPrice,
       unitsPerStrip,
@@ -142,7 +142,7 @@ const createMedicine = async (req: AuthRequest, res: Response) => {
 const medicineList = async (req: AuthRequest, res: Response) => {
   try {
     const medicine = await Medicine.find({ isActive: true }).select(
-      "-category -brand -createdBy",
+      "-categoryId -brandId -createdBy",
     );
 
     if (!medicine) {
@@ -182,11 +182,11 @@ const medicineInfo = async (req: AuthRequest, res: Response) => {
 
     const medicine = await Medicine.findById(id).populate([
       {
-        path: "category",
+        path: "categoryId",
         select: "name description -_id",
       },
       {
-        path: "brand",
+        path: "brandId",
         select: "name manufacturer country -_id",
       },
       {
@@ -316,7 +316,7 @@ const updateMedicine = async (req: AuthRequest, res: Response) => {
     }
 
     // valid category name update
-    updateData.category = category._id;
+    updateData.categoryId = category._id;
 
     //   check valid brand
     const activeBrand = await Brand.find({
@@ -334,7 +334,7 @@ const updateMedicine = async (req: AuthRequest, res: Response) => {
     }
 
     // valid brand name
-    updateData.brand = brand._id;
+    updateData.brandId = brand._id;
 
     // Update medicine
     const updatedMedicine = await Medicine.findByIdAndUpdate(id, updateData, {
