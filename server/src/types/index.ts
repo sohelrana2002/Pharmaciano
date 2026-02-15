@@ -126,8 +126,8 @@ export interface IMedicine extends Document {
   stripPrice: number;
   isPrescriptionRequired: boolean;
   taxRate: number;
-  category: Types.ObjectId;
-  brand: Types.ObjectId;
+  categoryId: Types.ObjectId;
+  brandId: Types.ObjectId;
   createdBy: Types.ObjectId;
   isActive: boolean;
   createdAt?: Date;

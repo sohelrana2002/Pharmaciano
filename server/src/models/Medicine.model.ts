@@ -65,13 +65,13 @@ const medicineSchema = new Schema<IMedicine>(
       default: 0,
     },
 
-    category: {
+    categoryId: {
       type: Schema.Types.ObjectId,
       ref: "Category",
       required: true,
     },
 
-    brand: {
+    brandId: {
       type: Schema.Types.ObjectId,
       ref: "Brand",
       required: true,
