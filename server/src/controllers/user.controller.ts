@@ -275,7 +275,7 @@ const updateUser = async (req: AuthRequest, res: Response) => {
     if (!mongoose.Types.ObjectId.isValid(userId)) {
       return res.status(400).json({
         success: false,
-        message: customMessage.invalidId("mongoose", userId),
+        message: customMessage.invalidId("Mongoose", userId),
       });
     }
 
@@ -451,6 +451,13 @@ const updateUser = async (req: AuthRequest, res: Response) => {
 const deleteUser = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(409).json({
+        success: false,
+        message: customMessage.invalidId("Mongoose", id),
+      });
+    }
 
     const deletedUser = await User.findByIdAndDelete(id);
 

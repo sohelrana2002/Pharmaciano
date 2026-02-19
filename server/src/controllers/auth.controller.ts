@@ -6,6 +6,7 @@ import Role from "../models/Role.model";
 import { config } from "../config/config";
 import { AuthRequest } from "../types";
 import { formattedDate } from "../helper/formattedDate";
+import { customMessage } from "../constants/customMessage";
 
 const login = async (req: Request, res: Response) => {
   try {
@@ -84,18 +85,18 @@ const login = async (req: Request, res: Response) => {
 
       return res.status(409).json({
         success: false,
-        message: `${value} already exists`,
+        message: customMessage.alreadyExists(value),
         error: {
           field,
           value,
-          reason: `${field} already exists`,
+          reason: customMessage.alreadyExists(field),
         },
       });
     }
     console.error("Login error:", error);
     res.status(500).json({
       success: false,
-      message: "Internal server error.",
+      message: customMessage.serverError(),
     });
   }
 };

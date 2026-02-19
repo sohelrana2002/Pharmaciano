@@ -8,6 +8,7 @@ import {
   updateRoleValidator,
 } from "../validators/role.validator";
 import mongoose from "mongoose";
+import { customMessage } from "../constants/customMessage";
 
 // create role
 const createRole = async (req: AuthRequest, res: Response) => {
@@ -79,8 +80,8 @@ const createRole = async (req: AuthRequest, res: Response) => {
 
     res.status(201).json({
       success: true,
-      message: "Role created successfully.",
-      data: { role: savedRole },
+      message: customMessage.created("Role"),
+      id: savedRole!._id,
     });
   } catch (error: any) {
     //MongoDB Duplicate Key Error
@@ -90,11 +91,11 @@ const createRole = async (req: AuthRequest, res: Response) => {
 
       return res.status(409).json({
         success: false,
-        message: `${value} already exists`,
+        message: customMessage.alreadyExists(value),
         error: {
           field,
           value,
-          reason: `${field} already exists`,
+          reason: customMessage.alreadyExists(field),
         },
       });
     }
@@ -102,7 +103,7 @@ const createRole = async (req: AuthRequest, res: Response) => {
 
     res.status(500).json({
       success: false,
-      message: "Internal server error.",
+      message: customMessage.serverError(),
     });
   }
 };
@@ -114,8 +115,16 @@ const roleList = async (req: AuthRequest, res: Response) => {
       .populate("createdBy", "name email")
       .sort({ createdAt: -1 });
 
+    if (!roles) {
+      return res.status(404).json({
+        success: false,
+        message: customMessage.notFound("Role"),
+      });
+    }
+
     res.json({
       success: true,
+      message: customMessage.found("List of role"),
       data: { roles },
     });
   } catch (error) {
@@ -123,7 +132,7 @@ const roleList = async (req: AuthRequest, res: Response) => {
 
     res.status(500).json({
       success: false,
-      message: "Internal server error.",
+      message: customMessage.serverError(),
     });
   }
 };
@@ -136,7 +145,7 @@ const updateRole = async (req: AuthRequest, res: Response) => {
     if (!mongoose.Types.ObjectId.isValid(roleId)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid role ID.",
+        message: customMessage.invalidId("Mongoose", roleId),
       });
     }
 
@@ -164,7 +173,7 @@ const updateRole = async (req: AuthRequest, res: Response) => {
     if (!role) {
       return res.status(404).json({
         success: false,
-        message: "Role not found.",
+        message: customMessage.notFound("Role"),
       });
     }
 
@@ -175,7 +184,7 @@ const updateRole = async (req: AuthRequest, res: Response) => {
       if (existingRole) {
         return res.status(409).json({
           success: false,
-          message: "Role name already exist",
+          message: customMessage.alreadyExists("Role name"),
         });
       }
     }
@@ -226,8 +235,8 @@ const updateRole = async (req: AuthRequest, res: Response) => {
 
     return res.status(200).json({
       success: true,
-      message: "Role updated successfully.",
-      data: updateResult,
+      message: customMessage.updated("Role", roleId),
+      id: updateResult!._id,
     });
   } catch (error: any) {
     //MongoDB Duplicate Key Error
@@ -237,11 +246,11 @@ const updateRole = async (req: AuthRequest, res: Response) => {
 
       return res.status(409).json({
         success: false,
-        message: `${value} already exists`,
+        message: customMessage.alreadyExists(value),
         error: {
           field,
           value,
-          reason: `${field} already exists`,
+          reason: customMessage.alreadyExists(field),
         },
       });
     }
@@ -249,7 +258,7 @@ const updateRole = async (req: AuthRequest, res: Response) => {
 
     res.status(500).json({
       success: false,
-      message: "Internal server error.",
+      message: customMessage.serverError(),
     });
   }
 };
@@ -262,7 +271,7 @@ const deleteRole = async (req: AuthRequest, res: Response) => {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid role ID.",
+        message: customMessage.invalidId("Mongoose", id),
       });
     }
 
@@ -272,13 +281,13 @@ const deleteRole = async (req: AuthRequest, res: Response) => {
     if (!deletedRole) {
       return res.status(404).json({
         success: false,
-        message: "Role not found.",
+        message: customMessage.notFound("Role", id),
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: "Role deleted successfully.",
+      message: customMessage.deleted("Role", id),
       id,
     });
   } catch (error) {
@@ -286,7 +295,7 @@ const deleteRole = async (req: AuthRequest, res: Response) => {
 
     res.status(500).json({
       success: false,
-      message: "Internal server error.",
+      message: customMessage.serverError(),
     });
   }
 };
@@ -299,15 +308,23 @@ const getFeatures = async (req: AuthRequest, res: Response) => {
       name: 1,
     });
 
+    if (!features) {
+      return res.status(404).json({
+        success: false,
+        message: customMessage.notFound("Feature"),
+      });
+    }
+
     res.json({
       success: true,
+      message: customMessage.found("Features"),
       data: { features },
     });
   } catch (error) {
     console.error("Get features error:", error);
     res.status(500).json({
       success: false,
-      message: "Internal server error.",
+      message: customMessage.serverError(),
     });
   }
 };

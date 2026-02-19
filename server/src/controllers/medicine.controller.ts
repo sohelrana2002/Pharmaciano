@@ -9,6 +9,7 @@ import Medicine from "../models/Medicine.model";
 import Category from "../models/Category.model";
 import Brand from "../models/Brand.model";
 import mongoose from "mongoose";
+import { customMessage } from "../constants/customMessage";
 
 // create medicine
 const createMedicine = async (req: AuthRequest, res: Response) => {
@@ -109,7 +110,7 @@ const createMedicine = async (req: AuthRequest, res: Response) => {
     //   success response
     return res.status(201).json({
       success: true,
-      message: "Medicine created successfully!",
+      message: customMessage.created("Medicine"),
       id: medicine._id,
     });
   } catch (error: any) {
@@ -120,11 +121,11 @@ const createMedicine = async (req: AuthRequest, res: Response) => {
 
       return res.status(409).json({
         success: false,
-        message: `${value} already exists`,
+        message: customMessage.alreadyExists(value),
         error: {
           field,
           value,
-          reason: `${field} already exists`,
+          reason: customMessage.alreadyExists(field),
         },
       });
     }
@@ -133,7 +134,7 @@ const createMedicine = async (req: AuthRequest, res: Response) => {
 
     res.status(500).json({
       success: false,
-      message: "Internal server error.",
+      message: customMessage.serverError(),
     });
   }
 };
@@ -148,13 +149,13 @@ const medicineList = async (req: AuthRequest, res: Response) => {
     if (!medicine) {
       return res.status(404).json({
         success: false,
-        message: "No medicine found!",
+        message: customMessage.notFound("Medicine"),
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: "List of medicine.",
+      message: customMessage.found("List of medicine"),
       length: medicine.length,
       data: { medicine },
     });
@@ -163,7 +164,7 @@ const medicineList = async (req: AuthRequest, res: Response) => {
 
     res.status(500).json({
       success: false,
-      message: "Internal server error.",
+      message: customMessage.serverError(),
     });
   }
 };
@@ -176,7 +177,7 @@ const medicineInfo = async (req: AuthRequest, res: Response) => {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(409).json({
         success: false,
-        message: "Invalid organization ID.",
+        message: customMessage.invalidId("Mongoose", id),
       });
     }
 
@@ -198,13 +199,13 @@ const medicineInfo = async (req: AuthRequest, res: Response) => {
     if (!medicine) {
       return res.status(404).json({
         success: false,
-        message: "Medicine not found!",
+        message: customMessage.notFound("Medicine", id),
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: "Individual medicine info!",
+      message: customMessage.found("Individual medicine info"),
       data: { medicine },
     });
   } catch (error) {
@@ -212,7 +213,7 @@ const medicineInfo = async (req: AuthRequest, res: Response) => {
 
     res.status(500).json({
       success: false,
-      message: "Internal server error.",
+      message: customMessage.serverError(),
     });
   }
 };
@@ -225,7 +226,7 @@ const updateMedicine = async (req: AuthRequest, res: Response) => {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(409).json({
         success: false,
-        message: "Invalid organization ID.",
+        message: customMessage.invalidId("Mongoose", id),
       });
     }
 
@@ -265,7 +266,7 @@ const updateMedicine = async (req: AuthRequest, res: Response) => {
     if (!medicine) {
       return res.status(404).json({
         success: false,
-        message: "Medicine not found!",
+        message: customMessage.notFound("Medicine", id),
       });
     }
 
@@ -343,7 +344,7 @@ const updateMedicine = async (req: AuthRequest, res: Response) => {
 
     return res.status(200).json({
       success: true,
-      message: "Medicine updated successfully!",
+      message: customMessage.updated("Medicine", id),
       id: updatedMedicine!._id,
     });
   } catch (error: any) {
@@ -354,11 +355,11 @@ const updateMedicine = async (req: AuthRequest, res: Response) => {
 
       return res.status(409).json({
         success: false,
-        message: `${value} already exists`,
+        message: customMessage.alreadyExists(value),
         error: {
           field,
           value,
-          reason: `${field} already exists`,
+          reason: customMessage.alreadyExists(field),
         },
       });
     }
@@ -367,7 +368,7 @@ const updateMedicine = async (req: AuthRequest, res: Response) => {
 
     res.status(500).json({
       success: false,
-      message: "Internal server error.",
+      message: customMessage.serverError(),
     });
   }
 };
@@ -380,7 +381,7 @@ const deleteMedicine = async (req: AuthRequest, res: Response) => {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(409).json({
         success: false,
-        message: "Invalid organization ID.",
+        message: customMessage.invalidId("Mongoose", id),
       });
     }
 
@@ -389,13 +390,13 @@ const deleteMedicine = async (req: AuthRequest, res: Response) => {
     if (!medicine) {
       return res.status(404).json({
         success: false,
-        message: `Medicine with ID ${id} does not exist. Please check the ID and try again.`,
+        message: customMessage.notFound("Medicine", id),
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: "Medicine deleted successfully!",
+      message: customMessage.deleted("Medicine", id),
       id,
     });
   } catch (error) {
@@ -403,7 +404,7 @@ const deleteMedicine = async (req: AuthRequest, res: Response) => {
 
     res.status(500).json({
       success: false,
-      message: "Internal server error.",
+      message: customMessage.serverError(),
     });
   }
 };

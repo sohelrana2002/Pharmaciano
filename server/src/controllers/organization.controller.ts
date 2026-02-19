@@ -8,6 +8,7 @@ import {
 } from "../validators/organization.validator";
 import Organization from "../models/Organization.model";
 import mongoose from "mongoose";
+import { customMessage } from "../constants/customMessage";
 
 // create organization
 const createOrganization = async (req: AuthRequest, res: Response) => {
@@ -66,7 +67,7 @@ const createOrganization = async (req: AuthRequest, res: Response) => {
     // success response
     return res.status(201).json({
       success: true,
-      message: "Organization created successfully.",
+      message: customMessage.created("Organization"),
       id: organization._id,
     });
   } catch (error: any) {
@@ -77,11 +78,11 @@ const createOrganization = async (req: AuthRequest, res: Response) => {
 
       return res.status(409).json({
         success: false,
-        message: `${value} already exists`,
+        message: customMessage.alreadyExists(value),
         error: {
           field,
           value,
-          reason: `${field} already exists`,
+          reason: customMessage.alreadyExists(field),
         },
       });
     }
@@ -90,7 +91,7 @@ const createOrganization = async (req: AuthRequest, res: Response) => {
 
     res.status(500).json({
       success: false,
-      message: "Internal server error.",
+      message: customMessage.serverError(),
     });
   }
 };
@@ -105,13 +106,13 @@ const organizationList = async (req: AuthRequest, res: Response) => {
     if (!organization) {
       return res.status(404).json({
         success: false,
-        message: "No organization found.",
+        message: customMessage.notFound("Organization"),
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: "List of organization.",
+      message: customMessage.found("List of organization"),
       length: organization.length,
       data: { organization },
     });
@@ -120,7 +121,7 @@ const organizationList = async (req: AuthRequest, res: Response) => {
 
     res.status(500).json({
       success: false,
-      message: "Internal server error.",
+      message: customMessage.serverError(),
     });
   }
 };
@@ -133,7 +134,7 @@ const organizationInfo = async (req: AuthRequest, res: Response) => {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(409).json({
         success: false,
-        message: "Invalid organization ID.",
+        message: customMessage.invalidId("Mongoose", id),
       });
     }
 
@@ -145,13 +146,13 @@ const organizationInfo = async (req: AuthRequest, res: Response) => {
     if (!organization) {
       return res.status(404).json({
         success: false,
-        message: `Organization with ID ${id} does not exist. Please check the ID and try again.`,
+        message: customMessage.notFound("Organization", id),
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: "Individual organization info.",
+      message: customMessage.found("Individual organization info"),
       data: { organization },
     });
   } catch (error) {
@@ -159,7 +160,7 @@ const organizationInfo = async (req: AuthRequest, res: Response) => {
 
     res.status(500).json({
       success: false,
-      message: "Internal server error.",
+      message: customMessage.serverError(),
     });
   }
 };
@@ -172,7 +173,7 @@ const updateOrganization = async (req: AuthRequest, res: Response) => {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid brand ID.",
+        message: customMessage.invalidId("Mongoose", id),
       });
     }
 
@@ -207,7 +208,7 @@ const updateOrganization = async (req: AuthRequest, res: Response) => {
     if (!organization) {
       return res.status(404).json({
         success: false,
-        message: `Organization with ID ${id} does not exist. Please check the ID and try again.`,
+        message: customMessage.notFound("Organization", id),
       });
     }
 
@@ -264,7 +265,7 @@ const updateOrganization = async (req: AuthRequest, res: Response) => {
 
     return res.status(200).json({
       success: true,
-      message: "Organization updated successfully.",
+      message: customMessage.updated("Organization", id),
       id: updateResult!._id,
     });
   } catch (error: any) {
@@ -275,11 +276,11 @@ const updateOrganization = async (req: AuthRequest, res: Response) => {
 
       return res.status(409).json({
         success: false,
-        message: `${value} already exists`,
+        message: customMessage.alreadyExists(value),
         error: {
           field,
           value,
-          reason: `${field} already exists`,
+          reason: customMessage.alreadyExists(field),
         },
       });
     }
@@ -288,7 +289,7 @@ const updateOrganization = async (req: AuthRequest, res: Response) => {
 
     res.status(500).json({
       success: false,
-      message: "Internal server error.",
+      message: customMessage.serverError(),
     });
   }
 };
@@ -301,7 +302,7 @@ const deleteOrganization = async (req: AuthRequest, res: Response) => {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(409).json({
         success: false,
-        message: "Invalid organization ID.",
+        message: customMessage.invalidId("Mongoose", id),
       });
     }
 
@@ -310,13 +311,13 @@ const deleteOrganization = async (req: AuthRequest, res: Response) => {
     if (!organization) {
       return res.status(404).json({
         success: false,
-        message: `Organization with ID ${id} does not exist. Please check the ID and try again.`,
+        message: customMessage.notFound("Organization", id),
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: "Organization deleted successfully!",
+      message: customMessage.deleted("Organization", id),
       id,
     });
   } catch (error) {
@@ -324,7 +325,7 @@ const deleteOrganization = async (req: AuthRequest, res: Response) => {
 
     res.status(500).json({
       success: false,
-      message: "Internal server error.",
+      message: customMessage.serverError(),
     });
   }
 };
