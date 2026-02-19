@@ -7,6 +7,7 @@ import {
 } from "../validators/category.validator";
 import Category from "../models/Category.model";
 import mongoose from "mongoose";
+import { customMessage } from "../constants/customMessage";
 
 // create category
 const createCategory = async (req: AuthRequest, res: Response) => {
@@ -33,7 +34,7 @@ const createCategory = async (req: AuthRequest, res: Response) => {
     if (existingCategory) {
       return res.status(409).json({
         success: false,
-        message: "Category already exist!",
+        message: customMessage.alreadyExists("Category"),
       });
     }
 
@@ -45,7 +46,7 @@ const createCategory = async (req: AuthRequest, res: Response) => {
 
     return res.status(201).json({
       success: true,
-      message: "Category created successfully!",
+      message: customMessage.created("Category"),
       id: category._id,
     });
   } catch (error: any) {
@@ -56,11 +57,11 @@ const createCategory = async (req: AuthRequest, res: Response) => {
 
       return res.status(409).json({
         success: false,
-        message: `${value} already exists`,
+        message: customMessage.alreadyExists(value),
         error: {
           field,
           value,
-          reason: `${field} already exists`,
+          reason: customMessage.alreadyExists(field),
         },
       });
     }
@@ -68,7 +69,7 @@ const createCategory = async (req: AuthRequest, res: Response) => {
 
     res.status(500).json({
       success: false,
-      message: "Internal server error.",
+      message: customMessage.serverError(),
     });
   }
 };
@@ -83,12 +84,13 @@ const categoryList = async (req: AuthRequest, res: Response) => {
     if (!category) {
       return res.status(404).json({
         success: false,
-        message: "Category not found!",
+        message: customMessage.notFound("Category"),
       });
     }
 
     return res.status(200).json({
       success: true,
+      message: customMessage.found("List of category"),
       length: category.length,
       data: { category },
     });
@@ -97,7 +99,7 @@ const categoryList = async (req: AuthRequest, res: Response) => {
 
     res.status(500).json({
       success: false,
-      message: "Internal server error.",
+      message: customMessage.serverError(),
     });
   }
 };
@@ -110,7 +112,7 @@ const categoryInfo = async (req: AuthRequest, res: Response) => {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid category ID!",
+        message: customMessage.invalidId("Mongoose", id),
       });
     }
 
@@ -122,13 +124,13 @@ const categoryInfo = async (req: AuthRequest, res: Response) => {
     if (!category) {
       return res.status(404).json({
         success: false,
-        message: "Category not found!",
+        message: customMessage.notFound("Category", id),
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: "Individual category info!",
+      message: customMessage.found("Individual category info"),
       data: { category },
     });
   } catch (error: any) {
@@ -136,7 +138,7 @@ const categoryInfo = async (req: AuthRequest, res: Response) => {
 
     res.status(500).json({
       success: false,
-      message: "Internal server error.",
+      message: customMessage.serverError(),
     });
   }
 };
@@ -149,7 +151,7 @@ const updateCategory = async (req: AuthRequest, res: Response) => {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(409).json({
         success: false,
-        message: "Invalid category ID!",
+        message: customMessage.invalidId("Mongoose", id),
       });
     }
 
@@ -175,7 +177,7 @@ const updateCategory = async (req: AuthRequest, res: Response) => {
     if (!category) {
       return res.status(404).json({
         success: false,
-        message: "Category not found!",
+        message: customMessage.notFound("Category", id),
       });
     }
 
@@ -186,7 +188,7 @@ const updateCategory = async (req: AuthRequest, res: Response) => {
       if (existingName) {
         return res.status(409).json({
           success: false,
-          message: "Category name alreday exists.",
+          message: customMessage.alreadyExists("Category name"),
         });
       }
     }
@@ -203,7 +205,7 @@ const updateCategory = async (req: AuthRequest, res: Response) => {
 
     return res.status(200).json({
       success: true,
-      message: "Category updated successfully!",
+      message: customMessage.updated("Category", id),
       id: updateResult!._id,
     });
   } catch (error: any) {
@@ -214,11 +216,11 @@ const updateCategory = async (req: AuthRequest, res: Response) => {
 
       return res.status(409).json({
         success: false,
-        message: `${value} already exists`,
+        message: customMessage.alreadyExists(value),
         error: {
           field,
           value,
-          reason: `${field} already exists`,
+          reason: customMessage.alreadyExists(field),
         },
       });
     }
@@ -226,7 +228,7 @@ const updateCategory = async (req: AuthRequest, res: Response) => {
 
     res.status(500).json({
       success: false,
-      message: "Internal server error.",
+      message: customMessage.serverError(),
     });
   }
 };
@@ -239,7 +241,7 @@ const deleteCategory = async (req: AuthRequest, res: Response) => {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(409).json({
         success: false,
-        message: "Invalid category ID!",
+        message: customMessage.invalidId("Mongoose", id),
       });
     }
 
@@ -248,13 +250,13 @@ const deleteCategory = async (req: AuthRequest, res: Response) => {
     if (!category) {
       return res.status(404).json({
         success: false,
-        message: "Category not found!",
+        message: customMessage.notFound("Category", id),
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: "Category deleted successfully!",
+      message: customMessage.deleted("Category", id),
       id,
     });
   } catch (error) {
@@ -262,7 +264,7 @@ const deleteCategory = async (req: AuthRequest, res: Response) => {
 
     res.status(500).json({
       success: false,
-      message: "Internal server error.",
+      message: customMessage.serverError(),
     });
   }
 };

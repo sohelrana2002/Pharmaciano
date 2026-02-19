@@ -63,7 +63,7 @@ const createBrand = async (req: AuthRequest, res: Response) => {
         error: {
           field,
           value,
-          reason: `${field} already exists`,
+          reason: customMessage.alreadyExists(field),
         },
       });
     }
@@ -86,7 +86,7 @@ const brandList = async (req: AuthRequest, res: Response) => {
     if (!brands) {
       return res.status(404).json({
         success: false,
-        message: "Brands not found!",
+        message: customMessage.notFound("Brands"),
       });
     }
 
@@ -101,7 +101,7 @@ const brandList = async (req: AuthRequest, res: Response) => {
 
     res.status(500).json({
       success: false,
-      message: "Internal server error.",
+      message: customMessage.serverError(),
     });
   }
 };
@@ -114,7 +114,7 @@ const brandInfo = async (req: AuthRequest, res: Response) => {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid brand ID.",
+        message: customMessage.invalidId("Mongoose", id),
       });
     }
 
@@ -126,13 +126,13 @@ const brandInfo = async (req: AuthRequest, res: Response) => {
     if (!brand) {
       return res.status(404).json({
         success: false,
-        message: "Brand not found.",
+        message: customMessage.notFound("Brand", id),
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: "Brand individul info",
+      message: customMessage.found("Individul Brand info"),
       data: { brand },
     });
   } catch (error) {
@@ -140,7 +140,7 @@ const brandInfo = async (req: AuthRequest, res: Response) => {
 
     res.status(500).json({
       success: false,
-      message: "Internal server error.",
+      message: customMessage.serverError(),
     });
   }
 };
@@ -153,7 +153,7 @@ const updateBrand = async (req: AuthRequest, res: Response) => {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid brand ID.",
+        message: customMessage.invalidId("Mongoose", id),
       });
     }
     // Validate request body using Zod
@@ -179,7 +179,7 @@ const updateBrand = async (req: AuthRequest, res: Response) => {
     if (!brand) {
       return res.status(404).json({
         success: false,
-        message: "Brand not found.",
+        message: customMessage.notFound("Brand", id),
       });
     }
 
@@ -190,7 +190,7 @@ const updateBrand = async (req: AuthRequest, res: Response) => {
       if (existingBrand) {
         return res.status(409).json({
           success: false,
-          message: "Brand name already exist.",
+          message: customMessage.alreadyExists("Brand name"),
         });
       }
     }
@@ -208,7 +208,7 @@ const updateBrand = async (req: AuthRequest, res: Response) => {
 
     return res.status(200).json({
       success: true,
-      message: "Brand update successfully.",
+      message: customMessage.updated("Brand", id),
       id: updateResult!._id,
     });
   } catch (error: any) {
@@ -219,11 +219,11 @@ const updateBrand = async (req: AuthRequest, res: Response) => {
 
       return res.status(409).json({
         success: false,
-        message: `${value} already exists`,
+        message: customMessage.alreadyExists(value),
         error: {
           field,
           value,
-          reason: `${field} already exists`,
+          reason: customMessage.alreadyExists(field),
         },
       });
     }
@@ -231,7 +231,7 @@ const updateBrand = async (req: AuthRequest, res: Response) => {
 
     res.status(500).json({
       success: false,
-      message: "Internal server error.",
+      message: customMessage.serverError(),
     });
   }
 };
@@ -244,7 +244,7 @@ const deleteBrand = async (req: AuthRequest, res: Response) => {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
         success: false,
-        message: "Invalid brand ID.",
+        message: customMessage.invalidId("Mongoose", id),
       });
     }
 
@@ -253,13 +253,13 @@ const deleteBrand = async (req: AuthRequest, res: Response) => {
     if (!deletedBrand) {
       return res.status(404).json({
         success: false,
-        message: "Brand not found.",
+        message: customMessage.notFound("Brand", id),
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: "Brand deleted successfully.",
+      message: customMessage.deleted("Brand", id),
       id,
     });
   } catch (error) {
@@ -267,7 +267,7 @@ const deleteBrand = async (req: AuthRequest, res: Response) => {
 
     res.status(500).json({
       success: false,
-      message: "Internal server error.",
+      message: customMessage.serverError(),
     });
   }
 };

@@ -9,6 +9,7 @@ import {
 import Organization from "../models/Organization.model";
 import Branch from "../models/Branch.model";
 import mongoose from "mongoose";
+import { customMessage } from "../constants/customMessage";
 
 // create branch
 const createBranch = async (req: AuthRequest, res: Response) => {
@@ -37,7 +38,7 @@ const createBranch = async (req: AuthRequest, res: Response) => {
     if (branchExist) {
       return res.status(409).json({
         success: false,
-        message: "Branch name already exist!",
+        message: customMessage.alreadyExists("Branch name"),
       });
     }
 
@@ -72,7 +73,7 @@ const createBranch = async (req: AuthRequest, res: Response) => {
 
     return res.status(201).json({
       success: true,
-      message: "Branch created successfully!",
+      message: customMessage.created("Branch"),
       id: branch._id,
     });
   } catch (error: any) {
@@ -83,11 +84,11 @@ const createBranch = async (req: AuthRequest, res: Response) => {
 
       return res.status(409).json({
         success: false,
-        message: `${value} already exists`,
+        message: customMessage.alreadyExists(value),
         error: {
           field,
           value,
-          reason: `${field} already exists`,
+          reason: customMessage.alreadyExists(field),
         },
       });
     }
@@ -96,7 +97,7 @@ const createBranch = async (req: AuthRequest, res: Response) => {
 
     res.status(500).json({
       success: false,
-      message: "Internal server error.",
+      message: customMessage.serverError(),
     });
   }
 };
@@ -111,13 +112,13 @@ const branchList = async (req: AuthRequest, res: Response) => {
     if (!branch) {
       res.status(404).json({
         success: false,
-        message: "Branch not found!",
+        message: customMessage.notFound("Branch"),
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: "Branch list",
+      message: customMessage.found("Branch"),
       length: branch.length,
       data: { branch },
     });
@@ -126,7 +127,7 @@ const branchList = async (req: AuthRequest, res: Response) => {
 
     res.status(500).json({
       success: false,
-      message: "Internal server error.",
+      message: customMessage.serverError(),
     });
   }
 };
@@ -139,7 +140,7 @@ const branchInfo = async (req: AuthRequest, res: Response) => {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(409).json({
         success: false,
-        message: "Invalid organization ID.",
+        message: customMessage.invalidId("Mongoose", id),
       });
     }
 
@@ -157,13 +158,13 @@ const branchInfo = async (req: AuthRequest, res: Response) => {
     if (!branch) {
       return res.status(404).json({
         success: false,
-        message: "Branch not found!",
+        message: customMessage.notFound("Branch", id),
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: "Individual branch info.",
+      message: customMessage.found("Individual branch info"),
       data: { branch },
     });
   } catch (error: any) {
@@ -171,7 +172,7 @@ const branchInfo = async (req: AuthRequest, res: Response) => {
 
     res.status(500).json({
       success: false,
-      message: "Internal server error.",
+      message: customMessage.serverError(),
     });
   }
 };
@@ -184,7 +185,7 @@ const updateBranch = async (req: AuthRequest, res: Response) => {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(409).json({
         success: false,
-        message: "Invalid organization ID.",
+        message: customMessage.invalidId("Mongoose", id),
       });
     }
 
@@ -211,7 +212,7 @@ const updateBranch = async (req: AuthRequest, res: Response) => {
     if (!branchExist) {
       return res.status(404).json({
         success: false,
-        message: "Branch not found!",
+        message: customMessage.notFound("Branch"),
       });
     }
 
@@ -222,7 +223,7 @@ const updateBranch = async (req: AuthRequest, res: Response) => {
       if (existing) {
         return res.status(409).json({
           success: false,
-          message: "Branch name already exist.",
+          message: customMessage.alreadyExists("Branch name"),
         });
       }
     }
@@ -262,7 +263,7 @@ const updateBranch = async (req: AuthRequest, res: Response) => {
 
     return res.status(200).json({
       success: true,
-      message: "Branch updated successfully.",
+      message: customMessage.updated("Branch", id),
       id: updateResult!._id,
     });
   } catch (error: any) {
@@ -273,11 +274,11 @@ const updateBranch = async (req: AuthRequest, res: Response) => {
 
       return res.status(409).json({
         success: false,
-        message: `${value} already exists`,
+        message: customMessage.alreadyExists(value),
         error: {
           field,
           value,
-          reason: `${field} already exists`,
+          reason: customMessage.alreadyExists(field),
         },
       });
     }
@@ -286,7 +287,7 @@ const updateBranch = async (req: AuthRequest, res: Response) => {
 
     res.status(500).json({
       success: false,
-      message: "Internal server error.",
+      message: customMessage.serverError(),
     });
   }
 };
@@ -299,7 +300,7 @@ const deleteBranch = async (req: AuthRequest, res: Response) => {
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(409).json({
         success: false,
-        message: "Invalid organization ID.",
+        message: customMessage.invalidId("Branch", id),
       });
     }
 
@@ -308,13 +309,13 @@ const deleteBranch = async (req: AuthRequest, res: Response) => {
     if (!branch) {
       return res.status(404).json({
         success: false,
-        message: "Branch not found!",
+        message: customMessage.notFound("Branch", id),
       });
     }
 
     return res.status(200).json({
       success: true,
-      message: "Branch deleted successfully!",
+      message: customMessage.deleted("Branch", id),
       id,
     });
   } catch (error: any) {
@@ -322,7 +323,7 @@ const deleteBranch = async (req: AuthRequest, res: Response) => {
 
     res.status(500).json({
       success: false,
-      message: "Internal server error.",
+      message: customMessage.serverError(),
     });
   }
 };
