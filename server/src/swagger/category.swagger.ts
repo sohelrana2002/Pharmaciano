@@ -40,7 +40,7 @@
 
 /**
  * @swagger
- * /api/categories:
+ * /api/v1/categories:
  *   post:
  *     summary: Create a new category
  *     description: Create a new category. Only authenticated users can create categories.
@@ -89,7 +89,7 @@
 
 /**
  * @swagger
- * /api/categories:
+ * /api/v1/categories:
  *   get:
  *     summary: Get all active categories
  *     description: Retrieve a list of all active categories.
@@ -123,7 +123,7 @@
 
 /**
  * @swagger
- * /api/categories/{id}:
+ * /api/v1/categories/{id}:
  *   get:
  *     summary: Get category details
  *     description: Retrieve individual category information by category ID.
@@ -164,7 +164,7 @@
 
 /**
  * @swagger
- * /api/categories/{id}:
+ * /api/v1/categories/{id}:
  *   put:
  *     summary: Update category
  *     description: Update category name or description by ID.
@@ -206,7 +206,7 @@
 
 /**
  * @swagger
- * /api/categories/{id}:
+ * /api/v1/categories/{id}:
  *   delete:
  *     summary: Delete category
  *     description: Permanently delete a category by ID.

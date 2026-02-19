@@ -1182,7 +1182,7 @@
         }
       }
     },
-    "/api/categories": {
+    "/api/v1/categories": {
       "post": {
         "summary": "Create a new category",
         "description": "Create a new category. Only authenticated users can create categories.",
@@ -1300,7 +1300,7 @@
         }
       }
     },
-    "/api/categories/{id}": {
+    "/api/v1/categories/{id}": {
       "get": {
         "summary": "Get category details",
         "description": "Retrieve individual category information by category ID.",
