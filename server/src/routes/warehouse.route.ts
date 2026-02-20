@@ -1,11 +1,15 @@
 import { Router } from "express";
 import { authenticate, authorize } from "../middlewares/auth.middleware";
 import { validate } from "../middlewares/validate.middleware";
-import { warehousSchemaValidator } from "../validators/warehouse.validator";
+import {
+  warehousSchemaValidator,
+  updateWarehouseValidator,
+} from "../validators/warehouse.validator";
 import {
   createWarehouse,
   warehouseList,
   warehouseInfo,
+  updateWarehouse,
   deleteWarehouse,
 } from "../controllers/warehouse.controller";
 
@@ -29,6 +33,15 @@ router.get(
   authenticate,
   authorize(["warehouse:manage"]),
   warehouseInfo,
+);
+
+// update warehouse
+router.put(
+  "/:id",
+  authenticate,
+  authorize(["warehouse:manage"]),
+  validate(updateWarehouseValidator),
+  updateWarehouse,
 );
 
 // delete warehouse
