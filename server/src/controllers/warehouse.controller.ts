@@ -2,7 +2,10 @@
 import { AuthRequest } from "../types";
 import { Response } from "express";
 import { customMessage } from "../constants/customMessage";
-import { warehousSchemaValidator } from "../validators/warehouse.validator";
+import {
+  updateWarehouseValidator,
+  warehousSchemaValidator,
+} from "../validators/warehouse.validator";
 import Warehouse from "../models/Warehouse.model";
 import Branch from "../models/Branch.model";
 import mongoose from "mongoose";
@@ -157,7 +160,7 @@ const warehouseInfo = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const role = await Role.findOne({ name: "staff" });
+    const role = await Role.findOne({ name: "STAFF" });
 
     const staffList = await User.find({
       roleId: role?._id,
@@ -168,10 +171,121 @@ const warehouseInfo = async (req: AuthRequest, res: Response) => {
       success: true,
       message: customMessage.found("Warehouse", id),
       data: { warehouse },
-      staffList: staffList === null ? "No staff found!" : staffList,
+      staffList: staffList.length > 0 ? staffList : "No staff found!",
     });
   } catch (error: any) {
     console.error("warehouse info error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: customMessage.serverError(),
+    });
+  }
+};
+
+// update warehouse
+const updateWarehouse = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: customMessage.invalidId("Mongoose", id),
+      });
+    }
+
+    const validationResult = updateWarehouseValidator.safeParse(req.body);
+
+    if (!validationResult.success) {
+      return res.status(400).json({
+        success: false,
+        message: "Validation failed",
+        errors: validationResult.error.issues.map(
+          (err: { path: any[]; message: any }) => ({
+            field: err.path.join("."),
+            message: err.message,
+          }),
+        ),
+      });
+    }
+
+    const { name, location, capacity, branchName, isActive } =
+      validationResult.data;
+
+    const warehouse = await Warehouse.findById(id);
+
+    if (!warehouse) {
+      return res.status(404).json({
+        success: false,
+        message: customMessage.notFound("Warehouse", id),
+      });
+    }
+
+    if (name && name !== warehouse.name) {
+      const existing = await Warehouse.findOne({ name });
+
+      if (existing) {
+        return res.status(404).json({
+          success: false,
+          message: customMessage.alreadyExists("Warehouse name"),
+        });
+      }
+    }
+
+    // build update data dynamically
+    const updateData: any = {};
+
+    if (name) updateData.name = name;
+    if (location) updateData.location = location;
+    if (capacity) updateData.capacity = capacity;
+    if (isActive) updateData.isActive = isActive;
+
+    //   fetch all active branch
+    const activeBranch = await Branch.find({ isActive: true }).select("name");
+
+    //   find branch name, exist or not
+    const branch = await Branch.findOne({ name: branchName });
+
+    if (!branch) {
+      return res.status(404).json({
+        success: false,
+        message: "Invalid branch name.",
+        hint: `Available branch name are ${activeBranch
+          .map((branch) => branch.name)
+          .join(", ")}`,
+      });
+    }
+
+    updateData.branchId = branch._id;
+
+    const updateResult = await Warehouse.findByIdAndUpdate(id, updateData, {
+      new: true,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: customMessage.updated("Warehouse", id),
+      id: updateResult!._id,
+    });
+  } catch (error: any) {
+    //MongoDB Duplicate Key Error
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyValue)[0];
+      const value = error.keyValue[field];
+
+      return res.status(409).json({
+        success: false,
+        message: customMessage.alreadyExists(value),
+        error: {
+          field,
+          value,
+          reason: customMessage.alreadyExists(field),
+        },
+      });
+    }
+
+    console.error("update warehouse error:", error);
 
     res.status(500).json({
       success: false,
@@ -216,4 +330,10 @@ const deleteWarehouse = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export { createWarehouse, warehouseList, warehouseInfo, deleteWarehouse };
+export {
+  createWarehouse,
+  warehouseList,
+  warehouseInfo,
+  updateWarehouse,
+  deleteWarehouse,
+};
