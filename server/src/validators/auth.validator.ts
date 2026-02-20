@@ -32,7 +32,7 @@ export const createUserValidator = z
       .max(50, "Warehouse name must be less than 50 characters")
       .toLowerCase()
       .optional(),
-    role: z.string().toLowerCase().optional(),
+    role: z.string().toUpperCase().optional(),
     isActive: z.boolean().optional().default(true),
     phone: z
       .string({ error: "Phone number is required!" })
