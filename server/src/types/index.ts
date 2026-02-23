@@ -147,3 +147,17 @@ export interface IWarehouse extends Document {
   createdAt?: Date;
   updatedAt?: Date;
 }
+
+// Supplier interface
+export interface ISupplier extends Document {
+  _id: Types.ObjectId;
+  name: string;
+  contactPerson: string;
+  phone: string;
+  email: string;
+  address: string;
+  isActive: boolean;
+  createdBy: Types.ObjectId;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
