@@ -22,6 +22,7 @@ export const supplierSchemaValidator = z.object({
     .min(1, "Supplier address must be at least 1 characters long")
     .toLowerCase()
     .trim(),
+  isActive: z.boolean().optional().default(true),
 });
 
 // Validator for updating a supplier (all fields optional)
