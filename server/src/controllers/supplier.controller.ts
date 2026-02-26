@@ -71,7 +71,44 @@ const createSupplier = async (req: AuthRequest, res: Response) => {
         },
       });
     }
+
+    console.error("create  error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: customMessage.serverError(),
+    });
   }
 };
 
-export { createSupplier };
+// list of suppliers
+const supplierList = async (req: AuthRequest, res: Response) => {
+  try {
+    const supplier = await Supplier.find({ isActive: true }).select(
+      "-createdBy",
+    );
+
+    if (!supplier) {
+      return res.status(404).json({
+        success: false,
+        message: customMessage.notFound("Supplier"),
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: customMessage.found("Suppliers"),
+      length: supplier.length,
+      data: { supplier },
+    });
+  } catch (error) {
+    console.error("list of supplier  error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: customMessage.serverError(),
+    });
+  }
+};
+
+export { createSupplier, supplierList };
