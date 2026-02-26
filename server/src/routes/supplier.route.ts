@@ -2,7 +2,10 @@ import { Router } from "express";
 import { authenticate, authorize } from "../middlewares/auth.middleware";
 import { validate } from "../middlewares/validate.middleware";
 import { supplierSchemaValidator } from "../validators/supplier.validator";
-import { createSupplier } from "../controllers/supplier.controller";
+import {
+  createSupplier,
+  supplierList,
+} from "../controllers/supplier.controller";
 
 const router = Router();
 
@@ -14,5 +17,8 @@ router.post(
   validate(supplierSchemaValidator),
   createSupplier,
 );
+
+// list of suppliers
+router.get("/", authenticate, authorize(["supplier:manage"]), supplierList);
 
 export default router;
