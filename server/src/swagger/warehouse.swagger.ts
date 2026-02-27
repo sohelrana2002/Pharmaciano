@@ -1,7 +1,8 @@
 /**
- * ============================================
- * WAREHOUSE SCHEMA
- * ============================================
+ * @swagger
+ * tags:
+ *   name: Warehouse
+ *   description: API endpoints for managing Warehouse
  */
 
 /**
