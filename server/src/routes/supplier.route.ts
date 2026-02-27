@@ -10,6 +10,7 @@ import {
   supplierList,
   supplierInfo,
   updateSupplier,
+  deleteSupplier,
 } from "../controllers/supplier.controller";
 
 const router = Router();
@@ -36,6 +37,14 @@ router.put(
   authorize(["supplier:manage"]),
   validate(updateSupplierValidator),
   updateSupplier,
+);
+
+// delete supplier
+router.delete(
+  "/:id",
+  authenticate,
+  authorize(["supplier:manage"]),
+  deleteSupplier,
 );
 
 export default router;
