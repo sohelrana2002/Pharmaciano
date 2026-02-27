@@ -5,6 +5,7 @@ import { AuthRequest } from "../types";
 import { Response } from "express";
 import { supplierSchemaValidator } from "../validators/supplier.validator";
 import Supplier from "../models/Supplier.model";
+import mongoose from "mongoose";
 
 // create supplier
 const createSupplier = async (req: AuthRequest, res: Response) => {
@@ -72,7 +73,7 @@ const createSupplier = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    console.error("create  error:", error);
+    console.error("create supplier error:", error);
 
     res.status(500).json({
       success: false,
@@ -111,4 +112,43 @@ const supplierList = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export { createSupplier, supplierList };
+// individual supplier info
+const supplierInfo = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(409).json({
+        success: false,
+        message: customMessage.invalidId("Mongoose", id),
+      });
+    }
+
+    const supplier = await Supplier.findById(id).populate(
+      "createdBy",
+      "name email -_id",
+    );
+
+    if (!supplier) {
+      return res.status(404).json({
+        success: false,
+        message: customMessage.notFound("Supplier", id),
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: customMessage.found("Supplier"),
+      data: { supplier },
+    });
+  } catch (error) {
+    console.error("individual supplier info  error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: customMessage.serverError(),
+    });
+  }
+};
+
+export { createSupplier, supplierList, supplierInfo };
