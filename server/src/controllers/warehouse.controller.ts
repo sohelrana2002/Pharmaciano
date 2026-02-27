@@ -321,7 +321,7 @@ const deleteWarehouse = async (req: AuthRequest, res: Response) => {
       id,
     });
   } catch (error: any) {
-    console.error("delete warehouse info:", error);
+    console.error("delete warehouse error: ", error);
 
     res.status(500).json({
       success: false,
