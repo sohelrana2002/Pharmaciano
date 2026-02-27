@@ -3,7 +3,10 @@
 import { customMessage } from "../constants/customMessage";
 import { AuthRequest } from "../types";
 import { Response } from "express";
-import { supplierSchemaValidator } from "../validators/supplier.validator";
+import {
+  supplierSchemaValidator,
+  updateSupplierValidator,
+} from "../validators/supplier.validator";
 import Supplier from "../models/Supplier.model";
 import mongoose from "mongoose";
 
@@ -151,4 +154,100 @@ const supplierInfo = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export { createSupplier, supplierList, supplierInfo };
+// update supplier
+const updateSupplier = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(409).json({
+        success: false,
+        message: customMessage.invalidId("Mongoose", id),
+      });
+    }
+
+    //   Validate request body using zod
+    const validationResult = updateSupplierValidator.safeParse(req.body);
+
+    if (!validationResult.success) {
+      return res.status(400).json({
+        success: false,
+        message: "Validation failed",
+        errors: validationResult.error.issues.map(
+          (err: { path: any[]; message: any }) => ({
+            field: err.path.join("."),
+            message: err.message,
+          }),
+        ),
+      });
+    }
+
+    const { name, contactPerson, phone, email, address, isActive } =
+      validationResult.data;
+
+    const supplier = await Supplier.findById(id);
+
+    if (!supplier) {
+      return res.status(404).json({
+        success: false,
+        message: customMessage.notFound("Supplier", id),
+      });
+    }
+
+    if (name && name !== supplier.name) {
+      const existing = await Supplier.findOne({ name });
+
+      if (existing) {
+        return res.status(409).json({
+          success: false,
+          message: customMessage.alreadyExists("Supplier name"),
+        });
+      }
+    }
+
+    // build update data dynamically
+    const updateData: any = {};
+
+    if (name) updateData.name = name;
+    if (contactPerson) updateData.contactPerson = contactPerson;
+    if (phone) updateData.phone = phone;
+    if (email) updateData.email = email;
+    if (address) updateData.address = address;
+    if (isActive) updateData.isActive = isActive;
+
+    const updateResult = await Supplier.findByIdAndUpdate(id, updateData, {
+      new: true,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: customMessage.updated("Supplier", id),
+      id: updateResult!._id,
+    });
+  } catch (error: any) {
+    //   mongoDb duplicate key error
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyValue)[0];
+      const value = error.keyValue[field];
+
+      return res.status(409).json({
+        success: false,
+        message: customMessage.alreadyExists(value),
+        error: {
+          field,
+          value,
+          reason: customMessage.alreadyExists(field),
+        },
+      });
+    }
+
+    console.error("update supplier error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: customMessage.serverError(),
+    });
+  }
+};
+
+export { createSupplier, supplierList, supplierInfo, updateSupplier };
