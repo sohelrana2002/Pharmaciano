@@ -5,6 +5,7 @@ import { supplierSchemaValidator } from "../validators/supplier.validator";
 import {
   createSupplier,
   supplierList,
+  supplierInfo,
 } from "../controllers/supplier.controller";
 
 const router = Router();
@@ -20,5 +21,8 @@ router.post(
 
 // list of suppliers
 router.get("/", authenticate, authorize(["supplier:manage"]), supplierList);
+
+// individual suppliers info
+router.get("/:id", authenticate, authorize(["supplier:manage"]), supplierInfo);
 
 export default router;
