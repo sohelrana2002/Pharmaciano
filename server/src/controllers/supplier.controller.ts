@@ -250,4 +250,46 @@ const updateSupplier = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export { createSupplier, supplierList, supplierInfo, updateSupplier };
+// delete supplier
+const deleteSupplier = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(409).json({
+        success: false,
+        message: customMessage.invalidId("Mongoose", id),
+      });
+    }
+
+    const supplier = await Supplier.findByIdAndDelete(id);
+
+    if (!supplier) {
+      return res.status(404).json({
+        success: false,
+        message: customMessage.notFound("Supplier", id),
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: customMessage.deleted("Supplier", id),
+      id,
+    });
+  } catch (error: any) {
+    console.error("delete supplier error: ", error);
+
+    res.status(500).json({
+      success: false,
+      message: customMessage.serverError(),
+    });
+  }
+};
+
+export {
+  createSupplier,
+  supplierList,
+  supplierInfo,
+  updateSupplier,
+  deleteSupplier,
+};
