@@ -161,3 +161,25 @@ export interface ISupplier extends Document {
   createdAt?: Date;
   updatedAt?: Date;
 }
+
+export type InventoryBatchStatus = "active" | "expired";
+// InventoryBatch interface
+export interface IInventoryBatch extends Document {
+  _id: Types.ObjectId;
+  orgName: string;
+  organizationId: Types.ObjectId;
+  branchName: string;
+  branchId: Types.ObjectId;
+  medicineName: string;
+  medicineId: Types.ObjectId;
+  batchNo: string;
+  expiryDate: Date;
+  quantity: number;
+  purchasePrice: number;
+  warehouseName: string;
+  warehouseId: Types.ObjectId;
+  createdBy: Types.ObjectId;
+  status: InventoryBatchStatus;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
