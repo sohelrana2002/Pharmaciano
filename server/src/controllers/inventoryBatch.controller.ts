@@ -135,7 +135,7 @@ const createInventoryBatch = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    console.error("Create medicine error:", error);
+    console.error("Create inventory batch error:", error);
 
     res.status(500).json({
       success: false,
@@ -144,4 +144,34 @@ const createInventoryBatch = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export { createInventoryBatch };
+// list of inventoryBatch
+const inventoryBatchList = async (req: AuthRequest, res: Response) => {
+  try {
+    const inventoryBatch = await InventoryBatch.find()
+      .populate("medicineId", "name -_id")
+      .select("-organizationId -branchId -warehouseId -createdBy");
+
+    if (!inventoryBatch) {
+      return res.status(404).json({
+        success: false,
+        message: customMessage.notFound("Inventory batch"),
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: customMessage.found("Inventory batch"),
+      length: inventoryBatch.length,
+      data: { inventoryBatch },
+    });
+  } catch (error) {
+    console.error("List of inventory batch error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: customMessage.serverError(),
+    });
+  }
+};
+
+export { createInventoryBatch, inventoryBatchList };
