@@ -103,6 +103,15 @@ const createInventoryBatch = async (req: AuthRequest, res: Response) => {
       });
     }
 
+    const existingBatchNo = await InventoryBatch.findOne({ batchNo });
+
+    if (existingBatchNo) {
+      return res.status(409).json({
+        success: false,
+        message: "Medicine batch No already exist.",
+      });
+    }
+
     //   create inventoryBatch
     const inventoryBatch = await InventoryBatch.create({
       organizationId: organization._id,
@@ -290,7 +299,7 @@ const updateInventoryBatch = async (req: AuthRequest, res: Response) => {
       if (existingBatchNo) {
         return res.status(409).json({
           success: false,
-          message: "Batch no already exist.",
+          message: "Medicine batch No already exist.",
         });
       }
     }
