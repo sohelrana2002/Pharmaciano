@@ -385,7 +385,7 @@ const deleteMedicine = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const medicine = await Medicine.findByIdAndUpdate(id);
+    const medicine = await Medicine.findByIdAndDelete(id);
 
     if (!medicine) {
       return res.status(404).json({
