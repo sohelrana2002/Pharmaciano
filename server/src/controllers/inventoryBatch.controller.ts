@@ -8,6 +8,7 @@ import Branch from "../models/Branch.model";
 import Medicine from "../models/Medicine.model";
 import Warehouse from "../models/Warehouse.model";
 import InventoryBatch from "../models/InventoryBatch.model";
+import mongoose from "mongoose";
 
 // create inventoryBatch
 const createInventoryBatch = async (req: AuthRequest, res: Response) => {
@@ -174,4 +175,61 @@ const inventoryBatchList = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export { createInventoryBatch, inventoryBatchList };
+// individual inventoryBatch info
+const inventoryBatchInfo = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(409).json({
+        success: false,
+        message: customMessage.invalidId("Mongoose", id),
+      });
+    }
+
+    const inventoryBatch = await InventoryBatch.findById(id).populate([
+      {
+        path: "organizationId",
+        select: "name contact address -_id",
+      },
+      {
+        path: "branchId",
+        select: "name contact address -_id",
+      },
+      {
+        path: "medicineId",
+        select: "-brandId -categoryId -createdBy -_id",
+      },
+      {
+        path: "warehouseId",
+        select: "name location -_id",
+      },
+      {
+        path: "createdBy",
+        select: "name email -_id",
+      },
+    ]);
+
+    if (!inventoryBatch) {
+      return res.status(404).json({
+        success: false,
+        message: customMessage.notFound("Inventory batch", id),
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: customMessage.found("Inventory batch", id),
+      date: { inventoryBatch },
+    });
+  } catch (error) {
+    console.error("Individual inventory batch info error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: customMessage.serverError(),
+    });
+  }
+};
+
+export { createInventoryBatch, inventoryBatchList, inventoryBatchInfo };
