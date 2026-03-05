@@ -10,6 +10,7 @@ import {
   inventoryBatchList,
   inventoryBatchInfo,
   updateInventoryBatch,
+  deleteInventoryBatch,
 } from "../controllers/inventoryBatch.controller";
 
 const router = Router();
@@ -46,6 +47,14 @@ router.put(
   authorize(["inventory:manage"]),
   validate(updateInventoryBatchValidator),
   updateInventoryBatch,
+);
+
+// delete inventoryBatch
+router.delete(
+  "/:id",
+  authenticate,
+  authorize(["inventory:manage"]),
+  deleteInventoryBatch,
 );
 
 export default router;
