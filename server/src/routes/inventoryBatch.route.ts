@@ -2,7 +2,10 @@ import { Router } from "express";
 import { authenticate, authorize } from "../middlewares/auth.middleware";
 import { validate } from "../middlewares/validate.middleware";
 import { inventoryBatchSchemaValidator } from "../validators/inventoryBatch.validator";
-import { createInventoryBatch } from "../controllers/inventoryBatch.controller";
+import {
+  createInventoryBatch,
+  inventoryBatchList,
+} from "../controllers/inventoryBatch.controller";
 
 const router = Router();
 
@@ -13,6 +16,14 @@ router.post(
   authorize(["inventory:manage"]),
   validate(inventoryBatchSchemaValidator),
   createInventoryBatch,
+);
+
+// list of inventoryBatch
+router.get(
+  "/",
+  authenticate,
+  authorize(["inventory:manage"]),
+  inventoryBatchList,
 );
 
 export default router;
