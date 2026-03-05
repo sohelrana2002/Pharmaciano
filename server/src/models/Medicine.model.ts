@@ -6,33 +6,39 @@ const medicineSchema = new Schema<IMedicine>(
     name: {
       type: String,
       required: true,
+      lowercase: true,
       trim: true,
     },
 
     genericName: {
       type: String,
       required: true,
+      lowercase: true,
       trim: true,
     },
 
     categoryName: {
       type: String,
+      lowercase: true,
       trim: true,
     },
 
     brandName: {
       type: String,
+      lowercase: true,
       trim: true,
     },
 
     dosageForm: {
       type: String,
       required: true,
+      lowercase: true,
       trim: true,
     },
     strength: {
       type: String,
       required: true,
+      lowercase: true,
       trim: true,
     },
 

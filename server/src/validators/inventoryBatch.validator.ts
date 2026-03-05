@@ -4,14 +4,17 @@ export const inventoryBatchSchemaValidator = z.object({
   orgName: z
     .string({ error: "Organization name is required!" })
     .min(1, "Organization name at least 1 character!")
+    .toLowerCase()
     .trim(),
   branchName: z
     .string({ error: "Branch name is required!" })
     .min(1, "Branch name at least 1 character!")
+    .toLowerCase()
     .trim(),
   medicineName: z
     .string({ error: "Medicine name is required!" })
     .min(1, "Medicine name at least 1 character!")
+    .toLowerCase()
     .trim(),
   batchNo: z
     .string({ error: "Batch No is required!" })
@@ -23,6 +26,7 @@ export const inventoryBatchSchemaValidator = z.object({
   warehouseName: z
     .string({ error: "Warehouse name is required!" })
     .min(1, "Warehouse name at least 1 character!")
+    .toLowerCase()
     .trim(),
   status: z
     .enum(["active", "expired"], {

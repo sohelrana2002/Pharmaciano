@@ -5,6 +5,7 @@ const inventoryBatchSchema = new Schema<IInventoryBatch>(
   {
     orgName: {
       type: String,
+      lowercase: true,
       trim: true,
     },
     organizationId: {
@@ -14,6 +15,7 @@ const inventoryBatchSchema = new Schema<IInventoryBatch>(
     },
     branchName: {
       type: String,
+      lowercase: true,
       trim: true,
     },
     branchId: {
@@ -23,6 +25,7 @@ const inventoryBatchSchema = new Schema<IInventoryBatch>(
     },
     medicineName: {
       type: String,
+      lowercase: true,
       trim: true,
     },
     medicineId: {
@@ -48,6 +51,7 @@ const inventoryBatchSchema = new Schema<IInventoryBatch>(
     },
     warehouseName: {
       type: String,
+      lowercase: true,
       trim: true,
     },
     warehouseId: {
