@@ -270,7 +270,7 @@ const updateMedicine = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    // revent duplicate medicine name (industry practice)
+    // prevent duplicate medicine name (industry practice)
     if (name && name !== medicine.name) {
       const existingMedicine = await Medicine.findOne({ name });
 
