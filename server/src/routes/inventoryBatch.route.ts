@@ -5,6 +5,7 @@ import { inventoryBatchSchemaValidator } from "../validators/inventoryBatch.vali
 import {
   createInventoryBatch,
   inventoryBatchList,
+  inventoryBatchInfo,
 } from "../controllers/inventoryBatch.controller";
 
 const router = Router();
@@ -24,6 +25,14 @@ router.get(
   authenticate,
   authorize(["inventory:manage"]),
   inventoryBatchList,
+);
+
+// individual inventoryBatch info
+router.get(
+  "/:id",
+  authenticate,
+  authorize(["inventory:manage"]),
+  inventoryBatchInfo,
 );
 
 export default router;
