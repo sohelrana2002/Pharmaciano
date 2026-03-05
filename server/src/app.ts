@@ -24,6 +24,7 @@ import categoryRouter from "./routes/category.route";
 import medicineRouter from "./routes/medicine.route";
 import warehouseRouter from "./routes/warehouse.route";
 import supplierRouter from "./routes/supplier.route";
+import inventoryBatchRouter from "./routes/inventoryBatch.route";
 
 const allowedOrigins = [
   "http://localhost:3000",
@@ -65,6 +66,7 @@ apiRouter.use("/categories", categoryRouter);
 apiRouter.use("/medicines", medicineRouter);
 apiRouter.use("/warehouses", warehouseRouter);
 apiRouter.use("/suppliers", supplierRouter);
+apiRouter.use("/inventory-batch", inventoryBatchRouter);
 
 // Test route
 app.get("/", (req: Request, res: Response) => {
