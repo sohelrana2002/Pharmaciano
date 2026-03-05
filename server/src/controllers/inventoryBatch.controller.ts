@@ -411,9 +411,46 @@ const updateInventoryBatch = async (req: AuthRequest, res: Response) => {
   }
 };
 
+// delete inventoryBatch
+const deleteInventoryBatch = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(409).json({
+        success: false,
+        message: customMessage.invalidId("Mongoose", id),
+      });
+    }
+
+    const inventoryBatch = await InventoryBatch.findByIdAndDelete(id);
+
+    if (!inventoryBatch) {
+      return res.status(404).json({
+        success: false,
+        message: customMessage.notFound("Inventory batch", id),
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: customMessage.deleted("Inventory batch", id),
+      id,
+    });
+  } catch (error) {
+    console.error("Delete inventory batch error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: customMessage.serverError(),
+    });
+  }
+};
+
 export {
   createInventoryBatch,
   inventoryBatchList,
   inventoryBatchInfo,
   updateInventoryBatch,
+  deleteInventoryBatch,
 };
