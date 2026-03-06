@@ -66,7 +66,7 @@ apiRouter.use("/categories", categoryRouter);
 apiRouter.use("/medicines", medicineRouter);
 apiRouter.use("/warehouses", warehouseRouter);
 apiRouter.use("/suppliers", supplierRouter);
-apiRouter.use("/inventory-batch", inventoryBatchRouter);
+apiRouter.use("/inventory-batches", inventoryBatchRouter);
 
 // Test route
 app.get("/", (req: Request, res: Response) => {
