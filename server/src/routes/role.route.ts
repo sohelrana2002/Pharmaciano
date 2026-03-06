@@ -2,6 +2,7 @@ import { Router } from "express";
 import {
   createRole,
   roleList,
+  roleInfo,
   getFeatures,
   updateRole,
   deleteRole,
@@ -26,6 +27,9 @@ router.post(
 
 // list of role
 router.get("/", authenticate, authorize(["role:manage"]), roleList);
+
+// individual role info
+router.get("/:id", authenticate, authorize(["role:manage"]), roleInfo);
 
 // update role
 router.put(
