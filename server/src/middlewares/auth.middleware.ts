@@ -57,7 +57,6 @@ export const authenticate = async (
         message: "Role is invalid or inactive.",
       });
     }
-
     // console.log("role info: ", role);
 
     req.user = {
@@ -65,6 +64,10 @@ export const authenticate = async (
       email: user.email,
       role: role.name,
       permissions: role.permissions,
+      organizationId: user.organizationId?.toString() || "",
+      branchId: user.branchId?.toString() || "",
+      warehouseId: user.warehouseId?.toString() || "",
+      phone: user.phone || null,
     };
 
     next();
