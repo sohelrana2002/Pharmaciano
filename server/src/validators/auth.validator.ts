@@ -40,7 +40,7 @@ export const createUserValidator = z
       .optional(),
   })
   .superRefine((data, ctx) => {
-    if (data.role !== "Super Admin") {
+    if (data.role !== "SUPER_ADMIN") {
       if (!data.orgName) {
         ctx.addIssue({
           path: ["orgName"],
