@@ -1,22 +1,32 @@
 # 💊 Pharmaciano API Server
 
-Backend service for **Pharmaciano**, a pharmacy management system designed to manage medicines, inventory batches, organizations, branches, and suppliers efficiently.
+Backend service for **Pharmaciano**, a pharmacy management ERP system designed to manage medicines, inventory batches, organizations, branches, and suppliers efficiently.
 
-This API provides secure and scalable endpoints for managing pharmacy operations such as inventory tracking, medicine management, supplier management, and organizational control.
+The API provides secure and scalable endpoints for core pharmacy operations including inventory management, sales, purchases, and supplier control.
+
+Pharmaciano also includes **AI-powered features** such as medicine demand forecasting, expiry date tracking, low-stock alerts, and automatic notifications for expiring medicines and high-demand products that need restocking. These smart insights help pharmacies maintain optimal inventory and reduce losses.
+
 
 ---
 
 ## 🚀 Features
 
-* 🏥 Organization management
-* 🏬 Branch management
-* 💊 Medicine management
-* 📦 Inventory batch tracking
-* 🧾 Supplier management
-* 🔐 Authentication & authorization
-* 📑 Request validation
-* 📊 Structured API responses
-* 📚 Interactive API documentation (Swagger)
+- 🏥 **Organization Management** – Multi-organization support for pharmacy businesses  
+- 🏬 **Branch Management** – Manage multiple pharmacy outlets under one organization  
+- 👤 **User & Role Management (RBAC)** – Secure role-based access control for admins, pharmacists, salesmen, and accountants  
+- 💊 **Medicine Management** – Central medicine database with category, brand, dosage, and generic tracking  
+- 📦 **Inventory & Batch Tracking** – Batch-based inventory system with expiry date monitoring  
+- 🏭 **Warehouse Management** – Manage medicine storage across warehouses  
+- 🧾 **Sales & POS System** – Invoice generation, sales tracking, and sales return management  
+- 🚚 **Purchase & Supplier Management** – Manage suppliers and medicine purchase orders  
+- 💰 **Accounting Integration** – Chart of accounts and journal entries for financial tracking  
+- 🤖 **AI-Powered Insights** – Medicine demand forecasting, trend analysis, and stock recommendations  
+- 🔔 **Smart Notifications** – Low-stock alerts, expiry notifications, and demand-based restock alerts  
+- 📊 **Reports & Analytics** – Sales, inventory, and financial reports  
+- 📜 **Audit Logs** – Track user activities for compliance and monitoring  
+- ⚙ **System Settings & Backup Logs** – Manage system configuration and backup history  
+- 📑 **API Validation & Structured Responses** – Clean request validation and standardized responses  
+- 📚 **Interactive API Documentation** – Swagger-based API documentation for easy testing
 
 ---
 
@@ -47,100 +57,12 @@ This API provides secure and scalable endpoints for managing pharmacy operations
 
 ---
 
-## 📂 Project Structure
 
-```
-src
-│
-├── config
-│   └── database.ts
-│
-├── controllers
-│   ├── organization.controller.ts
-│   ├── branch.controller.ts
-│   ├── medicine.controller.ts
-│   ├── inventoryBatch.controller.ts
-│   └── supplier.controller.ts
-│
-├── models
-│   ├── Organization.model.ts
-│   ├── Branch.model.ts
-│   ├── Medicine.model.ts
-│   ├── InventoryBatch.model.ts
-│   └── Supplier.model.ts
-│
-├── routes
-│   ├── organization.routes.ts
-│   ├── branch.routes.ts
-│   ├── medicine.routes.ts
-│   ├── inventoryBatch.routes.ts
-│   └── supplier.routes.ts
-│
-├── validators
-│
-├── middlewares
-│
-├── constants
-│
-├── types
-│
-└── server.ts
-```
+## 📚 API Documentation
 
----
+Interactive API documentation is available here:
 
-# 📦 Installation
-
-### 1️⃣ Clone the repository
-
-```bash
-git clone https://github.com/yourusername/pharmaciano-server.git
-cd pharmaciano-server
-```
-
-### 2️⃣ Install dependencies
-
-```bash
-npm install
-```
-
-### 3️⃣ Configure environment variables
-
-Create a `.env` file in the root directory.
-
-```
-PORT=5000
-MONGO_URI=your_mongodb_connection
-JWT_SECRET=your_secret_key
-```
-
-### 4️⃣ Run the server
-
-Development mode
-
-```bash
-npm run dev
-```
-
-Production build
-
-```bash
-npm run build
-npm start
-```
-
----
-
-# 📚 API Documentation
-
-Interactive Swagger documentation is available here:
-
-👉 **API Docs:**
-`http://localhost:5000/api-docs`
-
-Or deployed version:
-
-👉 `https://pharmaciano-backend.vercel.app/api-docs`
+🔗 **[Pharmaciano API Docs](https://pharmaciano-backend.vercel.app/api-docs)**
 
 The documentation allows you to:
 
