@@ -138,6 +138,32 @@
 /**
  * @swagger
  * /api/v1/roles/{id}:
+ *   get:
+ *     summary: Get role information by ID
+ *     tags: [Roles]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Role ID
+ *     responses:
+ *       200:
+ *         description: Role details retrieved successfully
+ *       404:
+ *         description: Role not found
+ *       409:
+ *         description: Invalid ID format
+ *       500:
+ *         description: Server error
+ */
+
+/**
+ * @swagger
+ * /api/v1/roles/{id}:
  *   put:
  *     summary: Update an existing role
  *     tags: [Roles]

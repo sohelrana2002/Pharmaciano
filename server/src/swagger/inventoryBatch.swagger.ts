@@ -168,7 +168,7 @@
  *         required: true
  *         schema:
  *           type: string
- *         description: Inventory batch MongoDB ID
+ *         description: Inventory batch ID
  *     responses:
  *       200:
  *         description: Inventory batch retrieved successfully

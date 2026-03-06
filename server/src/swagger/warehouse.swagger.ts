@@ -141,7 +141,7 @@
  *         required: true
  *         schema:
  *           type: string
- *         description: Warehouse MongoDB ID
+ *         description: Warehouse ID
  *     responses:
  *       200:
  *         description: Warehouse details retrieved successfully
