@@ -49,6 +49,10 @@ export interface AuthRequest extends Request {
     email: string;
     role: string;
     permissions: string[];
+    organizationId: string;
+    branchId: string;
+    warehouseId: string;
+    phone: string | null;
   };
 }
 
