@@ -28,7 +28,7 @@ const createRole = async (req: AuthRequest, res: Response) => {
         ),
       });
     }
-    const { name, description, permissions } = validationResult.data;
+    const { name, description, permissions, isActive } = validationResult.data;
 
     // Check if role already exists
     const existingRole = await Role.findOne({ name });
@@ -67,6 +67,7 @@ const createRole = async (req: AuthRequest, res: Response) => {
       name,
       description,
       permissions,
+      isActive,
       createdBy: req.user!.userId,
     });
 
@@ -112,7 +113,7 @@ const createRole = async (req: AuthRequest, res: Response) => {
 const roleList = async (req: AuthRequest, res: Response) => {
   try {
     const roles = await Role.find()
-      .populate("createdBy", "name email")
+      .select("name description isActive")
       .sort({ createdAt: -1 });
 
     if (!roles) {
@@ -125,10 +126,50 @@ const roleList = async (req: AuthRequest, res: Response) => {
     res.json({
       success: true,
       message: customMessage.found("List of role"),
+      length: roles.length,
       data: { roles },
     });
   } catch (error) {
     console.error("List of role error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: customMessage.serverError(),
+    });
+  }
+};
+
+// individual role info
+const roleInfo = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: customMessage.invalidId("Mongoose", id),
+      });
+    }
+
+    const role = await Role.findById(id).populate(
+      "createdBy",
+      "name email -_id",
+    );
+
+    if (!role) {
+      return res.status(404).json({
+        success: false,
+        message: customMessage.notFound("Role", id),
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: customMessage.found("Role", id),
+      data: { role },
+    });
+  } catch (error) {
+    console.error("Individual role info error:", error);
 
     res.status(500).json({
       success: false,
@@ -165,7 +206,7 @@ const updateRole = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const { name, description, permissions } = validationResult.data;
+    const { name, description, permissions, isActive } = validationResult.data;
 
     // check role exist
     const role = await Role.findOne({ _id: roleId });
@@ -227,6 +268,7 @@ const updateRole = async (req: AuthRequest, res: Response) => {
     if (name) updateData.name = name;
     if (description) updateData.description = description;
     if (permissions) updateData.permissions = permissions;
+    if (isActive) updateData.isActive = isActive;
 
     // update role
     const updateResult = await Role.findByIdAndUpdate(roleId, updateData, {
@@ -329,4 +371,4 @@ const getFeatures = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export { createRole, roleList, getFeatures, updateRole, deleteRole };
+export { createRole, roleList, roleInfo, updateRole, deleteRole, getFeatures };
