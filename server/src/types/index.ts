@@ -187,3 +187,29 @@ export interface IInventoryBatch extends Document {
   createdAt?: Date;
   updatedAt?: Date;
 }
+
+// salesItem interface
+export interface SaleItem {
+  medicineId: Types.ObjectId;
+  batchNo: string;
+  quantity: number;
+  sellingPrice: number;
+}
+
+export interface ISale extends Document {
+  _id: Types.ObjectId;
+  organizationId: Types.ObjectId;
+  branchId: Types.ObjectId;
+  cashierId: Types.ObjectId;
+  invoiceNo: string;
+  customerName: string;
+  customerPhone: string;
+  items: SaleItem[];
+  subtotal: number;
+  discount: number;
+  tax: number;
+  totalAmount: number;
+  paymentMethod: "cash" | "card" | "mobile";
+  createdAt?: Date;
+  updatedAt?: Date;
+}
