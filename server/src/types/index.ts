@@ -189,13 +189,14 @@ export interface IInventoryBatch extends Document {
 }
 
 // salesItem interface
-export interface SaleItem {
+export interface ISaleItem extends Document {
   medicineId: Types.ObjectId;
   batchNo: string;
   quantity: number;
   sellingPrice: number;
 }
 
+// sale interface
 export interface ISale extends Document {
   _id: Types.ObjectId;
   organizationId: Types.ObjectId;
@@ -204,7 +205,7 @@ export interface ISale extends Document {
   invoiceNo: string;
   customerName: string;
   customerPhone: string;
-  items: SaleItem[];
+  items: ISaleItem[];
   subtotal: number;
   discount: number;
   tax: number;
