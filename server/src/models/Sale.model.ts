@@ -7,6 +7,10 @@ const saleItemSchema = new Schema<ISaleItem>({
     ref: "Medicine",
     required: true,
   },
+  medicineName: {
+    type: String,
+    required: true,
+  },
   batchNo: {
     type: String,
     required: true,
