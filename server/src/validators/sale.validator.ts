@@ -1,6 +1,9 @@
 import { z } from "zod";
 
 export const salesItemSchema = z.object({
+  medineName: z
+    .string({ error: "medicine name is required!" })
+    .min(1, "Medicine name at least 1 character!"),
   batchNo: z
     .string({ error: "Batch no is required!" })
     .min(1, "Batch no at least 1 character!")
@@ -26,3 +29,6 @@ export const saleSchemaValidator = z.object({
   tax: z.number().nonnegative().optional().default(0),
   paymentMethod: z.enum(["cash", "card", "mobile"]),
 });
+
+//  Validator for updating a supplier (all fields optional)
+export const updateSaleValidator = saleSchemaValidator.partial();
