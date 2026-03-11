@@ -70,6 +70,11 @@ export const initializeSuperAdmin = async () => {
         description: "Manage Supply",
         category: "Supply",
       },
+      {
+        name: "cashier:manage",
+        description: "Manage cashier",
+        category: "Cashier",
+      },
     ];
 
     for (const featureData of defaultFeatures) {
