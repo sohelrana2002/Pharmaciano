@@ -1,7 +1,7 @@
 import { z } from "zod";
 
 export const salesItemSchema = z.object({
-  medineName: z
+  medicineName: z
     .string({ error: "medicine name is required!" })
     .min(1, "Medicine name at least 1 character!"),
   batchNo: z
