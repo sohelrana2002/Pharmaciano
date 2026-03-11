@@ -191,6 +191,7 @@ export interface IInventoryBatch extends Document {
 // salesItem interface
 export interface ISaleItem extends Document {
   medicineId: Types.ObjectId;
+  medicineName: string;
   batchNo: string;
   quantity: number;
   sellingPrice: number;
