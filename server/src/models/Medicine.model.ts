@@ -101,6 +101,7 @@ const medicineSchema = new Schema<IMedicine>(
 
 medicineSchema.index(
   {
+    name: 1,
     genericName: 1,
     strength: 1,
     dosageForm: 1,
