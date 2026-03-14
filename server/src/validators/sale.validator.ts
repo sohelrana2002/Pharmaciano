@@ -9,7 +9,14 @@ export const salesItemSchema = z.object({
     .min(1, "Batch no at least 1 character!")
     .trim(),
   quantity: z.number({ error: "Quantity is required!" }),
-  sellingPrice: z.number({ error: "Selling price is required!" }),
+  sellingPrice: z
+    .number({ error: "Selling price is required!" })
+    .optional()
+    .default(0),
+  purchasePrice: z
+    .number({ error: "Selling price is required!" })
+    .optional()
+    .default(0),
 });
 
 export const saleSchemaValidator = z.object({
