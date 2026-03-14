@@ -99,17 +99,16 @@ const medicineSchema = new Schema<IMedicine>(
   },
 );
 
-medicineSchema.index(
-  {
-    name: 1,
-    genericName: 1,
-    strength: 1,
-    dosageForm: 1,
-    brand: 1,
-  },
-  {
-    unique: true,
-  },
-);
+// medicineSchema.index(
+//   {
+//     name: 1,
+//     strength: 1,
+//     dosageForm: 1,
+//     brandId: 1,
+//   },
+//   {
+//     unique: true,
+//   },
+// );
 
 export default model<IMedicine>("Medicine", medicineSchema);
