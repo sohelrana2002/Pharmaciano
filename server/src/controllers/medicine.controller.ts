@@ -56,7 +56,7 @@ const createMedicine = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({
         success: false,
         message: "Invalid category name.",
-        hints: `Active category names are ${activeCategory.map((c) => c.name).join(", ")}`,
+        hints: `Active category names are: ${activeCategory.map((c) => c.name).join(", ")}`,
       });
     }
 
@@ -71,11 +71,12 @@ const createMedicine = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({
         success: false,
         message: "Invalid brand name.",
-        hints: `Active brand names are ${activeBrand.map((b) => b.name).join(", ")}`,
+        hints: `Active brand names are: ${activeBrand.map((b) => b.name).join(", ")}`,
       });
     }
 
     const existingMedicine = await Medicine.findOne({
+      name,
       genericName,
       strength,
       dosageForm,
@@ -86,7 +87,7 @@ const createMedicine = async (req: AuthRequest, res: Response) => {
       return res.status(409).json({
         succes: false,
         message:
-          "Medicine already exists with the same generic name, strength, dosage form, and brand",
+          "Medicine already exists with the same name, generic name, strength, dosage form, and brand",
       });
     }
 
