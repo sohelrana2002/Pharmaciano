@@ -1,5 +1,4 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { Response } from "express";
 import { AuthRequest } from "../types";
 import { saleSchemaValidator } from "../validators/sale.validator";
@@ -8,10 +7,23 @@ import Medicine from "../models/Medicine.model";
 import Sale from "../models/Sale.model";
 import { customMessage } from "../constants/customMessage";
 
+// Parse medicine input like "napa 500mg" or "napa 500 mg"
+function parseMedicineInput(input: string) {
+  input = input.trim();
+  const match = input.match(/(\d+(?:\.\d+)?)\s*([a-zA-Z]+)/);
+  if (match) {
+    const strength = match[1];
+    const unit = match[2];
+    const name = input.slice(0, match.index).trim();
+    return { name, strength, unit };
+  }
+  return { name: input, strength: "", unit: "" };
+}
+
 const createSale = async (req: AuthRequest, res: Response) => {
   try {
+    // Validate input
     const validationResult = saleSchemaValidator.safeParse(req.body);
-
     if (!validationResult.success) {
       return res.status(400).json({
         success: false,
@@ -23,99 +35,116 @@ const createSale = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const { customerName, customerPhone, items, discount, tax, paymentMethod } =
-      validationResult.data;
-
+    const {
+      customerName,
+      customerPhone,
+      items,
+      discount = 0,
+      tax = 0,
+      paymentMethod,
+    } = validationResult.data;
     const saleItems: any[] = [];
 
-    // Get active medicine list (optimization)
-    const activeMedicine = await Medicine.find({ isActive: true }).select(
-      "name",
-    );
-
+    // Process each sale item
     for (const item of items) {
-      const medicine = await Medicine.findOne({
-        name: item.medicineName,
-        isActive: true,
-      });
+      const { name, strength, unit } = parseMedicineInput(item.medicineName);
 
+      // Find medicine by name + strength + unit
+      const medicineQuery: any = {
+        isActive: true,
+        name: { $regex: `^${name}$`, $options: "i" },
+      };
+      if (strength) medicineQuery.strength = strength;
+      if (unit) medicineQuery.unit = unit;
+
+      const medicine = await Medicine.findOne(medicineQuery);
       if (!medicine) {
+        const activeMedicine = await Medicine.find({ isActive: true }).select(
+          "name strength unit",
+        );
         return res.status(404).json({
           success: false,
-          message: "Invalid medicine name.",
-          hints: `Active medicine names are ${activeMedicine
-            .map((m) => m.name)
+          message: `Medicine '${item.medicineName}' not found`,
+          hints: `Active medicines: ${activeMedicine
+            .map((m) => `${m.name} ${m.strength}${m.unit}`)
             .join(", ")}`,
         });
       }
 
+      // Find batch by batchNo and check quantity
       const batch = await InventoryBatch.findOne({
         medicineId: medicine._id,
-        batchNo: item.batchNo,
-        branchId: req.user!.branchId,
-        organizationId: req.user!.organizationId,
+        batchNo: item.batchNo, // optional: you can skip if batchNo not provided
         status: "active",
+        quantity: { $gte: item.quantity },
       });
 
+      // If batch not found, provide available batches
       if (!batch) {
+        const availableBatches = await InventoryBatch.find({
+          medicineId: medicine._id,
+          status: "active",
+          quantity: { $gt: 0 }, // only batches with stock
+        }).select("batchNo quantity");
+
         return res.status(404).json({
           success: false,
-          message: `Batch ${item.batchNo} not found for ${item.medicineName}`,
+          message: `Batch ${item.batchNo || "(not provided)"} not found or insufficient quantity`,
+          availableBatches: availableBatches.length
+            ? availableBatches.map(
+                (b) => `${b.batchNo} (Available: ${b.quantity})`,
+              )
+            : ["No active batches available"],
         });
       }
 
-      if (batch.quantity < item.quantity) {
-        return res.status(400).json({
-          success: false,
-          message: `Not enough stock for ${item.medicineName}. Available: ${batch.quantity}`,
-        });
-      }
-
-      // deduct stock
-      batch.quantity -= item.quantity;
-      await batch.save();
+      // Atomic stock update
+      await InventoryBatch.updateOne(
+        { _id: batch._id, quantity: { $gte: item.quantity } },
+        { $inc: { quantity: -item.quantity } },
+      );
 
       saleItems.push({
         medicineId: medicine._id,
-        medicineName: medicine.name,
-        batchNo: item.batchNo,
+        medicineName: `${medicine.name} ${medicine.strength}${medicine.unit}`,
+        batchNo: batch.batchNo,
         quantity: item.quantity,
-        sellingPrice: item.sellingPrice,
+        sellingPrice: medicine.unitPrice,
+        purchasePrice: batch.purchasePrice,
       });
     }
 
-    // calculate subtotal
+    // Calculate totals
     const subtotal = saleItems.reduce(
-      (sum, item) => sum + item.quantity * item.sellingPrice,
+      (sum, i) => sum + i.quantity * i.sellingPrice,
       0,
     );
+    const discountAmount = (subtotal * discount) / 100;
+    const totalAmount = subtotal - discountAmount + tax;
 
-    const totalAmount = subtotal - discount + tax;
-
-    // generate invoice number
-    const lastSale = await Sale.findOne().sort({ createdAt: -1 });
+    // Generate sequential invoice number
+    const lastSale = await Sale.findOne({
+      organizationId: req.user!.organizationId,
+      branchId: req.user!.branchId,
+    }).sort({ createdAt: -1 });
 
     const invoiceNo = lastSale
       ? `INV-${parseInt(lastSale.invoiceNo.split("-")[1]) + 1}`
       : "INV-1001";
 
-    // create sale
+    // Create sale
     const sale = await Sale.create({
       organizationId: req.user!.organizationId,
       branchId: req.user!.branchId,
       cashierId: req.user!.userId,
-
       invoiceNo,
       customerName,
       customerPhone,
-
       items: saleItems,
-
       subtotal,
       discount,
       tax,
       totalAmount,
-
       paymentMethod,
     });
 
@@ -123,14 +152,22 @@ const createSale = async (req: AuthRequest, res: Response) => {
       success: true,
       message: customMessage.created("Sale"),
       id: sale._id,
+      invoiceNo,
     });
   } catch (error: any) {
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyValue)[0];
+      const value = error.keyValue[field];
+      return res.status(409).json({
+        success: false,
+        message: customMessage.alreadyExists(value),
+        error: { field, value, reason: customMessage.alreadyExists(field) },
+      });
+    }
     console.error("create sale error:", error);
-
-    res.status(500).json({
-      success: false,
-      message: customMessage.serverError(),
-    });
+    res
+      .status(500)
+      .json({ success: false, message: customMessage.serverError() });
   }
 };
 
