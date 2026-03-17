@@ -195,6 +195,7 @@ export interface ISaleItem extends Document {
   batchNo: string;
   quantity: number;
   sellingPrice: number;
+  purchasePrice: number;
 }
 
 // sale interface
