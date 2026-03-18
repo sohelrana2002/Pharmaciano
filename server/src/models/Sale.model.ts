@@ -21,7 +21,11 @@ const saleItemSchema = new Schema<ISaleItem>({
   },
   sellingPrice: {
     type: Number,
-    required: true,
+    default: 0,
+  },
+  purchasePrice: {
+    type: Number,
+    default: 0,
   },
 });
 
