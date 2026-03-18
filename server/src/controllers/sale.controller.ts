@@ -48,6 +48,7 @@ const createSale = async (req: AuthRequest, res: Response) => {
     // Process each sale item
     for (const item of items) {
       const { name, strength, unit } = parseMedicineInput(item.medicineName);
+      // console.log("item:", item);
 
       // Find medicine by name + strength + unit
       const medicineQuery: any = {
@@ -70,31 +71,38 @@ const createSale = async (req: AuthRequest, res: Response) => {
             .join(", ")}`,
         });
       }
+      // console.log("medicine: ", medicine);
 
       // Find batch by batchNo and check quantity
       const batch = await InventoryBatch.findOne({
         medicineId: medicine._id,
-        batchNo: item.batchNo, // optional: you can skip if batchNo not provided
+        batchNo: item.batchNo,
         status: "active",
-        quantity: { $gte: item.quantity },
       });
+      // console.log("batch: ", batch);
+
+      let availableBatches;
 
       // If batch not found, provide available batches
       if (!batch) {
-        const availableBatches = await InventoryBatch.find({
+        availableBatches = await InventoryBatch.find({
           medicineId: medicine._id,
           status: "active",
-          quantity: { $gt: 0 }, // only batches with stock
-        }).select("batchNo quantity");
+        }).select("batchNo");
 
         return res.status(404).json({
           success: false,
-          message: `Batch ${item.batchNo || "(not provided)"} not found or insufficient quantity`,
-          availableBatches: availableBatches.length
-            ? availableBatches.map(
-                (b) => `${b.batchNo} (Available: ${b.quantity})`,
-              )
-            : ["No active batches available"],
+          message: `Batch ${item.batchNo} not found`,
+          hint: `Available branch name are ${availableBatches.map((b) => b.batchNo).join(", ")}`,
+        });
+      }
+
+      if (batch.quantity < item.quantity) {
+        return res.status(400).json({
+          success: false,
+          message: `Not enough stock for ${
+            medicine.name
+          }.Available: ${batch.quantity}`,
         });
       }
 
