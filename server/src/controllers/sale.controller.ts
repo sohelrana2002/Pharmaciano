@@ -173,10 +173,50 @@ const createSale = async (req: AuthRequest, res: Response) => {
       });
     }
     console.error("create sale error:", error);
-    res
-      .status(500)
-      .json({ success: false, message: customMessage.serverError() });
+
+    res.status(500).json({
+      success: false,
+      message: customMessage.serverError(),
+    });
   }
 };
 
-export { createSale };
+// list of sales
+const saleList = async (req: AuthRequest, res: Response) => {
+  try {
+    const sale = await Sale.find()
+      .populate([
+        {
+          path: "cashierId",
+          select: "name email -_id",
+        },
+        {
+          path: "items.medicineId",
+          select: "name strength unit unitPrice -_id",
+        },
+      ])
+      .select("-organizationId -branchId");
+
+    if (!sale) {
+      res.status(404).json({
+        success: false,
+        message: customMessage.notFound("Sale"),
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      length: sale.length,
+      data: { sale },
+    });
+  } catch (error) {
+    console.error("list of sale error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: customMessage.serverError(),
+    });
+  }
+};
+
+export { createSale, saleList };
