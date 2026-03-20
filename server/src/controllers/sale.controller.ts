@@ -184,7 +184,23 @@ const createSale = async (req: AuthRequest, res: Response) => {
 // list of sales
 const saleList = async (req: AuthRequest, res: Response) => {
   try {
-    const sale = await Sale.find()
+    const { medicine } = req.query;
+
+    let match: any = {};
+
+    if (medicine) {
+      // ✅ use your parse function
+      const { name, strength, unit } = parseMedicineInput(medicine as string);
+
+      match = {
+        name: { $regex: name, $options: "i" },
+      };
+
+      if (strength) match.strength = strength;
+      if (unit) match.unit = unit;
+    }
+
+    const sales = await Sale.find({})
       .populate([
         {
           path: "cashierId",
@@ -192,12 +208,18 @@ const saleList = async (req: AuthRequest, res: Response) => {
         },
         {
           path: "items.medicineId",
+          match: match,
           select: "name strength unit unitPrice -_id",
         },
       ])
       .select("-organizationId -branchId");
 
-    if (!sale) {
+    // 🔥 remove sales where no item matched
+    const filteredSales = sales.filter((sale: any) =>
+      sale.items.some((item: any) => item.medicineId !== null),
+    );
+
+    if (!filteredSales) {
       res.status(404).json({
         success: false,
         message: customMessage.notFound("Sale"),
@@ -206,8 +228,8 @@ const saleList = async (req: AuthRequest, res: Response) => {
 
     return res.status(200).json({
       success: true,
-      length: sale.length,
-      data: { sale },
+      length: filteredSales.length,
+      data: { filteredSales },
     });
   } catch (error) {
     console.error("list of sale error:", error);
