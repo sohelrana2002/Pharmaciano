@@ -190,7 +190,7 @@ const saleList = async (req: AuthRequest, res: Response) => {
     let match: any = {};
 
     if (medicine) {
-      // ✅ use your parse function
+      // use your parse function
       const { name, strength, unit } = parseMedicineInput(medicine as string);
 
       match = {
@@ -215,12 +215,12 @@ const saleList = async (req: AuthRequest, res: Response) => {
       ])
       .select("-organizationId -branchId");
 
-    // 🔥 remove sales where no item matched
+    // remove sales where no item matched
     const filteredSales = sales.filter((sale: any) =>
       sale.items.some((item: any) => item.medicineId !== null),
     );
 
-    if (!filteredSales) {
+    if (filteredSales.length === 0) {
       res.status(404).json({
         success: false,
         message: customMessage.notFound("Sale"),
