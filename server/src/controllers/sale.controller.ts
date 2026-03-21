@@ -6,6 +6,7 @@ import InventoryBatch from "../models/InventoryBatch.model";
 import Medicine from "../models/Medicine.model";
 import Sale from "../models/Sale.model";
 import { customMessage } from "../constants/customMessage";
+import mongoose from "mongoose";
 
 // Parse medicine input like "napa 500mg" or "napa 500 mg"
 function parseMedicineInput(input: string) {
@@ -241,4 +242,56 @@ const saleList = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export { createSale, saleList };
+// individual sale info
+const saleInfo = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(409).json({
+        success: false,
+        message: customMessage.invalidId("Mongoose", id),
+      });
+    }
+
+    const sale = await Sale.findById(id).populate([
+      {
+        path: "organizationId",
+        select: "name contact address -_id",
+      },
+      {
+        path: "branchId",
+        select: "name contact address -_id",
+      },
+      {
+        path: "cashierId",
+        select: "name email phone -_id",
+      },
+      {
+        path: "items.medicineId",
+        select: "-taxRate -categoryId -brandId -createdBy -isActive -_id",
+      },
+    ]);
+
+    if (!sale) {
+      return res.status(404).json({
+        success: false,
+        message: customMessage.notFound("Sale"),
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: customMessage.found("sale", id),
+      data: { sale },
+    });
+  } catch (error) {
+    console.error("Individual sale info error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: customMessage.serverError(),
+    });
+  }
+};
+export { createSale, saleList, saleInfo };
