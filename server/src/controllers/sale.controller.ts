@@ -276,7 +276,7 @@ const saleInfo = async (req: AuthRequest, res: Response) => {
     if (!sale) {
       return res.status(404).json({
         success: false,
-        message: customMessage.notFound("Sale"),
+        message: customMessage.notFound("Sale", id),
       });
     }
 
@@ -294,4 +294,41 @@ const saleInfo = async (req: AuthRequest, res: Response) => {
     });
   }
 };
-export { createSale, saleList, saleInfo };
+
+// delete sale
+const deleteSale = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(409).json({
+        success: false,
+        message: customMessage.invalidId("Mongoose", id),
+      });
+    }
+
+    const sale = await Sale.findByIdAndDelete(id);
+
+    if (!sale) {
+      return res.status(404).json({
+        success: false,
+        message: customMessage.notFound("Sale", id),
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: customMessage.deleted("Sale", id),
+      id,
+    });
+  } catch (error) {
+    console.error("delete sale error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: customMessage.serverError(),
+    });
+  }
+};
+
+export { createSale, saleList, saleInfo, deleteSale };
