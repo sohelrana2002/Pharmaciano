@@ -394,7 +394,7 @@ const updateSale = async (req: AuthRequest, res: Response) => {
         return res.status(404).json({
           success: false,
           message: `Medicine '${item.medicineName}' not found`,
-          hints: `Active medicines: ${activeMedicine
+          hints: `Available medicines are: ${activeMedicine
             .map((m) => `${m.name} ${m.strength}${m.unit}`)
             .join(", ")}`,
         });
@@ -413,7 +413,7 @@ const updateSale = async (req: AuthRequest, res: Response) => {
         await session.abortTransaction();
         return res.status(404).json({
           success: false,
-          message: `Batch ${batchNo} not found`,
+          message: customMessage.notFound("Batch no"),
         });
       }
 
@@ -430,12 +430,13 @@ const updateSale = async (req: AuthRequest, res: Response) => {
       batch.quantity -= quantity;
       await batch.save({ session });
 
-      // ✅ Subtotal
+      // Subtotal
       subtotal += quantity * medicine.unitPrice;
 
       // Save item
       processedItems.push({
         medicineId: medicine._id,
+        medicineName: `${medicine.name} ${medicine.strength}${medicine.unit}`,
         batchNo,
         quantity,
         sellingPrice: medicine.unitPrice,
