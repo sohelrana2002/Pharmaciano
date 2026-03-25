@@ -36,9 +36,6 @@ router.post(
 // list of role
 router.get("/", authenticate, authorize(["role:manage"]), roleList);
 
-// get all features
-router.get("/features", getFeatures);
-
 // individual role info
 router.get("/:id", authenticate, authorize(["role:manage"]), roleInfo);
 
@@ -54,9 +51,4 @@ router.put(
 // delete role
 router.delete("/:id", authenticate, authorize(["role:manage"]), deleteRole);
 
-<<<<<<< HEAD
-=======
-
-
->>>>>>> cffad8090ba0e16b276130e885fc49951d829cf7
 export default router;
