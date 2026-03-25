@@ -72,7 +72,7 @@ apiRouter.use("/inventory-batches", inventoryBatchRouter);
 apiRouter.use("/sales", saleRouter);
 
 // all necessary unique name
-apiRouter.use("/unique-name", uniqueNameRouter);
+apiRouter.use("/unique-names", uniqueNameRouter);
 
 // Test route
 app.get("/", (req: Request, res: Response) => {
