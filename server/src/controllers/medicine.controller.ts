@@ -10,6 +10,7 @@ import Category from "../models/Category.model";
 import Brand from "../models/Brand.model";
 import mongoose from "mongoose";
 import { customMessage } from "../constants/customMessage";
+import { parseMedicineInput } from "../helper/parseMedicineInput";
 
 // create medicine
 const createMedicine = async (req: AuthRequest, res: Response) => {
@@ -143,7 +144,26 @@ const createMedicine = async (req: AuthRequest, res: Response) => {
 // list of medicine
 const medicineList = async (req: AuthRequest, res: Response) => {
   try {
-    const medicine = await Medicine.find({ isActive: true }).select(
+    const rawSearch = req.query.search;
+
+    const search = typeof rawSearch === "string" ? rawSearch : "";
+
+    const { name, strength, unit } = parseMedicineInput(search);
+
+    const match: any = {};
+
+    // name search
+    if (name) {
+      match.name = { $regex: name, $options: "i" };
+    }
+
+    // strength + unit match
+    if (strength && unit) {
+      match.strength = strength;
+      match.unit = new RegExp(`^${unit}$`, "i");
+    }
+
+    const medicine = await Medicine.find(match).select(
       "-categoryId -brandId -createdBy",
     );
 
