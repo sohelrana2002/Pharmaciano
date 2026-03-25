@@ -359,6 +359,7 @@ const getFeatures = async (req: AuthRequest, res: Response) => {
 
     res.json({
       success: true,
+      length: features.length,
       message: customMessage.found("Features"),
       data: { features },
     });
