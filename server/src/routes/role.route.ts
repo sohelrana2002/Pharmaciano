@@ -16,6 +16,14 @@ import {
 
 const router = Router();
 
+// get all features
+router.get(
+  "/features",
+  authenticate,
+  authorize(["user:manage", "role:manage"]),
+  getFeatures,
+);
+
 // create role
 router.post(
   "/",
@@ -42,8 +50,5 @@ router.put(
 
 // delete role
 router.delete("/:id", authenticate, authorize(["role:manage"]), deleteRole);
-
-// get all features
-router.get("/features", getFeatures);
 
 export default router;
