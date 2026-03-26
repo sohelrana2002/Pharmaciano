@@ -119,8 +119,11 @@ const createSale = async (req: AuthRequest, res: Response) => {
       (sum, i) => sum + i.quantity * i.sellingPrice,
       0,
     );
+
     const discountAmount = (subtotal * discount) / 100;
-    const totalAmount = subtotal - discountAmount + tax;
+    const taxAmount = (subtotal * tax) / 100;
+
+    const totalAmount = subtotal - discountAmount + taxAmount;
 
     // Generate sequential invoice number
     const lastSale = await Sale.findOne({
