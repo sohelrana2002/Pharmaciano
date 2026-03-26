@@ -11,6 +11,7 @@ import {
   saleInfo,
   updateSale,
   deleteSale,
+  createPDF,
 } from "../controllers/sale.controller";
 
 const router = Router();
@@ -41,5 +42,13 @@ router.put(
 
 // delete sale
 router.delete("/:id", authenticate, authorize(["cashier:manage"]), deleteSale);
+
+// generate invoice
+router.get(
+  "/:id/invoice",
+  authenticate,
+  authorize(["cashier:manage"]),
+  createPDF,
+);
 
 export default router;
