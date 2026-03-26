@@ -12,6 +12,7 @@ import { customMessage } from "../constants/customMessage";
 import mongoose from "mongoose";
 import { parseMedicineInput } from "../helper/parseMedicineInput";
 import Counter from "../models/Counter.model";
+import { generateInvoicePDF } from "../shared/generateInvoice";
 
 const createSale = async (req: AuthRequest, res: Response) => {
   try {
@@ -559,4 +560,56 @@ const deleteSale = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export { createSale, saleList, saleInfo, updateSale, deleteSale };
+// create pdf
+const createPDF = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(409).json({
+        success: false,
+        message: customMessage.invalidId("Mongoose", id),
+      });
+    }
+
+    const sale = await Sale.findById(id).populate([
+      {
+        path: "organizationId",
+        select: "name contact address -_id",
+      },
+      {
+        path: "branchId",
+        select: "name contact address -_id",
+      },
+      {
+        path: "cashierId",
+        select: "name email phone -_id",
+      },
+      {
+        path: "warehouseId",
+        select: "name location -_id",
+      },
+      {
+        path: "items.medicineId",
+        select: "-taxRate -categoryId -brandId -createdBy -isActive -_id",
+      },
+    ]);
+
+    if (!sale) {
+      return res.status(404).json({
+        success: false,
+        message: customMessage.notFound("Sale", id),
+      });
+    }
+
+    return generateInvoicePDF(sale, res);
+  } catch (error) {
+    console.error("create invoice pdf error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: customMessage.serverError(),
+    });
+  }
+};
+export { createSale, saleList, saleInfo, updateSale, deleteSale, createPDF };
