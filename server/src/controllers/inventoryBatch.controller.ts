@@ -161,8 +161,25 @@ const createInventoryBatch = async (req: AuthRequest, res: Response) => {
 const inventoryBatchList = async (req: AuthRequest, res: Response) => {
   try {
     const inventoryBatch = await InventoryBatch.find()
-      .populate("medicineId", "name -_id")
-      .select("-organizationId -branchId -warehouseId -createdBy");
+      .populate([
+        {
+          path: "medicineId",
+          select: "name  -_id",
+        },
+        {
+          path: "organizationId",
+          select: "name address contact  -_id",
+        },
+        {
+          path: "branchId",
+          select: "name address contact  -_id",
+        },
+        {
+          path: "warehouseId",
+          select: "name location  -_id",
+        },
+      ])
+      .select("-createdBy");
 
     if (!inventoryBatch) {
       return res.status(404).json({
