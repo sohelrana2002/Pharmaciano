@@ -709,12 +709,12 @@
                   "email": {
                     "type": "string",
                     "format": "email",
-                    "example": "admin@example.com"
+                    "example": "superadmin@pharmaciano.com"
                   },
                   "password": {
                     "type": "string",
                     "format": "password",
-                    "example": "Admin@123"
+                    "example": "superadmin12"
                   }
                 }
               }
@@ -3181,6 +3181,100 @@
           },
           "500": {
             "description": "Internal server error"
+          }
+        }
+      }
+    },
+    "/api/v1/sales/{id}/invoice": {
+      "get": {
+        "summary": "Generate PDF invoice for a specific sale",
+        "description": "Generates a PDF invoice for a sale by its ID, including organization, branch, cashier, warehouse, and medicine details.",
+        "tags": [
+          "Sales"
+        ],
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "description": "The ID of the sale to generate the PDF for",
+            "schema": {
+              "type": "string",
+              "example": "64f1c9b1c2a1e3a4b5c6d999"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "PDF invoice generated successfully",
+            "content": {
+              "application/pdf": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Sale not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Sale with ID 64f1c9b1c2a1e3a4b5c6d999 not found"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Invalid sale ID format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Invalid Mongoose ID: abc123"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error while generating PDF",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Internal server error"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }

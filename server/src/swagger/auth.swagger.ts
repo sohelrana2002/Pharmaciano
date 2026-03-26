@@ -25,11 +25,11 @@
  *               email:
  *                 type: string
  *                 format: email
- *                 example: admin@example.com
+ *                 example: superadmin@pharmaciano.com
  *               password:
  *                 type: string
  *                 format: password
- *                 example: Admin@123
+ *                 example: superadmin12
  *     responses:
  *       200:
  *         description: Login successful
