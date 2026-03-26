@@ -14,6 +14,7 @@ const saleItemSchema = new Schema<ISaleItem>({
   batchNo: {
     type: String,
     required: true,
+    unique: true,
   },
   quantity: {
     type: Number,
@@ -39,6 +40,11 @@ const saleSchema = new Schema<ISale>(
     branchId: {
       type: Schema.Types.ObjectId,
       ref: "Branch",
+      required: true,
+    },
+    warehouseId: {
+      type: Schema.Types.ObjectId,
+      ref: "Warehouse",
       required: true,
     },
     invoiceNo: {
