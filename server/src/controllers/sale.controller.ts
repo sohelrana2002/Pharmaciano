@@ -11,6 +11,7 @@ import Sale from "../models/Sale.model";
 import { customMessage } from "../constants/customMessage";
 import mongoose from "mongoose";
 import { parseMedicineInput } from "../helper/parseMedicineInput";
+import Counter from "../models/Counter.model";
 
 const createSale = async (req: AuthRequest, res: Response) => {
   try {
@@ -69,6 +70,9 @@ const createSale = async (req: AuthRequest, res: Response) => {
       const batch = await InventoryBatch.findOne({
         medicineId: medicine._id,
         batchNo: item.batchNo,
+        organizationId: req.user!.organizationId,
+        branchId: req.user!.branchId,
+        warehouseId: req.user!.warehouseId,
         status: "active",
       });
       // console.log("batch: ", batch);
@@ -79,13 +83,19 @@ const createSale = async (req: AuthRequest, res: Response) => {
       if (!batch) {
         availableBatches = await InventoryBatch.find({
           medicineId: medicine._id,
+          organizationId: req.user!.organizationId,
+          branchId: req.user!.branchId,
+          warehouseId: req.user!.warehouseId,
           status: "active",
         }).select("batchNo");
 
         return res.status(404).json({
           success: false,
           message: `Batch ${item.batchNo} not found`,
-          hint: `Available branch name are ${availableBatches.map((b) => b.batchNo).join(", ")}`,
+          hint:
+            availableBatches.length > 0
+              ? `Available branch name are ${availableBatches.map((b) => b.batchNo).join(", ")}`
+              : "No batches found!",
         });
       }
 
@@ -125,21 +135,25 @@ const createSale = async (req: AuthRequest, res: Response) => {
 
     const totalAmount = subtotal - discountAmount + taxAmount;
 
-    // Generate sequential invoice number
-    const lastSale = await Sale.findOne({
-      organizationId: req.user!.organizationId,
-      branchId: req.user!.branchId,
-    }).sort({ createdAt: -1 });
+    // generate invoice bumber unique
+    const counter = await Counter.findOneAndUpdate(
+      {
+        organizationId: req.user!.organizationId,
+        branchId: req.user!.branchId,
+        warehouseId: req.user!.warehouseId,
+      },
+      { $inc: { seq: 1 } },
+      { new: true, upsert: true },
+    );
 
-    const invoiceNo = lastSale
-      ? `INV-${parseInt(lastSale.invoiceNo.split("-")[1]) + 1}`
-      : "INV-1001";
+    const invoiceNo = `INV-${counter.seq}`;
 
     // Create sale
     const sale = await Sale.create({
       organizationId: req.user!.organizationId,
       branchId: req.user!.branchId,
       cashierId: req.user!.userId,
+      warehouseId: req.user!.warehouseId,
       invoiceNo,
       customerName,
       customerPhone,
@@ -264,6 +278,10 @@ const saleInfo = async (req: AuthRequest, res: Response) => {
       {
         path: "cashierId",
         select: "name email phone -_id",
+      },
+      {
+        path: "warehouseId",
+        select: "name location -_id",
       },
       {
         path: "items.medicineId",
@@ -396,15 +414,32 @@ const updateSale = async (req: AuthRequest, res: Response) => {
 
       // Find batch using  batchNo
       const batch = await InventoryBatch.findOne({
-        batchNo,
+        medicineId: medicine._id,
+        batchNo: item.batchNo,
+        organizationId: req.user!.organizationId,
+        branchId: req.user!.branchId,
+        warehouseId: req.user!.warehouseId,
         status: "active",
       }).session(session);
 
+      let availableBatches;
+      // If batch not found, provide available batches
       if (!batch) {
-        await session.abortTransaction();
+        availableBatches = await InventoryBatch.find({
+          medicineId: medicine._id,
+          organizationId: req.user!.organizationId,
+          branchId: req.user!.branchId,
+          warehouseId: req.user!.warehouseId,
+          status: "active",
+        }).select("batchNo");
+
         return res.status(404).json({
           success: false,
-          message: customMessage.notFound("Batch no"),
+          message: `Batch ${item.batchNo} not found`,
+          hint:
+            availableBatches.length > 0
+              ? `Available branch name are ${availableBatches.map((b) => b.batchNo).join(", ")}`
+              : "No batches found!",
         });
       }
 
@@ -437,7 +472,9 @@ const updateSale = async (req: AuthRequest, res: Response) => {
 
     // calculation
     const discountAmount = (subtotal * discount) / 100;
-    const totalAmount = subtotal - discountAmount + tax;
+    const taxAmount = (subtotal * tax) / 100;
+
+    const totalAmount = subtotal - discountAmount + taxAmount;
 
     // update sale
     await Sale.findByIdAndUpdate(
