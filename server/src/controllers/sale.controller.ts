@@ -146,7 +146,7 @@ const createSale = async (req: AuthRequest, res: Response) => {
       { new: true, upsert: true },
     );
 
-    const invoiceNo = `INV-${counter.seq}`;
+    const invoiceNo = `INV-100${counter.seq}`;
 
     // Create sale
     const sale = await Sale.create({
