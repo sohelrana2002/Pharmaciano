@@ -164,19 +164,19 @@ const inventoryBatchList = async (req: AuthRequest, res: Response) => {
       .populate([
         {
           path: "medicineId",
-          select: "name  -_id",
+          select: "name -_id",
         },
         {
           path: "organizationId",
-          select: "name address contact  -_id",
+          select: "name -_id",
         },
         {
           path: "branchId",
-          select: "name address contact  -_id",
+          select: "name -_id",
         },
         {
           path: "warehouseId",
-          select: "name location  -_id",
+          select: "name -_id",
         },
       ])
       .select("-createdBy");
