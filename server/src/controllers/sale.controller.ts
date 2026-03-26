@@ -612,4 +612,5 @@ const createPDF = async (req: AuthRequest, res: Response) => {
     });
   }
 };
+
 export { createSale, saleList, saleInfo, updateSale, deleteSale, createPDF };
