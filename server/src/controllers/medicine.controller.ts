@@ -196,22 +196,32 @@ const medicineList = async (req: AuthRequest, res: Response) => {
       filter.isActive = isActive;
     }
 
-    const medicine = await Medicine.find(filter)
-      .populate([
-        {
-          path: "organizationId",
-          select: "name",
-        },
-        {
-          path: "branchId",
-          select: "name",
-        },
-        {
-          path: "warehouseId",
-          select: "name",
-        },
-      ])
-      .select("-categoryId -brandId -createdBy");
+    const medicine = await Medicine.find(filter).populate([
+      {
+        path: "organizationId",
+        select: "name",
+      },
+      {
+        path: "branchId",
+        select: "name",
+      },
+      {
+        path: "warehouseId",
+        select: "name",
+      },
+      {
+        path: "categoryId",
+        select: "name",
+      },
+      {
+        path: "brandId",
+        select: "name",
+      },
+      {
+        path: "createdBy",
+        select: "name",
+      },
+    ]);
 
     if (!medicine) {
       return res.status(404).json({
@@ -273,27 +283,27 @@ const medicineInfo = async (req: AuthRequest, res: Response) => {
     }).populate([
       {
         path: "categoryId",
-        select: "name description -_id",
+        select: "name description",
       },
       {
         path: "brandId",
-        select: "name manufacturer country -_id",
+        select: "name manufacturer country",
       },
       {
         path: "createdBy",
-        select: "name email -_id",
+        select: "name email",
       },
       {
         path: "organizationId",
-        select: "name ",
+        select: "name contact address",
       },
       {
         path: "branchId",
-        select: "name ",
+        select: "name contact address",
       },
       {
         path: "warehouseId",
-        select: "name ",
+        select: "name location",
       },
     ]);
 
