@@ -1,41 +1,8 @@
 /**
  * @swagger
  * tags:
- *   name: Brands
- *   description: API endpoints for managing brands
- */
-
-/**
- * @swagger
- * components:
- *   schemas:
- *     Brand:
- *       type: object
- *       properties:
- *         _id:
- *           type: string
- *           example: 64f1c9b1c2a1e3a4b5c6d789
- *         name:
- *           type: string
- *           example: Pfizer
- *         manufacturer:
- *           type: string
- *           example: Pfizer Inc.
- *         country:
- *           type: string
- *           example: USA
- *         isActive:
- *           type: boolean
- *           example: true
- *         createdBy:
- *           type: string
- *           example: 64f1c9b1c2a1e3a4b5c6d123
- *         createdAt:
- *           type: string
- *           format: date-time
- *         updatedAt:
- *           type: string
- *           format: date-time
+ *   name: Brand
+ *   description: Brand management APIs
  */
 
 /**
@@ -43,7 +10,7 @@
  * /api/v1/brands:
  *   post:
  *     summary: Create a new brand
- *     tags: [Brands]
+ *     tags: [Brand]
  *     security:
  *       - bearerAuth: []
  *     requestBody:
@@ -59,13 +26,13 @@
  *             properties:
  *               name:
  *                 type: string
- *                 example: Pfizer
+ *                 example: Panadol
  *               manufacturer:
  *                 type: string
- *                 example: Pfizer Inc.
+ *                 example: GlaxoSmithKline
  *               country:
  *                 type: string
- *                 example: USA
+ *                 example: UK
  *     responses:
  *       201:
  *         description: Brand created successfully
@@ -85,17 +52,23 @@
  *       409:
  *         description: Brand already exists
  *       500:
- *         description: Internal server error
+ *         description: Server error
  */
 
 /**
  * @swagger
  * /api/v1/brands:
  *   get:
- *     summary: Get list of all active brands
- *     tags: [Brands]
+ *     summary: Get list of brands
+ *     tags: [Brand]
  *     security:
  *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: isActive
+ *         schema:
+ *           type: boolean
+ *         description: Filter brands by active status
  *     responses:
  *       200:
  *         description: List of brands
@@ -108,8 +81,12 @@
  *                   type: boolean
  *                 message:
  *                   type: string
- *                 length:
- *                   type: number
+ *                 total:
+ *                   type: integer
+ *                 active:
+ *                   type: integer
+ *                 inActive:
+ *                   type: integer
  *                 data:
  *                   type: object
  *                   properties:
@@ -118,7 +95,7 @@
  *                       items:
  *                         $ref: '#/components/schemas/Brand'
  *       500:
- *         description: Internal server error
+ *         description: Server error
  */
 
 /**
@@ -126,7 +103,7 @@
  * /api/v1/brands/{id}:
  *   get:
  *     summary: Get individual brand info
- *     tags: [Brands]
+ *     tags: [Brand]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -138,7 +115,7 @@
  *         description: Brand ID
  *     responses:
  *       200:
- *         description: Brand details
+ *         description: Brand info found
  *         content:
  *           application/json:
  *             schema:
@@ -153,20 +130,18 @@
  *                   properties:
  *                     brand:
  *                       $ref: '#/components/schemas/Brand'
- *       400:
- *         description: Invalid brand ID
  *       404:
  *         description: Brand not found
  *       500:
- *         description: Internal server error
+ *         description: Server error
  */
 
 /**
  * @swagger
  * /api/v1/brands/{id}:
  *   put:
- *     summary: Update an existing brand
- *     tags: [Brands]
+ *     summary: Update brand info
+ *     tags: [Brand]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -185,35 +160,21 @@
  *             properties:
  *               name:
  *                 type: string
- *                 example: Pfizer Updated
  *               manufacturer:
  *                 type: string
- *                 example: Pfizer Ltd.
  *               country:
  *                 type: string
- *                 example: UK
  *     responses:
  *       200:
  *         description: Brand updated successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
- *                 data:
- *                   type: object
  *       400:
  *         description: Validation failed or invalid ID
  *       404:
  *         description: Brand not found
  *       409:
- *         description: Brand name already exists
+ *         description: Duplicate brand name
  *       500:
- *         description: Internal server error
+ *         description: Server error
  */
 
 /**
@@ -221,7 +182,7 @@
  * /api/v1/brands/{id}:
  *   delete:
  *     summary: Delete a brand
- *     tags: [Brands]
+ *     tags: [Brand]
  *     security:
  *       - bearerAuth: []
  *     parameters:
@@ -234,10 +195,41 @@
  *     responses:
  *       200:
  *         description: Brand deleted successfully
- *       400:
- *         description: Invalid brand ID
  *       404:
  *         description: Brand not found
  *       500:
- *         description: Internal server error
+ *         description: Server error
+ */
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Brand:
+ *       type: object
+ *       properties:
+ *         _id:
+ *           type: string
+ *         organizationId:
+ *           type: string
+ *         branchId:
+ *           type: string
+ *         warehouseId:
+ *           type: string
+ *         name:
+ *           type: string
+ *         manufacturer:
+ *           type: string
+ *         country:
+ *           type: string
+ *         isActive:
+ *           type: boolean
+ *         createdBy:
+ *           type: string
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ *         updatedAt:
+ *           type: string
+ *           format: date-time
  */

@@ -74,28 +74,31 @@
         "type": "object",
         "properties": {
           "_id": {
-            "type": "string",
-            "example": "64f1c9b1c2a1e3a4b5c6d789"
+            "type": "string"
+          },
+          "organizationId": {
+            "type": "string"
+          },
+          "branchId": {
+            "type": "string"
+          },
+          "warehouseId": {
+            "type": "string"
           },
           "name": {
-            "type": "string",
-            "example": "Pfizer"
+            "type": "string"
           },
           "manufacturer": {
-            "type": "string",
-            "example": "Pfizer Inc."
+            "type": "string"
           },
           "country": {
-            "type": "string",
-            "example": "USA"
+            "type": "string"
           },
           "isActive": {
-            "type": "boolean",
-            "example": true
+            "type": "boolean"
           },
           "createdBy": {
-            "type": "string",
-            "example": "64f1c9b1c2a1e3a4b5c6d123"
+            "type": "string"
           },
           "createdAt": {
             "type": "string",
@@ -1159,7 +1162,7 @@
       "post": {
         "summary": "Create a new brand",
         "tags": [
-          "Brands"
+          "Brand"
         ],
         "security": [
           {
@@ -1180,15 +1183,15 @@
                 "properties": {
                   "name": {
                     "type": "string",
-                    "example": "Pfizer"
+                    "example": "Panadol"
                   },
                   "manufacturer": {
                     "type": "string",
-                    "example": "Pfizer Inc."
+                    "example": "GlaxoSmithKline"
                   },
                   "country": {
                     "type": "string",
-                    "example": "USA"
+                    "example": "UK"
                   }
                 }
               }
@@ -1224,18 +1227,28 @@
             "description": "Brand already exists"
           },
           "500": {
-            "description": "Internal server error"
+            "description": "Server error"
           }
         }
       },
       "get": {
-        "summary": "Get list of all active brands",
+        "summary": "Get list of brands",
         "tags": [
-          "Brands"
+          "Brand"
         ],
         "security": [
           {
             "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "in": "query",
+            "name": "isActive",
+            "schema": {
+              "type": "boolean"
+            },
+            "description": "Filter brands by active status"
           }
         ],
         "responses": {
@@ -1252,8 +1265,14 @@
                     "message": {
                       "type": "string"
                     },
-                    "length": {
-                      "type": "number"
+                    "total": {
+                      "type": "integer"
+                    },
+                    "active": {
+                      "type": "integer"
+                    },
+                    "inActive": {
+                      "type": "integer"
                     },
                     "data": {
                       "type": "object",
@@ -1272,7 +1291,7 @@
             }
           },
           "500": {
-            "description": "Internal server error"
+            "description": "Server error"
           }
         }
       }
@@ -1281,7 +1300,7 @@
       "get": {
         "summary": "Get individual brand info",
         "tags": [
-          "Brands"
+          "Brand"
         ],
         "security": [
           {
@@ -1301,7 +1320,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Brand details",
+            "description": "Brand info found",
             "content": {
               "application/json": {
                 "schema": {
@@ -1326,21 +1345,18 @@
               }
             }
           },
-          "400": {
-            "description": "Invalid brand ID"
-          },
           "404": {
             "description": "Brand not found"
           },
           "500": {
-            "description": "Internal server error"
+            "description": "Server error"
           }
         }
       },
       "put": {
-        "summary": "Update an existing brand",
+        "summary": "Update brand info",
         "tags": [
-          "Brands"
+          "Brand"
         ],
         "security": [
           {
@@ -1366,16 +1382,13 @@
                 "type": "object",
                 "properties": {
                   "name": {
-                    "type": "string",
-                    "example": "Pfizer Updated"
+                    "type": "string"
                   },
                   "manufacturer": {
-                    "type": "string",
-                    "example": "Pfizer Ltd."
+                    "type": "string"
                   },
                   "country": {
-                    "type": "string",
-                    "example": "UK"
+                    "type": "string"
                   }
                 }
               }
@@ -1384,25 +1397,7 @@
         },
         "responses": {
           "200": {
-            "description": "Brand updated successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean"
-                    },
-                    "message": {
-                      "type": "string"
-                    },
-                    "data": {
-                      "type": "object"
-                    }
-                  }
-                }
-              }
-            }
+            "description": "Brand updated successfully"
           },
           "400": {
             "description": "Validation failed or invalid ID"
@@ -1411,17 +1406,17 @@
             "description": "Brand not found"
           },
           "409": {
-            "description": "Brand name already exists"
+            "description": "Duplicate brand name"
           },
           "500": {
-            "description": "Internal server error"
+            "description": "Server error"
           }
         }
       },
       "delete": {
         "summary": "Delete a brand",
         "tags": [
-          "Brands"
+          "Brand"
         ],
         "security": [
           {
@@ -1443,14 +1438,11 @@
           "200": {
             "description": "Brand deleted successfully"
           },
-          "400": {
-            "description": "Invalid brand ID"
-          },
           "404": {
             "description": "Brand not found"
           },
           "500": {
-            "description": "Internal server error"
+            "description": "Server error"
           }
         }
       }
@@ -4259,8 +4251,8 @@
       "description": "API endpoints for managing branches"
     },
     {
-      "name": "Brands",
-      "description": "API endpoints for managing brands"
+      "name": "Brand",
+      "description": "Brand management APIs"
     },
     {
       "name": "Category",
