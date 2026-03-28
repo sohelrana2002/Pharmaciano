@@ -59,11 +59,16 @@ export interface AuthRequest extends Request {
 // brand interface
 export interface IBrand extends Document {
   _id: Types.ObjectId;
+  organizationId: Types.ObjectId;
+  branchId: Types.ObjectId;
+  cashierId: Types.ObjectId;
+  warehouseId: Types.ObjectId;
   name: string;
   manufacturer: string;
   country: string;
   isActive: boolean;
   createdBy: Types.ObjectId;
+
   createdAt: Date;
   updatedAt: Date;
 }
@@ -71,6 +76,10 @@ export interface IBrand extends Document {
 // category interface
 export interface ICategory extends Document {
   _id: Types.ObjectId;
+  organizationId: Types.ObjectId;
+  branchId: Types.ObjectId;
+  cashierId: Types.ObjectId;
+  warehouseId: Types.ObjectId;
   name: string;
   description: string;
   isActive: boolean;
