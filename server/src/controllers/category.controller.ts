@@ -29,7 +29,12 @@ const createCategory = async (req: AuthRequest, res: Response) => {
 
     const { name, description } = validationResult.data;
 
-    const existingCategory = await Category.findOne({ name });
+    const existingCategory = await Category.findOne({
+      name,
+      organizationId: req.user!.organizationId,
+      branchId: req.user!.branchId,
+      warehouseId: req.user!.warehouseId,
+    });
 
     if (existingCategory) {
       return res.status(409).json({
@@ -42,6 +47,9 @@ const createCategory = async (req: AuthRequest, res: Response) => {
       name,
       description,
       createdBy: req.user!.userId,
+      organizationId: req.user!.organizationId,
+      branchId: req.user!.branchId,
+      warehouseId: req.user!.warehouseId,
     });
 
     return res.status(201).json({
@@ -77,9 +85,38 @@ const createCategory = async (req: AuthRequest, res: Response) => {
 // list of category
 const categoryList = async (req: AuthRequest, res: Response) => {
   try {
-    const category = await Category.find({ isActive: true }).select(
-      "-createdBy",
-    );
+    const { isActive } = req.query;
+
+    const baseFilter: any = {
+      organizationId: req.user!.organizationId,
+      branchId: req.user!.branchId,
+      warehouseId: req.user!.warehouseId,
+    };
+
+    const filter: any = { ...baseFilter };
+
+    if (isActive !== undefined) {
+      filter.isActive = isActive;
+    }
+
+    const category = await Category.find(filter).populate([
+      {
+        path: "organizationId",
+        select: "name",
+      },
+      {
+        path: "branchId",
+        select: "name",
+      },
+      {
+        path: "warehouseId",
+        select: "name",
+      },
+      {
+        path: "createdBy",
+        select: "name email",
+      },
+    ]);
 
     if (!category) {
       return res.status(404).json({
@@ -88,10 +125,27 @@ const categoryList = async (req: AuthRequest, res: Response) => {
       });
     }
 
+    const total = await Category.countDocuments({ ...baseFilter });
+
+    const activeCount = await Category.countDocuments({
+      ...baseFilter,
+      isActive: true,
+    });
+
+    const inActiveCount = await Category.countDocuments({
+      ...baseFilter,
+      isActive: false,
+    });
+
     return res.status(200).json({
       success: true,
-      message: customMessage.found("List of category"),
-      length: category.length,
+      message:
+        category.length > 0
+          ? customMessage.found("List of category")
+          : "No Medicinees found!",
+      total,
+      active: activeCount,
+      inActive: inActiveCount,
       data: { category },
     });
   } catch (error: any) {
@@ -116,10 +170,29 @@ const categoryInfo = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const category = await Category.findById(id).populate(
-      "createdBy",
-      "name email -_id",
-    );
+    const category = await Category.findOne({
+      _id: id,
+      organizationId: req.user!.organizationId,
+      branchId: req.user!.branchId,
+      warehouseId: req.user!.warehouseId,
+    }).populate([
+      {
+        path: "organizationId",
+        select: "name contact address",
+      },
+      {
+        path: "branchId",
+        select: "name contact address",
+      },
+      {
+        path: "warehouseId",
+        select: "name location",
+      },
+      {
+        path: "createdBy",
+        select: "name email",
+      },
+    ]);
 
     if (!category) {
       return res.status(404).json({
@@ -172,7 +245,12 @@ const updateCategory = async (req: AuthRequest, res: Response) => {
 
     const { name, description } = validationResult.data;
 
-    const category = await Category.findById(id);
+    const category = await Category.findOne({
+      _id: id,
+      organizationId: req.user!.organizationId,
+      branchId: req.user!.branchId,
+      warehouseId: req.user!.warehouseId,
+    });
 
     if (!category) {
       return res.status(404).json({
@@ -183,7 +261,12 @@ const updateCategory = async (req: AuthRequest, res: Response) => {
 
     // Prevent duplicate fields (industry practice)
     if (name && name !== category.name) {
-      const existingName = await Category.findOne({ name });
+      const existingName = await Category.findOne({
+        name,
+        organizationId: req.user!.organizationId,
+        branchId: req.user!.branchId,
+        warehouseId: req.user!.warehouseId,
+      });
 
       if (existingName) {
         return res.status(409).json({
@@ -199,9 +282,18 @@ const updateCategory = async (req: AuthRequest, res: Response) => {
     if (name) updateData.name = name;
     if (description) updateData.description = description;
 
-    const updateResult = await Category.findByIdAndUpdate(id, updateData, {
-      new: true,
-    });
+    const updateResult = await Category.findByIdAndUpdate(
+      {
+        _id: id,
+        organizationId: req.user!.organizationId,
+        branchId: req.user!.branchId,
+        warehouseId: req.user!.warehouseId,
+      },
+      updateData,
+      {
+        new: true,
+      },
+    );
 
     return res.status(200).json({
       success: true,
@@ -245,7 +337,12 @@ const deleteCategory = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const category = await Category.findByIdAndDelete(id);
+    const category = await Category.findByIdAndDelete({
+      _id: id,
+      organizationId: req.user!.organizationId,
+      branchId: req.user!.branchId,
+      warehouseId: req.user!.warehouseId,
+    });
 
     if (!category) {
       return res.status(404).json({
