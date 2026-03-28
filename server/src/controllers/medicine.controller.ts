@@ -173,28 +173,30 @@ const medicineList = async (req: AuthRequest, res: Response) => {
 
     const { name, strength, unit } = parseMedicineInput(search);
 
-    const match: any = {
+    const baseFilter: any = {
       organizationId: req.user!.organizationId,
       branchId: req.user!.branchId,
       warehouseId: req.user!.warehouseId,
     };
 
+    const filter: any = { ...baseFilter };
+
     // name search
     if (name) {
-      match.name = { $regex: name, $options: "i" };
+      filter.name = { $regex: name, $options: "i" };
     }
 
     // strength + unit match
     if (strength && unit) {
-      match.strength = strength;
-      match.unit = new RegExp(`^${unit}$`, "i");
+      filter.strength = strength;
+      filter.unit = new RegExp(`^${unit}$`, "i");
     }
 
     if (isActive !== undefined) {
-      match.isActive = isActive;
+      filter.isActive = isActive;
     }
 
-    const medicine = await Medicine.find(match)
+    const medicine = await Medicine.find(filter)
       .populate([
         {
           path: "organizationId",
@@ -218,10 +220,27 @@ const medicineList = async (req: AuthRequest, res: Response) => {
       });
     }
 
+    const total = await Medicine.countDocuments({ ...baseFilter });
+
+    const activeCount = await Medicine.countDocuments({
+      ...baseFilter,
+      isActive: true,
+    });
+
+    const inActiveCount = await Medicine.countDocuments({
+      ...baseFilter,
+      isActive: false,
+    });
+
     return res.status(200).json({
       success: true,
-      message: customMessage.found("List of medicine"),
-      length: medicine.length,
+      message:
+        medicine.length > 0
+          ? customMessage.found("List of medicine")
+          : "No Medicinees found!",
+      total,
+      active: activeCount,
+      inActive: inActiveCount,
       data: { medicine },
     });
   } catch (error) {
