@@ -6,10 +6,7 @@ import {
   inventoryBatchSchemaValidator,
   updateInventoryBatchValidator,
 } from "../validators/inventoryBatch.validator";
-import Organization from "../models/Organization.model";
-import Branch from "../models/Branch.model";
 import Medicine from "../models/Medicine.model";
-import Warehouse from "../models/Warehouse.model";
 import InventoryBatch from "../models/InventoryBatch.model";
 import mongoose from "mongoose";
 
@@ -32,78 +29,36 @@ const createInventoryBatch = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const {
-      orgName,
-      branchName,
-      medicineName,
-      batchNo,
-      expiryDate,
-      quantity,
-      purchasePrice,
-      warehouseName,
-    } = validationResult.data;
-
-    //   check valid organization name
-    const activeOrganization = await Organization.find({
-      isActive: true,
-    }).select("name");
-
-    const organization = await Organization.findOne({ name: orgName });
-
-    if (!organization) {
-      return res.status(404).json({
-        success: false,
-        message: "Invalid organization name.",
-        hints: `Active organization names are ${activeOrganization.map((org) => org.name).join(", ")}`,
-      });
-    }
-
-    //   check valid branch name
-    const activeBranch = await Branch.find({
-      isActive: true,
-    }).select("name");
-
-    const branch = await Branch.findOne({ name: branchName });
-
-    if (!branch) {
-      return res.status(404).json({
-        success: false,
-        message: "Invalid branch name.",
-        hints: `Active branch names are ${activeBranch.map((b) => b.name).join(", ")}`,
-      });
-    }
+    const { medicineName, batchNo, expiryDate, quantity, purchasePrice } =
+      validationResult.data;
 
     //   check valid medicine name
     const activeMedicine = await Medicine.find({
+      organizationId: req.user!.organizationId,
+      branchId: req.user!.branchId,
+      warehouseId: req.user!.warehouseId,
       isActive: true,
     }).select("name");
 
-    const medicine = await Medicine.findOne({ name: medicineName });
+    const medicine = await Medicine.findOne({
+      name: medicineName,
+      organizationId: req.user!.organizationId,
+      branchId: req.user!.branchId,
+      warehouseId: req.user!.warehouseId,
+    });
 
     if (!medicine) {
       return res.status(404).json({
         success: false,
         message: "Invalid medicine name.",
-        hints: `Active medicine names are ${activeMedicine.map((m) => m.name).join(", ")}`,
+        hints: `Active medicine names are: ${activeMedicine.map((m) => m.name).join(", ")}`,
       });
     }
 
-    //   check valid warehouse name
-    const activeWarehouse = await Warehouse.find({
-      isActive: true,
-    }).select("name");
-
-    const warehouse = await Warehouse.findOne({ name: warehouseName });
-
-    if (!warehouse) {
-      return res.status(404).json({
-        success: false,
-        message: "Invalid warehouse name.",
-        hints: `Active warehouse names are ${activeWarehouse.map((w) => w.name).join(", ")}`,
-      });
-    }
-
-    const existingBatchNo = await InventoryBatch.findOne({ batchNo });
+    const existingBatchNo = await InventoryBatch.findOne({
+      batchNo,
+      warehouseId: req.user!.warehouseId,
+    });
 
     if (existingBatchNo) {
       return res.status(409).json({
@@ -114,14 +69,14 @@ const createInventoryBatch = async (req: AuthRequest, res: Response) => {
 
     //   create inventoryBatch
     const inventoryBatch = await InventoryBatch.create({
-      organizationId: organization._id,
-      branchId: branch._id,
+      organizationId: req.user!.organizationId,
+      branchId: req.user!.branchId,
       medicineId: medicine._id,
       batchNo,
       expiryDate,
       quantity,
       purchasePrice,
-      warehouseId: warehouse._id,
+      warehouseId: req.user!.warehouseId,
       status: new Date(expiryDate) < new Date() ? "expired" : "active",
       createdBy: req.user!.userId,
     });
@@ -160,7 +115,24 @@ const createInventoryBatch = async (req: AuthRequest, res: Response) => {
 // list of inventoryBatch
 const inventoryBatchList = async (req: AuthRequest, res: Response) => {
   try {
-    const inventoryBatch = await InventoryBatch.find()
+    const { status } = req.query;
+
+    // base filter
+    const baseFilter: any = {
+      organizationId: req.user!.organizationId,
+      branchId: req.user!.branchId,
+      warehouseId: req.user!.warehouseId,
+    };
+
+    // main filter
+    const filter: any = { ...baseFilter };
+
+    // filter with isActive
+    if (status !== undefined) {
+      filter.status = status;
+    }
+
+    const inventoryBatch = await InventoryBatch.find(filter)
       .populate([
         {
           path: "medicineId",
@@ -188,10 +160,27 @@ const inventoryBatchList = async (req: AuthRequest, res: Response) => {
       });
     }
 
+    const total = await InventoryBatch.countDocuments({ ...baseFilter });
+
+    const activeCount = await InventoryBatch.countDocuments({
+      ...baseFilter,
+      status: "active",
+    });
+
+    const expiredCount = await InventoryBatch.countDocuments({
+      ...baseFilter,
+      status: "expired",
+    });
+
     return res.status(200).json({
       success: true,
-      message: customMessage.found("Inventory batch"),
-      length: inventoryBatch.length,
+      message:
+        inventoryBatch.length > 0
+          ? customMessage.found("Inventory batch")
+          : "No inventory batches found!",
+      total,
+      active: activeCount,
+      expired: expiredCount,
       data: { inventoryBatch },
     });
   } catch (error) {
@@ -219,23 +208,23 @@ const inventoryBatchInfo = async (req: AuthRequest, res: Response) => {
     const inventoryBatch = await InventoryBatch.findById(id).populate([
       {
         path: "organizationId",
-        select: "name contact address -_id",
+        select: "name contact address",
       },
       {
         path: "branchId",
-        select: "name contact address -_id",
+        select: "name contact address",
       },
       {
         path: "medicineId",
-        select: "-brandId -categoryId -createdBy -_id",
+        select: "-brandId -categoryId -createdBy",
       },
       {
         path: "warehouseId",
-        select: "name location -_id",
+        select: "name location",
       },
       {
         path: "createdBy",
-        select: "name email -_id",
+        select: "name email",
       },
     ]);
 
@@ -246,10 +235,25 @@ const inventoryBatchInfo = async (req: AuthRequest, res: Response) => {
       });
     }
 
+    // advance level protection
+    if (
+      inventoryBatch.organizationId._id.toString() !==
+        req.user!.organizationId.toString() ||
+      inventoryBatch.branchId._id.toString() !==
+        req.user!.branchId.toString() ||
+      inventoryBatch.warehouseId._id.toString() !==
+        req.user!.warehouseId.toString()
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized access to this inventory batch!",
+      });
+    }
+
     return res.status(200).json({
       success: true,
       message: customMessage.found("Inventory batch", id),
-      date: { inventoryBatch },
+      data: { inventoryBatch },
     });
   } catch (error) {
     console.error("Individual inventory batch info error:", error);
@@ -289,16 +293,8 @@ const updateInventoryBatch = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const {
-      orgName,
-      branchName,
-      medicineName,
-      batchNo,
-      expiryDate,
-      quantity,
-      purchasePrice,
-      warehouseName,
-    } = validationResult.data;
+    const { medicineName, batchNo, expiryDate, quantity, purchasePrice } =
+      validationResult.data;
 
     const inventoryBatch = await InventoryBatch.findById(id);
 
@@ -306,6 +302,19 @@ const updateInventoryBatch = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({
         success: false,
         message: customMessage.notFound("Inventory batch", id),
+      });
+    }
+
+    // advance level protection
+    if (
+      inventoryBatch.organizationId.toString() !==
+        req.user!.organizationId.toString() ||
+      inventoryBatch.branchId.toString() !== req.user!.branchId.toString() ||
+      inventoryBatch.warehouseId.toString() !== req.user!.warehouseId.toString()
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized access to this inventory batch!",
       });
     }
 
@@ -329,46 +338,20 @@ const updateInventoryBatch = async (req: AuthRequest, res: Response) => {
     if (quantity) updateData.quantity = quantity;
     if (purchasePrice) updateData.purchasePrice = purchasePrice;
 
-    //   check valid organization name
-    const activeOrganization = await Organization.find({
-      isActive: true,
-    }).select("name");
-
-    const organization = await Organization.findOne({ name: orgName });
-
-    if (!organization) {
-      return res.status(404).json({
-        success: false,
-        message: "Invalid organization name.",
-        hints: `Active organization names are ${activeOrganization.map((org) => org.name).join(", ")}`,
-      });
-    }
-    //   update organizationId
-    updateData.organizationId = organization._id;
-
-    //   check valid branch name
-    const activeBranch = await Branch.find({
-      isActive: true,
-    }).select("name");
-
-    const branch = await Branch.findOne({ name: branchName });
-
-    if (!branch) {
-      return res.status(404).json({
-        success: false,
-        message: "Invalid branch name.",
-        hints: `Active branch names are ${activeBranch.map((b) => b.name).join(", ")}`,
-      });
-    }
-    //   update branchId
-    updateData.branchId = branch._id;
-
     //   check valid medicine name
     const activeMedicine = await Medicine.find({
+      organizationId: req.user!.organizationId,
+      branchId: req.user!.branchId,
+      warehouseId: req.user!.warehouseId,
       isActive: true,
     }).select("name");
 
-    const medicine = await Medicine.findOne({ name: medicineName });
+    const medicine = await Medicine.findOne({
+      name: medicineName,
+      organizationId: req.user!.organizationId,
+      branchId: req.user!.branchId,
+      warehouseId: req.user!.warehouseId,
+    });
 
     if (!medicine) {
       return res.status(404).json({
@@ -380,22 +363,10 @@ const updateInventoryBatch = async (req: AuthRequest, res: Response) => {
     //   update medicineId
     updateData.medicineId = medicine._id;
 
-    //   check valid warehouse name
-    const activeWarehouse = await Warehouse.find({
-      isActive: true,
-    }).select("name");
-
-    const warehouse = await Warehouse.findOne({ name: warehouseName });
-
-    if (!warehouse) {
-      return res.status(404).json({
-        success: false,
-        message: "Invalid warehouse name.",
-        hints: `Active warehouse names are ${activeWarehouse.map((w) => w.name).join(", ")}`,
-      });
-    }
-    //   update warehouseId
-    updateData.warehouseId = warehouse._id;
+    // advance level update data
+    updateData.organizationId = req.user!.organizationId;
+    updateData.branchId = req.user!.branchId;
+    updateData.warehouseId = req.user!.warehouseId;
 
     // Update inventoryBatch
     const updatedInventoryBatch = await InventoryBatch.findByIdAndUpdate(
@@ -455,6 +426,19 @@ const deleteInventoryBatch = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({
         success: false,
         message: customMessage.notFound("Inventory batch", id),
+      });
+    }
+
+    // advance level protection
+    if (
+      inventoryBatch.organizationId.toString() !==
+        req.user!.organizationId.toString() ||
+      inventoryBatch.branchId.toString() !== req.user!.branchId.toString() ||
+      inventoryBatch.warehouseId.toString() !== req.user!.warehouseId.toString()
+    ) {
+      return res.status(403).json({
+        success: false,
+        message: "Unauthorized access to this inventory batch!",
       });
     }
 

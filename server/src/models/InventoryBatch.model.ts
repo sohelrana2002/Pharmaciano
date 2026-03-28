@@ -3,20 +3,10 @@ import { IInventoryBatch } from "../types";
 
 const inventoryBatchSchema = new Schema<IInventoryBatch>(
   {
-    orgName: {
-      type: String,
-      lowercase: true,
-      trim: true,
-    },
     organizationId: {
       type: Schema.Types.ObjectId,
       ref: "Organization",
       required: true,
-    },
-    branchName: {
-      type: String,
-      lowercase: true,
-      trim: true,
     },
     branchId: {
       type: Schema.Types.ObjectId,
@@ -48,11 +38,6 @@ const inventoryBatchSchema = new Schema<IInventoryBatch>(
     purchasePrice: {
       type: Number,
       required: true,
-    },
-    warehouseName: {
-      type: String,
-      lowercase: true,
-      trim: true,
     },
     warehouseId: {
       type: Schema.Types.ObjectId,

@@ -173,9 +173,7 @@ export type InventoryBatchStatus = "active" | "expired";
 // InventoryBatch interface
 export interface IInventoryBatch extends Document {
   _id: Types.ObjectId;
-  orgName: string;
   organizationId: Types.ObjectId;
-  branchName: string;
   branchId: Types.ObjectId;
   medicineName: string;
   medicineId: Types.ObjectId;
@@ -183,7 +181,6 @@ export interface IInventoryBatch extends Document {
   expiryDate: Date;
   quantity: number;
   purchasePrice: number;
-  warehouseName: string;
   warehouseId: Types.ObjectId;
   createdBy: Types.ObjectId;
   status: InventoryBatchStatus;
