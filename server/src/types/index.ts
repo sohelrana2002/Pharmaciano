@@ -118,6 +118,9 @@ export interface IBranch extends Document {
 // medicine interface
 export interface IMedicine extends Document {
   _id: Types.ObjectId;
+  organizationId: Types.ObjectId;
+  branchId: Types.ObjectId;
+  warehouseId: Types.ObjectId;
   name: string;
   genericName: string;
   categoryName: string;

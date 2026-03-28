@@ -9,26 +9,37 @@ const medicineSchema = new Schema<IMedicine>(
       lowercase: true,
       trim: true,
     },
-
+    organizationId: {
+      type: Schema.Types.ObjectId,
+      ref: "Organization",
+      required: true,
+    },
+    branchId: {
+      type: Schema.Types.ObjectId,
+      ref: "Branch",
+      required: true,
+    },
+    warehouseId: {
+      type: Schema.Types.ObjectId,
+      ref: "Warehouse",
+      required: true,
+    },
     genericName: {
       type: String,
       required: true,
       lowercase: true,
       trim: true,
     },
-
     categoryName: {
       type: String,
       lowercase: true,
       trim: true,
     },
-
     brandName: {
       type: String,
       lowercase: true,
       trim: true,
     },
-
     dosageForm: {
       type: String,
       required: true,
@@ -41,54 +52,44 @@ const medicineSchema = new Schema<IMedicine>(
       lowercase: true,
       trim: true,
     },
-
     unit: {
       type: String,
       required: true,
       trim: true,
     },
-
     unitPrice: {
       type: Number,
     },
-
     unitsPerStrip: {
       type: Number,
     },
-
     stripPrice: {
       type: Number,
       default: 0,
     },
-
     isPrescriptionRequired: {
       type: Boolean,
       default: false,
     },
-
     taxRate: {
       type: Number,
       default: 0,
     },
-
     categoryId: {
       type: Schema.Types.ObjectId,
       ref: "Category",
       required: true,
     },
-
     brandId: {
       type: Schema.Types.ObjectId,
       ref: "Brand",
       required: true,
     },
-
     createdBy: {
       type: Schema.Types.ObjectId,
       ref: "User",
       required: true,
     },
-
     isActive: {
       type: Boolean,
       default: true,
