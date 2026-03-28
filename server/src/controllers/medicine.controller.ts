@@ -48,10 +48,18 @@ const createMedicine = async (req: AuthRequest, res: Response) => {
 
     //   check valid category
     const activeCategory = await Category.find({
+      organizationId: req.user!.organizationId,
+      branchId: req.user!.branchId,
+      warehouseId: req.user!.warehouseId,
       isActive: true,
     }).select("name");
 
-    const category = await Category.findOne({ name: categoryName });
+    const category = await Category.findOne({
+      name: categoryName,
+      organizationId: req.user!.organizationId,
+      branchId: req.user!.branchId,
+      warehouseId: req.user!.warehouseId,
+    });
 
     if (!category) {
       return res.status(404).json({
@@ -63,10 +71,18 @@ const createMedicine = async (req: AuthRequest, res: Response) => {
 
     //   check valid brand
     const activeBrand = await Brand.find({
+      organizationId: req.user!.organizationId,
+      branchId: req.user!.branchId,
+      warehouseId: req.user!.warehouseId,
       isActive: true,
     }).select("name");
 
-    const brand = await Brand.findOne({ name: brandName });
+    const brand = await Brand.findOne({
+      name: brandName,
+      organizationId: req.user!.organizationId,
+      branchId: req.user!.branchId,
+      warehouseId: req.user!.warehouseId,
+    });
 
     if (!brand) {
       return res.status(404).json({
@@ -82,6 +98,9 @@ const createMedicine = async (req: AuthRequest, res: Response) => {
       strength,
       dosageForm,
       brandId: brand._id,
+      organizationId: req.user!.organizationId,
+      branchId: req.user!.branchId,
+      warehouseId: req.user!.warehouseId,
     });
 
     if (existingMedicine) {
@@ -107,6 +126,9 @@ const createMedicine = async (req: AuthRequest, res: Response) => {
       unitsPerStrip,
       stripPrice: unitPrice * unitsPerStrip,
       isActive,
+      organizationId: req.user!.organizationId,
+      branchId: req.user!.branchId,
+      warehouseId: req.user!.warehouseId,
     });
 
     //   success response
@@ -145,12 +167,17 @@ const createMedicine = async (req: AuthRequest, res: Response) => {
 const medicineList = async (req: AuthRequest, res: Response) => {
   try {
     const rawSearch = req.query.search;
+    const isActive = req.query.isActive;
 
     const search = typeof rawSearch === "string" ? rawSearch : "";
 
     const { name, strength, unit } = parseMedicineInput(search);
 
-    const match: any = {};
+    const match: any = {
+      organizationId: req.user!.organizationId,
+      branchId: req.user!.branchId,
+      warehouseId: req.user!.warehouseId,
+    };
 
     // name search
     if (name) {
@@ -163,9 +190,26 @@ const medicineList = async (req: AuthRequest, res: Response) => {
       match.unit = new RegExp(`^${unit}$`, "i");
     }
 
-    const medicine = await Medicine.find(match).select(
-      "-categoryId -brandId -createdBy",
-    );
+    if (isActive !== undefined) {
+      match.isActive = isActive;
+    }
+
+    const medicine = await Medicine.find(match)
+      .populate([
+        {
+          path: "organizationId",
+          select: "name",
+        },
+        {
+          path: "branchId",
+          select: "name",
+        },
+        {
+          path: "warehouseId",
+          select: "name",
+        },
+      ])
+      .select("-categoryId -brandId -createdBy");
 
     if (!medicine) {
       return res.status(404).json({
@@ -202,7 +246,12 @@ const medicineInfo = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const medicine = await Medicine.findById(id).populate([
+    const medicine = await Medicine.findOne({
+      _id: id,
+      organizationId: req.user!.organizationId,
+      branchId: req.user!.branchId,
+      warehouseId: req.user!.warehouseId,
+    }).populate([
       {
         path: "categoryId",
         select: "name description -_id",
@@ -214,6 +263,18 @@ const medicineInfo = async (req: AuthRequest, res: Response) => {
       {
         path: "createdBy",
         select: "name email -_id",
+      },
+      {
+        path: "organizationId",
+        select: "name ",
+      },
+      {
+        path: "branchId",
+        select: "name ",
+      },
+      {
+        path: "warehouseId",
+        select: "name ",
       },
     ]);
 
@@ -282,7 +343,12 @@ const updateMedicine = async (req: AuthRequest, res: Response) => {
       isActive,
     } = validationResult.data;
 
-    const medicine = await Medicine.findById(id);
+    const medicine = await Medicine.findOne({
+      _id: id,
+      organizationId: req.user!.organizationId,
+      branchId: req.user!.branchId,
+      warehouseId: req.user!.warehouseId,
+    });
 
     if (!medicine) {
       return res.status(404).json({
@@ -293,7 +359,13 @@ const updateMedicine = async (req: AuthRequest, res: Response) => {
 
     // prevent duplicate medicine name (industry practice)
     if (name && name !== medicine.name) {
-      const existingMedicine = await Medicine.findOne({ name });
+      const existingMedicine = await Medicine.findOne({
+        name,
+        organizationId: req.user!.organizationId,
+        branchId: req.user!.branchId,
+        warehouseId: req.user!.warehouseId,
+        _id: { $ne: id }, // exclude current medicine
+      });
 
       if (existingMedicine) {
         return res.status(409).json({
@@ -324,10 +396,19 @@ const updateMedicine = async (req: AuthRequest, res: Response) => {
 
     //   check valid category
     const activeCategory = await Category.find({
+      organizationId: req.user!.organizationId,
+      branchId: req.user!.branchId,
+      warehouseId: req.user!.warehouseId,
       isActive: true,
     }).select("name");
 
-    const category = await Category.findOne({ name: categoryName });
+    const category = await Category.findOne({
+      name: categoryName,
+      organizationId: req.user!.organizationId,
+      branchId: req.user!.branchId,
+      warehouseId: req.user!.warehouseId,
+      isActive: true,
+    });
 
     if (!category) {
       return res.status(404).json({
@@ -342,10 +423,19 @@ const updateMedicine = async (req: AuthRequest, res: Response) => {
 
     //   check valid brand
     const activeBrand = await Brand.find({
+      organizationId: req.user!.organizationId,
+      branchId: req.user!.branchId,
+      warehouseId: req.user!.warehouseId,
       isActive: true,
     }).select("name");
 
-    const brand = await Brand.findOne({ name: brandName });
+    const brand = await Brand.findOne({
+      name: brandName,
+      organizationId: req.user!.organizationId,
+      branchId: req.user!.branchId,
+      warehouseId: req.user!.warehouseId,
+      isActive: true,
+    });
 
     if (!brand) {
       return res.status(404).json({
@@ -359,9 +449,18 @@ const updateMedicine = async (req: AuthRequest, res: Response) => {
     updateData.brandId = brand._id;
 
     // Update medicine
-    const updatedMedicine = await Medicine.findByIdAndUpdate(id, updateData, {
-      new: true,
-    });
+    const updatedMedicine = await Medicine.findByIdAndUpdate(
+      {
+        _id: id,
+        organizationId: req.user!.organizationId,
+        branchId: req.user!.branchId,
+        warehouseId: req.user!.warehouseId,
+      },
+      updateData,
+      {
+        new: true,
+      },
+    );
 
     return res.status(200).json({
       success: true,
@@ -406,7 +505,12 @@ const deleteMedicine = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const medicine = await Medicine.findByIdAndDelete(id);
+    const medicine = await Medicine.findByIdAndDelete({
+      _id: id,
+      organizationId: req.user!.organizationId,
+      branchId: req.user!.branchId,
+      warehouseId: req.user!.warehouseId,
+    });
 
     if (!medicine) {
       return res.status(404).json({
