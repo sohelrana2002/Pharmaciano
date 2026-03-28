@@ -205,7 +205,12 @@ const inventoryBatchInfo = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const inventoryBatch = await InventoryBatch.findById(id).populate([
+    const inventoryBatch = await InventoryBatch.findOne({
+      _id: id,
+      organizationId: req.user!.organizationId,
+      branchId: req.user!.branchId,
+      warehouseId: req.user!.warehouseId,
+    }).populate([
       {
         path: "organizationId",
         select: "name contact address",
@@ -232,21 +237,6 @@ const inventoryBatchInfo = async (req: AuthRequest, res: Response) => {
       return res.status(404).json({
         success: false,
         message: customMessage.notFound("Inventory batch", id),
-      });
-    }
-
-    // advance level protection
-    if (
-      inventoryBatch.organizationId._id.toString() !==
-        req.user!.organizationId.toString() ||
-      inventoryBatch.branchId._id.toString() !==
-        req.user!.branchId.toString() ||
-      inventoryBatch.warehouseId._id.toString() !==
-        req.user!.warehouseId.toString()
-    ) {
-      return res.status(403).json({
-        success: false,
-        message: "Unauthorized access to this inventory batch!",
       });
     }
 
@@ -296,7 +286,12 @@ const updateInventoryBatch = async (req: AuthRequest, res: Response) => {
     const { medicineName, batchNo, expiryDate, quantity, purchasePrice } =
       validationResult.data;
 
-    const inventoryBatch = await InventoryBatch.findById(id);
+    const inventoryBatch = await InventoryBatch.findOne({
+      _id: id,
+      organizationId: req.user!.organizationId,
+      branchId: req.user!.branchId,
+      warehouseId: req.user!.warehouseId,
+    });
 
     if (!inventoryBatch) {
       return res.status(404).json({
@@ -305,22 +300,15 @@ const updateInventoryBatch = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    // advance level protection
-    if (
-      inventoryBatch.organizationId.toString() !==
-        req.user!.organizationId.toString() ||
-      inventoryBatch.branchId.toString() !== req.user!.branchId.toString() ||
-      inventoryBatch.warehouseId.toString() !== req.user!.warehouseId.toString()
-    ) {
-      return res.status(403).json({
-        success: false,
-        message: "Unauthorized access to this inventory batch!",
-      });
-    }
-
     //   prevent duplicate batch no
     if (batchNo && batchNo !== inventoryBatch.batchNo) {
-      const existingBatchNo = await InventoryBatch.findOne({ batchNo });
+      const existingBatchNo = await InventoryBatch.findOne({
+        batchNo,
+        organizationId: req.user!.organizationId,
+        branchId: req.user!.branchId,
+        warehouseId: req.user!.warehouseId,
+        _id: { $ne: id }, // exclude current inventoryBatch
+      });
 
       if (existingBatchNo) {
         return res.status(409).json({
@@ -351,6 +339,7 @@ const updateInventoryBatch = async (req: AuthRequest, res: Response) => {
       organizationId: req.user!.organizationId,
       branchId: req.user!.branchId,
       warehouseId: req.user!.warehouseId,
+      isActive: true,
     });
 
     if (!medicine) {
@@ -363,14 +352,14 @@ const updateInventoryBatch = async (req: AuthRequest, res: Response) => {
     //   update medicineId
     updateData.medicineId = medicine._id;
 
-    // advance level update data
-    updateData.organizationId = req.user!.organizationId;
-    updateData.branchId = req.user!.branchId;
-    updateData.warehouseId = req.user!.warehouseId;
-
     // Update inventoryBatch
     const updatedInventoryBatch = await InventoryBatch.findByIdAndUpdate(
-      id,
+      {
+        _id: id,
+        organizationId: req.user!.organizationId,
+        branchId: req.user!.branchId,
+        warehouseId: req.user!.warehouseId,
+      },
       updateData,
       {
         new: true,
@@ -420,25 +409,17 @@ const deleteInventoryBatch = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const inventoryBatch = await InventoryBatch.findByIdAndDelete(id);
+    const inventoryBatch = await InventoryBatch.findByIdAndDelete({
+      _id: id,
+      organizationId: req.user!.organizationId,
+      branchId: req.user!.branchId,
+      warehouseId: req.user!.warehouseId,
+    });
 
     if (!inventoryBatch) {
       return res.status(404).json({
         success: false,
         message: customMessage.notFound("Inventory batch", id),
-      });
-    }
-
-    // advance level protection
-    if (
-      inventoryBatch.organizationId.toString() !==
-        req.user!.organizationId.toString() ||
-      inventoryBatch.branchId.toString() !== req.user!.branchId.toString() ||
-      inventoryBatch.warehouseId.toString() !== req.user!.warehouseId.toString()
-    ) {
-      return res.status(403).json({
-        success: false,
-        message: "Unauthorized access to this inventory batch!",
       });
     }
 
