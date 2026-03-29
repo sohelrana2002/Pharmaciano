@@ -33,6 +33,9 @@
  *               country:
  *                 type: string
  *                 example: UK
+ *               isActive:
+ *                 type: boolean
+ *                 example: true
  *     responses:
  *       201:
  *         description: Brand created successfully
@@ -164,6 +167,8 @@
  *                 type: string
  *               country:
  *                 type: string
+ *               isActive:
+ *                 type: boolean
  *     responses:
  *       200:
  *         description: Brand updated successfully

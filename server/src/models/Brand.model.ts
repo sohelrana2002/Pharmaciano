@@ -8,16 +8,6 @@ const brandSchema = new Schema<IBrand>(
       ref: "Organization",
       required: true,
     },
-    branchId: {
-      type: Schema.Types.ObjectId,
-      ref: "Branch",
-      required: true,
-    },
-    warehouseId: {
-      type: Schema.Types.ObjectId,
-      ref: "Warehouse",
-      required: true,
-    },
     name: {
       type: String,
       required: true,
