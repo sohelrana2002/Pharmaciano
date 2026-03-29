@@ -27,13 +27,11 @@ const createCategory = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const { name, description } = validationResult.data;
+    const { name, description, isActive } = validationResult.data;
 
     const existingCategory = await Category.findOne({
       name,
       organizationId: req.user!.organizationId,
-      branchId: req.user!.branchId,
-      warehouseId: req.user!.warehouseId,
     });
 
     if (existingCategory) {
@@ -48,8 +46,7 @@ const createCategory = async (req: AuthRequest, res: Response) => {
       description,
       createdBy: req.user!.userId,
       organizationId: req.user!.organizationId,
-      branchId: req.user!.branchId,
-      warehouseId: req.user!.warehouseId,
+      isActive,
     });
 
     return res.status(201).json({
@@ -89,8 +86,6 @@ const categoryList = async (req: AuthRequest, res: Response) => {
 
     const baseFilter: any = {
       organizationId: req.user!.organizationId,
-      branchId: req.user!.branchId,
-      warehouseId: req.user!.warehouseId,
     };
 
     const filter: any = { ...baseFilter };
@@ -102,14 +97,6 @@ const categoryList = async (req: AuthRequest, res: Response) => {
     const category = await Category.find(filter).populate([
       {
         path: "organizationId",
-        select: "name",
-      },
-      {
-        path: "branchId",
-        select: "name",
-      },
-      {
-        path: "warehouseId",
         select: "name",
       },
       {
@@ -142,7 +129,7 @@ const categoryList = async (req: AuthRequest, res: Response) => {
       message:
         category.length > 0
           ? customMessage.found("List of category")
-          : "No Medicinees found!",
+          : "No category found!",
       total,
       active: activeCount,
       inActive: inActiveCount,
@@ -173,20 +160,10 @@ const categoryInfo = async (req: AuthRequest, res: Response) => {
     const category = await Category.findOne({
       _id: id,
       organizationId: req.user!.organizationId,
-      branchId: req.user!.branchId,
-      warehouseId: req.user!.warehouseId,
     }).populate([
       {
         path: "organizationId",
         select: "name contact address",
-      },
-      {
-        path: "branchId",
-        select: "name contact address",
-      },
-      {
-        path: "warehouseId",
-        select: "name location",
       },
       {
         path: "createdBy",
@@ -243,13 +220,11 @@ const updateCategory = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const { name, description } = validationResult.data;
+    const { name, description, isActive } = validationResult.data;
 
     const category = await Category.findOne({
       _id: id,
       organizationId: req.user!.organizationId,
-      branchId: req.user!.branchId,
-      warehouseId: req.user!.warehouseId,
     });
 
     if (!category) {
@@ -264,8 +239,6 @@ const updateCategory = async (req: AuthRequest, res: Response) => {
       const existingName = await Category.findOne({
         name,
         organizationId: req.user!.organizationId,
-        branchId: req.user!.branchId,
-        warehouseId: req.user!.warehouseId,
       });
 
       if (existingName) {
@@ -281,13 +254,12 @@ const updateCategory = async (req: AuthRequest, res: Response) => {
 
     if (name) updateData.name = name;
     if (description) updateData.description = description;
+    if (isActive) updateData.isActive = isActive;
 
     const updateResult = await Category.findByIdAndUpdate(
       {
         _id: id,
         organizationId: req.user!.organizationId,
-        branchId: req.user!.branchId,
-        warehouseId: req.user!.warehouseId,
       },
       updateData,
       {
@@ -340,8 +312,6 @@ const deleteCategory = async (req: AuthRequest, res: Response) => {
     const category = await Category.findByIdAndDelete({
       _id: id,
       organizationId: req.user!.organizationId,
-      branchId: req.user!.branchId,
-      warehouseId: req.user!.warehouseId,
     });
 
     if (!category) {
