@@ -1192,6 +1192,10 @@
                   "country": {
                     "type": "string",
                     "example": "UK"
+                  },
+                  "isActive": {
+                    "type": "boolean",
+                    "example": true
                   }
                 }
               }
@@ -1389,6 +1393,9 @@
                   },
                   "country": {
                     "type": "string"
+                  },
+                  "isActive": {
+                    "type": "boolean"
                   }
                 }
               }

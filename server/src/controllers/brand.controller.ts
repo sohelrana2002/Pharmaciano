@@ -28,14 +28,11 @@ const createBrand = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const { name, manufacturer, country } = validationResult.data;
+    const { name, manufacturer, country, isActive } = validationResult.data;
 
     const existingBrand = await Brand.findOne({
       name,
       organizationId: req.user!.organizationId,
-      branchId: req.user!.branchId,
-      warehouseId: req.user!.warehouseId,
-      isActive: true,
     });
 
     if (existingBrand) {
@@ -51,8 +48,7 @@ const createBrand = async (req: AuthRequest, res: Response) => {
       country,
       createdBy: req.user!.userId,
       organizationId: req.user!.organizationId,
-      branchId: req.user!.branchId,
-      warehouseId: req.user!.warehouseId,
+      isActive,
     });
 
     return res.status(201).json({
@@ -92,8 +88,6 @@ const brandList = async (req: AuthRequest, res: Response) => {
 
     const baseFilter: any = {
       organizationId: req.user!.organizationId,
-      branchId: req.user!.branchId,
-      warehouseId: req.user!.warehouseId,
     };
 
     const filter: any = { ...baseFilter };
@@ -106,14 +100,6 @@ const brandList = async (req: AuthRequest, res: Response) => {
       .populate([
         {
           path: "organizationId",
-          select: "name",
-        },
-        {
-          path: "branchId",
-          select: "name",
-        },
-        {
-          path: "warehouseId",
           select: "name",
         },
         {
@@ -147,7 +133,7 @@ const brandList = async (req: AuthRequest, res: Response) => {
       message:
         brands.length > 0
           ? customMessage.found("List of brands")
-          : "No Medicinees found!",
+          : "No brand found!",
       total,
       active: activeCount,
       inActive: inActiveCount,
@@ -178,20 +164,10 @@ const brandInfo = async (req: AuthRequest, res: Response) => {
     const brand = await Brand.findOne({
       _id: id,
       organizationId: req.user!.organizationId,
-      branchId: req.user!.branchId,
-      warehouseId: req.user!.warehouseId,
     }).populate([
       {
         path: "organizationId",
         select: "name contact address",
-      },
-      {
-        path: "branchId",
-        select: "name contact address",
-      },
-      {
-        path: "warehouseId",
-        select: "name location",
       },
       {
         path: "createdBy",
@@ -248,13 +224,11 @@ const updateBrand = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const { name, manufacturer, country } = validationResult.data;
+    const { name, manufacturer, country, isActive } = validationResult.data;
 
     const brand = await Brand.findOne({
       _id: id,
       organizationId: req.user!.organizationId,
-      branchId: req.user!.branchId,
-      warehouseId: req.user!.warehouseId,
     });
 
     if (!brand) {
@@ -269,8 +243,6 @@ const updateBrand = async (req: AuthRequest, res: Response) => {
       const existingBrand = await Brand.findOne({
         name,
         organizationId: req.user!.organizationId,
-        branchId: req.user!.branchId,
-        warehouseId: req.user!.warehouseId,
       });
 
       if (existingBrand) {
@@ -286,14 +258,13 @@ const updateBrand = async (req: AuthRequest, res: Response) => {
     if (name) updateData.name = name;
     if (manufacturer) updateData.manufacturer = manufacturer;
     if (country) updateData.country = country;
+    if (isActive) updateData.isActive = isActive;
 
     // update brand
     const updateResult = await Brand.findByIdAndUpdate(
       {
         _id: id,
         organizationId: req.user!.organizationId,
-        branchId: req.user!.branchId,
-        warehouseId: req.user!.warehouseId,
       },
       updateData,
       {
@@ -346,8 +317,6 @@ const deleteBrand = async (req: AuthRequest, res: Response) => {
     const deletedBrand = await Brand.findByIdAndDelete({
       _id: id,
       organizationId: req.user!.organizationId,
-      branchId: req.user!.branchId,
-      warehouseId: req.user!.warehouseId,
     });
 
     if (!deletedBrand) {
