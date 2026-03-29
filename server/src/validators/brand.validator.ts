@@ -16,6 +16,7 @@ export const brandSchemaValidator = z.object({
     .string({ error: "Country name is required." })
     .min(1, "Country name must be at least 1 characters long")
     .toLowerCase(),
+  isActive: z.boolean().optional().default(true),
 });
 
 // Validator for updating a brand (all fields optional)

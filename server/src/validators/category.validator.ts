@@ -11,6 +11,7 @@ export const categorySchemaValidator = z.object({
     .string({ error: "Category description is required." })
     .min(1, "Category description must be at least 1 characters long")
     .toLowerCase(),
+  isActive: z.boolean().optional().default(true),
 });
 
 // Validator for updating a brand (all fields optional)
