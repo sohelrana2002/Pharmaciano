@@ -49,16 +49,12 @@ const createMedicine = async (req: AuthRequest, res: Response) => {
     //   check valid category
     const activeCategory = await Category.find({
       organizationId: req.user!.organizationId,
-      branchId: req.user!.branchId,
-      warehouseId: req.user!.warehouseId,
       isActive: true,
     }).select("name");
 
     const category = await Category.findOne({
       name: categoryName,
       organizationId: req.user!.organizationId,
-      branchId: req.user!.branchId,
-      warehouseId: req.user!.warehouseId,
     });
 
     if (!category) {
@@ -72,16 +68,12 @@ const createMedicine = async (req: AuthRequest, res: Response) => {
     //   check valid brand
     const activeBrand = await Brand.find({
       organizationId: req.user!.organizationId,
-      branchId: req.user!.branchId,
-      warehouseId: req.user!.warehouseId,
       isActive: true,
     }).select("name");
 
     const brand = await Brand.findOne({
       name: brandName,
       organizationId: req.user!.organizationId,
-      branchId: req.user!.branchId,
-      warehouseId: req.user!.warehouseId,
     });
 
     if (!brand) {
@@ -99,8 +91,6 @@ const createMedicine = async (req: AuthRequest, res: Response) => {
       dosageForm,
       brandId: brand._id,
       organizationId: req.user!.organizationId,
-      branchId: req.user!.branchId,
-      warehouseId: req.user!.warehouseId,
     });
 
     if (existingMedicine) {
@@ -127,8 +117,6 @@ const createMedicine = async (req: AuthRequest, res: Response) => {
       stripPrice: unitPrice * unitsPerStrip,
       isActive,
       organizationId: req.user!.organizationId,
-      branchId: req.user!.branchId,
-      warehouseId: req.user!.warehouseId,
     });
 
     //   success response
@@ -175,8 +163,6 @@ const medicineList = async (req: AuthRequest, res: Response) => {
 
     const baseFilter: any = {
       organizationId: req.user!.organizationId,
-      branchId: req.user!.branchId,
-      warehouseId: req.user!.warehouseId,
     };
 
     const filter: any = { ...baseFilter };
@@ -199,14 +185,6 @@ const medicineList = async (req: AuthRequest, res: Response) => {
     const medicine = await Medicine.find(filter).populate([
       {
         path: "organizationId",
-        select: "name",
-      },
-      {
-        path: "branchId",
-        select: "name",
-      },
-      {
-        path: "warehouseId",
         select: "name",
       },
       {
@@ -278,8 +256,6 @@ const medicineInfo = async (req: AuthRequest, res: Response) => {
     const medicine = await Medicine.findOne({
       _id: id,
       organizationId: req.user!.organizationId,
-      branchId: req.user!.branchId,
-      warehouseId: req.user!.warehouseId,
     }).populate([
       {
         path: "categoryId",
@@ -296,14 +272,6 @@ const medicineInfo = async (req: AuthRequest, res: Response) => {
       {
         path: "organizationId",
         select: "name contact address",
-      },
-      {
-        path: "branchId",
-        select: "name contact address",
-      },
-      {
-        path: "warehouseId",
-        select: "name location",
       },
     ]);
 
@@ -375,8 +343,6 @@ const updateMedicine = async (req: AuthRequest, res: Response) => {
     const medicine = await Medicine.findOne({
       _id: id,
       organizationId: req.user!.organizationId,
-      branchId: req.user!.branchId,
-      warehouseId: req.user!.warehouseId,
     });
 
     if (!medicine) {
@@ -391,8 +357,6 @@ const updateMedicine = async (req: AuthRequest, res: Response) => {
       const existingMedicine = await Medicine.findOne({
         name,
         organizationId: req.user!.organizationId,
-        branchId: req.user!.branchId,
-        warehouseId: req.user!.warehouseId,
         _id: { $ne: id }, // exclude current medicine
       });
 
@@ -426,16 +390,12 @@ const updateMedicine = async (req: AuthRequest, res: Response) => {
     //   check valid category
     const activeCategory = await Category.find({
       organizationId: req.user!.organizationId,
-      branchId: req.user!.branchId,
-      warehouseId: req.user!.warehouseId,
       isActive: true,
     }).select("name");
 
     const category = await Category.findOne({
       name: categoryName,
       organizationId: req.user!.organizationId,
-      branchId: req.user!.branchId,
-      warehouseId: req.user!.warehouseId,
       isActive: true,
     });
 
@@ -453,16 +413,12 @@ const updateMedicine = async (req: AuthRequest, res: Response) => {
     //   check valid brand
     const activeBrand = await Brand.find({
       organizationId: req.user!.organizationId,
-      branchId: req.user!.branchId,
-      warehouseId: req.user!.warehouseId,
       isActive: true,
     }).select("name");
 
     const brand = await Brand.findOne({
       name: brandName,
       organizationId: req.user!.organizationId,
-      branchId: req.user!.branchId,
-      warehouseId: req.user!.warehouseId,
       isActive: true,
     });
 
@@ -482,8 +438,6 @@ const updateMedicine = async (req: AuthRequest, res: Response) => {
       {
         _id: id,
         organizationId: req.user!.organizationId,
-        branchId: req.user!.branchId,
-        warehouseId: req.user!.warehouseId,
       },
       updateData,
       {
@@ -537,8 +491,6 @@ const deleteMedicine = async (req: AuthRequest, res: Response) => {
     const medicine = await Medicine.findByIdAndDelete({
       _id: id,
       organizationId: req.user!.organizationId,
-      branchId: req.user!.branchId,
-      warehouseId: req.user!.warehouseId,
     });
 
     if (!medicine) {
