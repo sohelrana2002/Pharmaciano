@@ -14,16 +14,6 @@ const medicineSchema = new Schema<IMedicine>(
       ref: "Organization",
       required: true,
     },
-    branchId: {
-      type: Schema.Types.ObjectId,
-      ref: "Branch",
-      required: true,
-    },
-    warehouseId: {
-      type: Schema.Types.ObjectId,
-      ref: "Warehouse",
-      required: true,
-    },
     genericName: {
       type: String,
       required: true,
@@ -106,10 +96,9 @@ medicineSchema.index(
     genericName: 1,
     strength: 1,
     dosageForm: 1,
+    unit: 1,
     brandId: 1,
     organizationId: 1,
-    branchId: 1,
-    warehouseId: 1,
   },
   { unique: true },
 );
