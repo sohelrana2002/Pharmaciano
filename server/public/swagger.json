@@ -72,18 +72,16 @@
       },
       "Brand": {
         "type": "object",
+        "required": [
+          "name",
+          "manufacturer",
+          "country",
+          "isActive"
+        ],
         "properties": {
           "_id": {
-            "type": "string"
-          },
-          "organizationId": {
-            "type": "string"
-          },
-          "branchId": {
-            "type": "string"
-          },
-          "warehouseId": {
-            "type": "string"
+            "type": "string",
+            "description": "MongoDB ObjectId"
           },
           "name": {
             "type": "string"
@@ -96,6 +94,9 @@
           },
           "isActive": {
             "type": "boolean"
+          },
+          "organizationId": {
+            "type": "string"
           },
           "createdBy": {
             "type": "string"
@@ -659,14 +660,14 @@
       }
     },
     "parameters": {
-      "inventoryBatchId": {
+      "brandId": {
         "in": "path",
         "name": "id",
         "required": true,
         "schema": {
           "type": "string"
         },
-        "description": "Inventory batch ID"
+        "description": "Brand ID"
       },
       "page": {
         "in": "query",
@@ -683,6 +684,29 @@
           "type": "integer",
           "default": 10
         }
+      },
+      "isActive": {
+        "in": "query",
+        "name": "isActive",
+        "schema": {
+          "type": "boolean"
+        }
+      },
+      "name": {
+        "in": "query",
+        "name": "name",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "inventoryBatchId": {
+        "in": "path",
+        "name": "id",
+        "required": true,
+        "schema": {
+          "type": "string"
+        },
+        "description": "Inventory batch ID"
       },
       "status": {
         "in": "query",
@@ -1188,12 +1212,7 @@
       "post": {
         "summary": "Create a new brand",
         "tags": [
-          "Brand"
-        ],
-        "security": [
-          {
-            "bearerAuth": []
-          }
+          "Brands"
         ],
         "requestBody": {
           "required": true,
@@ -1204,24 +1223,21 @@
                 "required": [
                   "name",
                   "manufacturer",
-                  "country"
+                  "country",
+                  "isActive"
                 ],
                 "properties": {
                   "name": {
-                    "type": "string",
-                    "example": "Panadol"
+                    "type": "string"
                   },
                   "manufacturer": {
-                    "type": "string",
-                    "example": "GlaxoSmithKline"
+                    "type": "string"
                   },
                   "country": {
-                    "type": "string",
-                    "example": "UK"
+                    "type": "string"
                   },
                   "isActive": {
-                    "type": "boolean",
-                    "example": true
+                    "type": "boolean"
                   }
                 }
               }
@@ -1264,21 +1280,20 @@
       "get": {
         "summary": "Get list of brands",
         "tags": [
-          "Brand"
-        ],
-        "security": [
-          {
-            "bearerAuth": []
-          }
+          "Brands"
         ],
         "parameters": [
           {
-            "in": "query",
-            "name": "isActive",
-            "schema": {
-              "type": "boolean"
-            },
-            "description": "Filter brands by active status"
+            "$ref": "#/components/parameters/page"
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/isActive"
+          },
+          {
+            "$ref": "#/components/parameters/name"
           }
         ],
         "responses": {
@@ -1330,27 +1345,16 @@
       "get": {
         "summary": "Get individual brand info",
         "tags": [
-          "Brand"
-        ],
-        "security": [
-          {
-            "bearerAuth": []
-          }
+          "Brands"
         ],
         "parameters": [
           {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Brand ID"
+            "$ref": "#/components/parameters/brandId"
           }
         ],
         "responses": {
           "200": {
-            "description": "Brand info found",
+            "description": "Brand found",
             "content": {
               "application/json": {
                 "schema": {
@@ -1375,6 +1379,9 @@
               }
             }
           },
+          "400": {
+            "description": "Invalid ID"
+          },
           "404": {
             "description": "Brand not found"
           },
@@ -1384,24 +1391,13 @@
         }
       },
       "put": {
-        "summary": "Update brand info",
+        "summary": "Update a brand",
         "tags": [
-          "Brand"
-        ],
-        "security": [
-          {
-            "bearerAuth": []
-          }
+          "Brands"
         ],
         "parameters": [
           {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Brand ID"
+            "$ref": "#/components/parameters/brandId"
           }
         ],
         "requestBody": {
@@ -1439,7 +1435,7 @@
             "description": "Brand not found"
           },
           "409": {
-            "description": "Duplicate brand name"
+            "description": "Brand name already exists"
           },
           "500": {
             "description": "Server error"
@@ -1449,27 +1445,19 @@
       "delete": {
         "summary": "Delete a brand",
         "tags": [
-          "Brand"
-        ],
-        "security": [
-          {
-            "bearerAuth": []
-          }
+          "Brands"
         ],
         "parameters": [
           {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Brand ID"
+            "$ref": "#/components/parameters/brandId"
           }
         ],
         "responses": {
           "200": {
             "description": "Brand deleted successfully"
+          },
+          "400": {
+            "description": "Invalid ID"
           },
           "404": {
             "description": "Brand not found"
@@ -4354,7 +4342,7 @@
       "description": "API endpoints for managing branches"
     },
     {
-      "name": "Brand",
+      "name": "Brands",
       "description": "Brand management APIs"
     },
     {
