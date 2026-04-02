@@ -1,8 +1,8 @@
 /**
  * @swagger
  * tags:
- *   name: Branches
- *   description: API endpoints for managing branches
+ *   - name: Branches
+ *     description: Branch management APIs
  */
 
 /**
@@ -11,12 +11,13 @@
  *   schemas:
  *     Branch:
  *       type: object
+ *       required:
+ *         - name
+ *         - address
+ *         - contact
+ *         - isActive
  *       properties:
  *         _id:
- *           type: string
- *         organization:
- *           type: string
- *         createdBy:
  *           type: string
  *         name:
  *           type: string
@@ -29,26 +30,63 @@
  *               type: string
  *             email:
  *               type: string
- *         orgName:
- *           type: string
  *         isActive:
  *           type: boolean
+ *         organizationId:
+ *           type: string
+ *         createdBy:
+ *           type: string
  *         createdAt:
  *           type: string
  *           format: date-time
  *         updatedAt:
  *           type: string
  *           format: date-time
+ *
+ *   parameters:
+ *     branchId:
+ *       in: path
+ *       name: id
+ *       required: true
+ *       schema:
+ *         type: string
+ *       description: Branch ID
+ *
+ *     page:
+ *       in: query
+ *       name: page
+ *       schema:
+ *         type: integer
+ *         default: 1
+ *         example: 1
+ *
+ *     limit:
+ *       in: query
+ *       name: limit
+ *       schema:
+ *         type: integer
+ *         default: 10
+ *         example: 10
+ *
+ *     name:
+ *       in: query
+ *       name: name
+ *       schema:
+ *         type: string
+ *
+ *     isActive:
+ *       in: query
+ *       name: isActive
+ *       schema:
+ *         type: boolean
  */
 
 /**
  * @swagger
  * /api/v1/branches:
  *   post:
- *     summary: Create a new branch
+ *     summary: Create a branch
  *     tags: [Branches]
- *     security:
- *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -59,7 +97,7 @@
  *               - name
  *               - address
  *               - contact
- *               - orgName
+ *               - isActive
  *             properties:
  *               name:
  *                 type: string
@@ -72,33 +110,30 @@
  *                     type: string
  *                   email:
  *                     type: string
- *               orgName:
- *                 type: string
+ *               isActive:
+ *                 type: boolean
  *     responses:
  *       201:
  *         description: Branch created successfully
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Branch'
  *       400:
  *         description: Validation failed
- *       404:
- *         description: Invalid organization name
  *       409:
- *         description: Branch name already exists
+ *         description: Branch already exists
  *       500:
- *         description: Internal server error
+ *         description: Server error
  */
 
 /**
  * @swagger
  * /api/v1/branches:
  *   get:
- *     summary: Get list of all active branches
+ *     summary: Get list of branches
  *     tags: [Branches]
- *     security:
- *       - bearerAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/page'
+ *       - $ref: '#/components/parameters/limit'
+ *       - $ref: '#/components/parameters/name'
+ *       - $ref: '#/components/parameters/isActive'
  *     responses:
  *       200:
  *         description: List of branches
@@ -111,6 +146,21 @@
  *                   type: boolean
  *                 message:
  *                   type: string
+ *                 meta:
+ *                   type: object
+ *                   properties:
+ *                     page:
+ *                       type: integer
+ *                     limit:
+ *                       type: integer
+ *                     count:
+ *                       type: integer
+ *                 total:
+ *                   type: integer
+ *                 active:
+ *                   type: integer
+ *                 inActive:
+ *                   type: integer
  *                 data:
  *                   type: object
  *                   properties:
@@ -118,57 +168,37 @@
  *                       type: array
  *                       items:
  *                         $ref: '#/components/schemas/Branch'
- *       404:
- *         description: Branch not found
  *       500:
- *         description: Internal server error
+ *         description: Server error
  */
 
 /**
  * @swagger
  * /api/v1/branches/{id}:
  *   get:
- *     summary: Get individual branch info
+ *     summary: Get branch by ID
  *     tags: [Branches]
- *     security:
- *       - bearerAuth: []
  *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: Branch ID
+ *       - $ref: '#/components/parameters/branchId'
  *     responses:
  *       200:
- *         description: Branch details
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Branch'
+ *         description: Branch found
  *       404:
  *         description: Branch not found
  *       409:
- *         description: Invalid branch ID
+ *         description: Invalid ID
  *       500:
- *         description: Internal server error
+ *         description: Server error
  */
 
 /**
  * @swagger
  * /api/v1/branches/{id}:
  *   put:
- *     summary: Update an existing branch
+ *     summary: Update branch
  *     tags: [Branches]
- *     security:
- *       - bearerAuth: []
  *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: Branch ID
+ *       - $ref: '#/components/parameters/branchId'
  *     requestBody:
  *       required: true
  *       content:
@@ -187,47 +217,36 @@
  *                     type: string
  *                   email:
  *                     type: string
- *               orgName:
- *                 type: string
+ *               isActive:
+ *                 type: boolean
  *     responses:
  *       200:
  *         description: Branch updated successfully
- *         content:
- *           application/json:
- *             schema:
- *               $ref: '#/components/schemas/Branch'
  *       400:
  *         description: Validation failed
  *       404:
- *         description: Branch not found or invalid organization name
+ *         description: Branch not found
  *       409:
- *         description: Branch name already exists or invalid ID
+ *         description: Duplicate or invalid
  *       500:
- *         description: Internal server error
+ *         description: Server error
  */
 
 /**
  * @swagger
  * /api/v1/branches/{id}:
  *   delete:
- *     summary: Delete a branch
+ *     summary: Delete branch
  *     tags: [Branches]
- *     security:
- *       - bearerAuth: []
  *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: Branch ID
+ *       - $ref: '#/components/parameters/branchId'
  *     responses:
  *       200:
  *         description: Branch deleted successfully
  *       404:
  *         description: Branch not found
  *       409:
- *         description: Invalid branch ID
+ *         description: Invalid ID
  *       500:
- *         description: Internal server error
+ *         description: Server error
  */

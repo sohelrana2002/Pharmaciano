@@ -27,14 +27,14 @@
     "schemas": {
       "Branch": {
         "type": "object",
+        "required": [
+          "name",
+          "address",
+          "contact",
+          "isActive"
+        ],
         "properties": {
           "_id": {
-            "type": "string"
-          },
-          "organization": {
-            "type": "string"
-          },
-          "createdBy": {
             "type": "string"
           },
           "name": {
@@ -54,11 +54,14 @@
               }
             }
           },
-          "orgName": {
-            "type": "string"
-          },
           "isActive": {
             "type": "boolean"
+          },
+          "organizationId": {
+            "type": "string"
+          },
+          "createdBy": {
+            "type": "string"
           },
           "createdAt": {
             "type": "string",
@@ -671,21 +674,22 @@
       }
     },
     "parameters": {
-      "brandId": {
+      "branchId": {
         "in": "path",
         "name": "id",
         "required": true,
         "schema": {
           "type": "string"
         },
-        "description": "Brand ID"
+        "description": "Branch ID"
       },
       "page": {
         "in": "query",
         "name": "page",
         "schema": {
           "type": "integer",
-          "default": 1
+          "default": 1,
+          "example": 1
         }
       },
       "limit": {
@@ -693,7 +697,15 @@
         "name": "limit",
         "schema": {
           "type": "integer",
-          "default": 20
+          "default": 20,
+          "example": 10
+        }
+      },
+      "name": {
+        "in": "query",
+        "name": "name",
+        "schema": {
+          "type": "string"
         }
       },
       "isActive": {
@@ -703,12 +715,14 @@
           "type": "boolean"
         }
       },
-      "name": {
-        "in": "query",
-        "name": "name",
+      "brandId": {
+        "in": "path",
+        "name": "id",
+        "required": true,
         "schema": {
           "type": "string"
-        }
+        },
+        "description": "Brand ID"
       },
       "categoryId": {
         "in": "path",
@@ -965,14 +979,9 @@
     },
     "/api/v1/branches": {
       "post": {
-        "summary": "Create a new branch",
+        "summary": "Create a branch",
         "tags": [
           "Branches"
-        ],
-        "security": [
-          {
-            "bearerAuth": []
-          }
         ],
         "requestBody": {
           "required": true,
@@ -984,7 +993,7 @@
                   "name",
                   "address",
                   "contact",
-                  "orgName"
+                  "isActive"
                 ],
                 "properties": {
                   "name": {
@@ -1004,8 +1013,8 @@
                       }
                     }
                   },
-                  "orgName": {
-                    "type": "string"
+                  "isActive": {
+                    "type": "boolean"
                   }
                 }
               }
@@ -1014,37 +1023,36 @@
         },
         "responses": {
           "201": {
-            "description": "Branch created successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Branch"
-                }
-              }
-            }
+            "description": "Branch created successfully"
           },
           "400": {
             "description": "Validation failed"
           },
-          "404": {
-            "description": "Invalid organization name"
-          },
           "409": {
-            "description": "Branch name already exists"
+            "description": "Branch already exists"
           },
           "500": {
-            "description": "Internal server error"
+            "description": "Server error"
           }
         }
       },
       "get": {
-        "summary": "Get list of all active branches",
+        "summary": "Get list of branches",
         "tags": [
           "Branches"
         ],
-        "security": [
+        "parameters": [
           {
-            "bearerAuth": []
+            "$ref": "#/components/parameters/page"
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/name"
+          },
+          {
+            "$ref": "#/components/parameters/isActive"
           }
         ],
         "responses": {
@@ -1060,6 +1068,29 @@
                     },
                     "message": {
                       "type": "string"
+                    },
+                    "meta": {
+                      "type": "object",
+                      "properties": {
+                        "page": {
+                          "type": "integer"
+                        },
+                        "limit": {
+                          "type": "integer"
+                        },
+                        "count": {
+                          "type": "integer"
+                        }
+                      }
+                    },
+                    "total": {
+                      "type": "integer"
+                    },
+                    "active": {
+                      "type": "integer"
+                    },
+                    "inActive": {
+                      "type": "integer"
                     },
                     "data": {
                       "type": "object",
@@ -1077,78 +1108,46 @@
               }
             }
           },
-          "404": {
-            "description": "Branch not found"
-          },
           "500": {
-            "description": "Internal server error"
+            "description": "Server error"
           }
         }
       }
     },
     "/api/v1/branches/{id}": {
       "get": {
-        "summary": "Get individual branch info",
+        "summary": "Get branch by ID",
         "tags": [
           "Branches"
         ],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
         "parameters": [
           {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Branch ID"
+            "$ref": "#/components/parameters/branchId"
           }
         ],
         "responses": {
           "200": {
-            "description": "Branch details",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Branch"
-                }
-              }
-            }
+            "description": "Branch found"
           },
           "404": {
             "description": "Branch not found"
           },
           "409": {
-            "description": "Invalid branch ID"
+            "description": "Invalid ID"
           },
           "500": {
-            "description": "Internal server error"
+            "description": "Server error"
           }
         }
       },
       "put": {
-        "summary": "Update an existing branch",
+        "summary": "Update branch",
         "tags": [
           "Branches"
         ],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
         "parameters": [
           {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Branch ID"
+            "$ref": "#/components/parameters/branchId"
           }
         ],
         "requestBody": {
@@ -1175,8 +1174,8 @@
                       }
                     }
                   },
-                  "orgName": {
-                    "type": "string"
+                  "isActive": {
+                    "type": "boolean"
                   }
                 }
               }
@@ -1185,48 +1184,30 @@
         },
         "responses": {
           "200": {
-            "description": "Branch updated successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/Branch"
-                }
-              }
-            }
+            "description": "Branch updated successfully"
           },
           "400": {
             "description": "Validation failed"
           },
           "404": {
-            "description": "Branch not found or invalid organization name"
+            "description": "Branch not found"
           },
           "409": {
-            "description": "Branch name already exists or invalid ID"
+            "description": "Duplicate or invalid"
           },
           "500": {
-            "description": "Internal server error"
+            "description": "Server error"
           }
         }
       },
       "delete": {
-        "summary": "Delete a branch",
+        "summary": "Delete branch",
         "tags": [
           "Branches"
         ],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
         "parameters": [
           {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Branch ID"
+            "$ref": "#/components/parameters/branchId"
           }
         ],
         "responses": {
@@ -1237,10 +1218,10 @@
             "description": "Branch not found"
           },
           "409": {
-            "description": "Invalid branch ID"
+            "description": "Invalid ID"
           },
           "500": {
-            "description": "Internal server error"
+            "description": "Server error"
           }
         }
       }
@@ -4358,7 +4339,7 @@
     },
     {
       "name": "Branches",
-      "description": "API endpoints for managing branches"
+      "description": "Branch management APIs"
     },
     {
       "name": "Brands",
