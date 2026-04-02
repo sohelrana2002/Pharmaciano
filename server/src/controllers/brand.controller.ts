@@ -84,7 +84,7 @@ const createBrand = async (req: AuthRequest, res: Response) => {
 // list of brand
 const brandList = async (req: AuthRequest, res: Response) => {
   try {
-    const { isActive } = req.query;
+    const { isActive, name, page, limit } = req.query;
 
     const baseFilter: any = {
       organizationId: req.user!.organizationId,
@@ -92,9 +92,17 @@ const brandList = async (req: AuthRequest, res: Response) => {
 
     const filter: any = { ...baseFilter };
 
+    if (name) {
+      filter.name = { $regex: name, $options: "i" };
+    }
+
     if (isActive !== undefined) {
       filter.isActive = isActive;
     }
+
+    const pageNumber = parseInt(page as string) || 1;
+    const limitNumber = parseInt(limit as string) || 10;
+    const skip = (pageNumber - 1) * limitNumber;
 
     const brands = await Brand.find(filter)
       .populate([
@@ -107,7 +115,9 @@ const brandList = async (req: AuthRequest, res: Response) => {
           select: "name email",
         },
       ])
-      .sort({ name: 1 });
+      .skip(skip)
+      .limit(limitNumber)
+      .sort({ createdAt: -1 });
 
     if (!brands) {
       return res.status(404).json({
