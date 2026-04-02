@@ -9,6 +9,7 @@ import {
 import Medicine from "../models/Medicine.model";
 import InventoryBatch from "../models/InventoryBatch.model";
 import mongoose from "mongoose";
+import { parseMedicineInput } from "../helper/parseMedicineInput";
 
 // create inventoryBatch
 const createInventoryBatch = async (req: AuthRequest, res: Response) => {
@@ -35,16 +36,12 @@ const createInventoryBatch = async (req: AuthRequest, res: Response) => {
     //   check valid medicine name
     const activeMedicine = await Medicine.find({
       organizationId: req.user!.organizationId,
-      branchId: req.user!.branchId,
-      warehouseId: req.user!.warehouseId,
       isActive: true,
     }).select("name");
 
     const medicine = await Medicine.findOne({
       name: medicineName,
       organizationId: req.user!.organizationId,
-      branchId: req.user!.branchId,
-      warehouseId: req.user!.warehouseId,
     });
 
     if (!medicine) {
@@ -57,6 +54,8 @@ const createInventoryBatch = async (req: AuthRequest, res: Response) => {
 
     const existingBatchNo = await InventoryBatch.findOne({
       batchNo,
+      organizationId: req.user!.organizationId,
+      branchId: req.user!.branchId,
       warehouseId: req.user!.warehouseId,
     });
 
@@ -115,52 +114,68 @@ const createInventoryBatch = async (req: AuthRequest, res: Response) => {
 // list of inventoryBatch
 const inventoryBatchList = async (req: AuthRequest, res: Response) => {
   try {
-    const { status } = req.query;
+    const { status, medicineName, page = "1", limit = "10" } = req.query;
 
-    // base filter
+    const search = typeof medicineName === "string" ? medicineName : "";
+    const { name, strength, unit } = parseMedicineInput(search);
+
+    const pageNumber = parseInt(page as string) || 1;
+    const limitNumber = parseInt(limit as string) || 10;
+    const skip = (pageNumber - 1) * limitNumber;
+
     const baseFilter: any = {
       organizationId: req.user!.organizationId,
       branchId: req.user!.branchId,
       warehouseId: req.user!.warehouseId,
     };
 
-    // main filter
-    const filter: any = { ...baseFilter };
-
-    // filter with isActive
-    if (status !== undefined) {
-      filter.status = status;
+    if (status) {
+      baseFilter.status = status;
     }
 
-    const inventoryBatch = await InventoryBatch.find(filter)
+    // ✅ conditionally add match
+    const medicinePopulate: any = {
+      path: "medicineId",
+      select: "name strength unit",
+    };
+
+    if (search) {
+      medicinePopulate.match = {
+        ...(name && { name: { $regex: name, $options: "i" } }),
+        ...(strength && { strength }),
+        ...(unit && { unit: new RegExp(`^${unit}$`, "i") }),
+      };
+    }
+
+    const inventoryBatch = await InventoryBatch.find(baseFilter)
+      .populate(medicinePopulate)
       .populate([
-        {
-          path: "medicineId",
-          select: "name -_id",
-        },
-        {
-          path: "organizationId",
-          select: "name -_id",
-        },
-        {
-          path: "branchId",
-          select: "name -_id",
-        },
-        {
-          path: "warehouseId",
-          select: "name -_id",
-        },
+        { path: "organizationId", select: "name" },
+        { path: "branchId", select: "name" },
+        { path: "warehouseId", select: "name" },
       ])
-      .select("-createdBy");
+      .select("-createdBy")
+      .skip(skip)
+      .limit(limitNumber)
+      .sort({ createdAt: -1 });
 
-    if (!inventoryBatch) {
-      return res.status(404).json({
-        success: false,
-        message: customMessage.notFound("Inventory batch"),
-      });
-    }
+    // ✅ ONLY filter when searching
 
-    const total = await InventoryBatch.countDocuments({ ...baseFilter });
+    console.log(
+      "filter: ",
+      inventoryBatch.filter((item) => item.medicineId),
+    );
+
+    const finalData = search
+      ? inventoryBatch.filter((item) => item.medicineId)
+      : inventoryBatch;
+
+    // counts
+    const total = await InventoryBatch.countDocuments({
+      organizationId: req.user!.organizationId,
+      branchId: req.user!.branchId,
+      warehouseId: req.user!.warehouseId,
+    });
 
     const activeCount = await InventoryBatch.countDocuments({
       ...baseFilter,
@@ -175,18 +190,23 @@ const inventoryBatchList = async (req: AuthRequest, res: Response) => {
     return res.status(200).json({
       success: true,
       message:
-        inventoryBatch.length > 0
+        finalData.length > 0
           ? customMessage.found("Inventory batch")
           : "No inventory batches found!",
+      meta: {
+        page: pageNumber,
+        limit: limitNumber,
+        count: finalData.length,
+      },
       total,
       active: activeCount,
       expired: expiredCount,
-      data: { inventoryBatch },
+      data: finalData,
     });
   } catch (error) {
     console.error("List of inventory batch error:", error);
 
-    res.status(500).json({
+    return res.status(500).json({
       success: false,
       message: customMessage.serverError(),
     });
@@ -329,16 +349,12 @@ const updateInventoryBatch = async (req: AuthRequest, res: Response) => {
     //   check valid medicine name
     const activeMedicine = await Medicine.find({
       organizationId: req.user!.organizationId,
-      branchId: req.user!.branchId,
-      warehouseId: req.user!.warehouseId,
       isActive: true,
     }).select("name");
 
     const medicine = await Medicine.findOne({
       name: medicineName,
       organizationId: req.user!.organizationId,
-      branchId: req.user!.branchId,
-      warehouseId: req.user!.warehouseId,
       isActive: true,
     });
 
