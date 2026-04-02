@@ -1,8 +1,8 @@
 /**
  * @swagger
  * tags:
- *   name: Medicines
- *   description: API endpoints for managing medicines
+ *   - name: Medicines
+ *     description: Medicine management APIs
  */
 
 /**
@@ -11,54 +11,93 @@
  *   schemas:
  *     Medicine:
  *       type: object
+ *       required:
+ *         - name
+ *         - genericName
+ *         - categoryName
+ *         - brandName
+ *         - dosageForm
+ *         - strength
+ *         - unit
+ *         - unitPrice
+ *         - unitsPerStrip
+ *         - isPrescriptionRequired
+ *         - taxRate
+ *         - isActive
  *       properties:
  *         _id:
  *           type: string
+ *           description: MongoDB ObjectId
  *         name:
  *           type: string
- *           example: Napa
  *         genericName:
  *           type: string
- *           example: Paracetamol
  *         categoryName:
  *           type: string
- *           example: Painkiller
  *         brandName:
  *           type: string
- *           example: Beximco
  *         dosageForm:
  *           type: string
- *           example: Tablet
  *         strength:
  *           type: string
- *           example: 500
  *         unit:
  *           type: string
- *           example: mg
  *         unitPrice:
  *           type: number
- *           example: 2
  *         unitsPerStrip:
  *           type: number
- *           example: 10
  *         stripPrice:
  *           type: number
- *           example: 20
  *         isPrescriptionRequired:
  *           type: boolean
- *           example: false
  *         taxRate:
  *           type: number
- *           example: 5
+ *         categoryId:
+ *           type: string
+ *         brandId:
+ *           type: string
+ *         createdBy:
+ *           type: string
  *         isActive:
  *           type: boolean
- *           example: true
  *         createdAt:
  *           type: string
  *           format: date-time
  *         updatedAt:
  *           type: string
  *           format: date-time
+ *
+ *   parameters:
+ *     medicineId:
+ *       in: path
+ *       name: id
+ *       required: true
+ *       schema:
+ *         type: string
+ *       description: Medicine ID
+ *     page:
+ *       in: query
+ *       name: page
+ *       schema:
+ *         type: integer
+ *         default: 1
+ *     limit:
+ *       in: query
+ *       name: limit
+ *       schema:
+ *         type: integer
+ *         default: 20
+ *     isActive:
+ *       in: query
+ *       name: isActive
+ *       schema:
+ *         type: boolean
+ *     search:
+ *       in: query
+ *       name: search
+ *       schema:
+ *         type: string
+ *       description: Search by name, strength, or unit
  */
 
 /**
@@ -67,8 +106,6 @@
  *   post:
  *     summary: Create a new medicine
  *     tags: [Medicines]
- *     security:
- *       - bearerAuth: []
  *     requestBody:
  *       required: true
  *       content:
@@ -85,6 +122,9 @@
  *               - unit
  *               - unitPrice
  *               - unitsPerStrip
+ *               - isPrescriptionRequired
+ *               - taxRate
+ *               - isActive
  *             properties:
  *               name:
  *                 type: string
@@ -116,21 +156,24 @@
  *       400:
  *         description: Validation failed
  *       404:
- *         description: Invalid category or brand name
+ *         description: Invalid category or brand
  *       409:
  *         description: Medicine already exists
  *       500:
- *         description: Internal server error
+ *         description: Server error
  */
 
 /**
  * @swagger
  * /api/v1/medicines:
  *   get:
- *     summary: Get list of all active medicines
+ *     summary: Get list of medicines
  *     tags: [Medicines]
- *     security:
- *       - bearerAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/page'
+ *       - $ref: '#/components/parameters/limit'
+ *       - $ref: '#/components/parameters/isActive'
+ *       - $ref: '#/components/parameters/search'
  *     responses:
  *       200:
  *         description: List of medicines
@@ -143,8 +186,21 @@
  *                   type: boolean
  *                 message:
  *                   type: string
- *                 length:
- *                   type: number
+ *                 total:
+ *                   type: integer
+ *                 active:
+ *                   type: integer
+ *                 inActive:
+ *                   type: integer
+ *                 meta:
+ *                   type: object
+ *                   properties:
+ *                     page:
+ *                       type: integer
+ *                     limit:
+ *                       type: integer
+ *                     count:
+ *                       type: integer
  *                 data:
  *                   type: object
  *                   properties:
@@ -152,57 +208,51 @@
  *                       type: array
  *                       items:
  *                         $ref: '#/components/schemas/Medicine'
- *       404:
- *         description: No medicine found
  *       500:
- *         description: Internal server error
+ *         description: Server error
  */
 
 /**
  * @swagger
  * /api/v1/medicines/{id}:
  *   get:
- *     summary: Get individual medicine details
+ *     summary: Get individual medicine info
  *     tags: [Medicines]
- *     security:
- *       - bearerAuth: []
  *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: Medicine ID
+ *       - $ref: '#/components/parameters/medicineId'
  *     responses:
  *       200:
- *         description: Medicine details
+ *         description: Medicine found
  *         content:
  *           application/json:
  *             schema:
- *               $ref: '#/components/schemas/Medicine'
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     medicine:
+ *                       $ref: '#/components/schemas/Medicine'
  *       404:
  *         description: Medicine not found
- *       409:
- *         description: Invalid medicine ID
+ *       400:
+ *         description: Invalid ID
  *       500:
- *         description: Internal server error
+ *         description: Server error
  */
 
 /**
  * @swagger
  * /api/v1/medicines/{id}:
  *   put:
- *     summary: Update an existing medicine
+ *     summary: Update a medicine
  *     tags: [Medicines]
- *     security:
- *       - bearerAuth: []
  *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: Medicine ID
+ *       - $ref: '#/components/parameters/medicineId'
  *     requestBody:
  *       required: true
  *       content:
@@ -238,13 +288,13 @@
  *       200:
  *         description: Medicine updated successfully
  *       400:
- *         description: Validation failed
+ *         description: Validation failed or invalid ID
  *       404:
- *         description: Medicine not found or invalid category/brand
+ *         description: Medicine, category, or brand not found
  *       409:
- *         description: Duplicate medicine name or invalid ID
+ *         description: Duplicate medicine name
  *       500:
- *         description: Internal server error
+ *         description: Server error
  */
 
 /**
@@ -253,22 +303,15 @@
  *   delete:
  *     summary: Delete a medicine
  *     tags: [Medicines]
- *     security:
- *       - bearerAuth: []
  *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: Medicine ID
+ *       - $ref: '#/components/parameters/medicineId'
  *     responses:
  *       200:
  *         description: Medicine deleted successfully
  *       404:
  *         description: Medicine not found
- *       409:
- *         description: Invalid medicine ID
+ *       400:
+ *         description: Invalid ID
  *       500:
- *         description: Internal server error
+ *         description: Server error
  */

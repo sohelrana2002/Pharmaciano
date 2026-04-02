@@ -212,61 +212,72 @@
       },
       "Medicine": {
         "type": "object",
+        "required": [
+          "name",
+          "genericName",
+          "categoryName",
+          "brandName",
+          "dosageForm",
+          "strength",
+          "unit",
+          "unitPrice",
+          "unitsPerStrip",
+          "isPrescriptionRequired",
+          "taxRate",
+          "isActive"
+        ],
         "properties": {
           "_id": {
-            "type": "string"
+            "type": "string",
+            "description": "MongoDB ObjectId"
           },
           "name": {
-            "type": "string",
-            "example": "Napa"
+            "type": "string"
           },
           "genericName": {
-            "type": "string",
-            "example": "Paracetamol"
+            "type": "string"
           },
           "categoryName": {
-            "type": "string",
-            "example": "Painkiller"
+            "type": "string"
           },
           "brandName": {
-            "type": "string",
-            "example": "Beximco"
+            "type": "string"
           },
           "dosageForm": {
-            "type": "string",
-            "example": "Tablet"
+            "type": "string"
           },
           "strength": {
-            "type": "string",
-            "example": 500
+            "type": "string"
           },
           "unit": {
-            "type": "string",
-            "example": "mg"
+            "type": "string"
           },
           "unitPrice": {
-            "type": "number",
-            "example": 2
+            "type": "number"
           },
           "unitsPerStrip": {
-            "type": "number",
-            "example": 10
+            "type": "number"
           },
           "stripPrice": {
-            "type": "number",
-            "example": 20
+            "type": "number"
           },
           "isPrescriptionRequired": {
-            "type": "boolean",
-            "example": false
+            "type": "boolean"
           },
           "taxRate": {
-            "type": "number",
-            "example": 5
+            "type": "number"
+          },
+          "categoryId": {
+            "type": "string"
+          },
+          "brandId": {
+            "type": "string"
+          },
+          "createdBy": {
+            "type": "string"
           },
           "isActive": {
-            "type": "boolean",
-            "example": true
+            "type": "boolean"
           },
           "createdAt": {
             "type": "string",
@@ -682,7 +693,7 @@
         "name": "limit",
         "schema": {
           "type": "integer",
-          "default": 10
+          "default": 20
         }
       },
       "isActive": {
@@ -741,6 +752,23 @@
         "schema": {
           "type": "string"
         }
+      },
+      "medicineId": {
+        "in": "path",
+        "name": "id",
+        "required": true,
+        "schema": {
+          "type": "string"
+        },
+        "description": "Medicine ID"
+      },
+      "search": {
+        "in": "query",
+        "name": "search",
+        "schema": {
+          "type": "string"
+        },
+        "description": "Search by name, strength, or unit"
       }
     }
   },
@@ -2013,11 +2041,6 @@
         "tags": [
           "Medicines"
         ],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
         "requestBody": {
           "required": true,
           "content": {
@@ -2033,7 +2056,10 @@
                   "strength",
                   "unit",
                   "unitPrice",
-                  "unitsPerStrip"
+                  "unitsPerStrip",
+                  "isPrescriptionRequired",
+                  "taxRate",
+                  "isActive"
                 ],
                 "properties": {
                   "name": {
@@ -2085,24 +2111,33 @@
             "description": "Validation failed"
           },
           "404": {
-            "description": "Invalid category or brand name"
+            "description": "Invalid category or brand"
           },
           "409": {
             "description": "Medicine already exists"
           },
           "500": {
-            "description": "Internal server error"
+            "description": "Server error"
           }
         }
       },
       "get": {
-        "summary": "Get list of all active medicines",
+        "summary": "Get list of medicines",
         "tags": [
           "Medicines"
         ],
-        "security": [
+        "parameters": [
           {
-            "bearerAuth": []
+            "$ref": "#/components/parameters/page"
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/isActive"
+          },
+          {
+            "$ref": "#/components/parameters/search"
           }
         ],
         "responses": {
@@ -2119,8 +2154,28 @@
                     "message": {
                       "type": "string"
                     },
-                    "length": {
-                      "type": "number"
+                    "total": {
+                      "type": "integer"
+                    },
+                    "active": {
+                      "type": "integer"
+                    },
+                    "inActive": {
+                      "type": "integer"
+                    },
+                    "meta": {
+                      "type": "object",
+                      "properties": {
+                        "page": {
+                          "type": "integer"
+                        },
+                        "limit": {
+                          "type": "integer"
+                        },
+                        "count": {
+                          "type": "integer"
+                        }
+                      }
                     },
                     "data": {
                       "type": "object",
@@ -2138,78 +2193,69 @@
               }
             }
           },
-          "404": {
-            "description": "No medicine found"
-          },
           "500": {
-            "description": "Internal server error"
+            "description": "Server error"
           }
         }
       }
     },
     "/api/v1/medicines/{id}": {
       "get": {
-        "summary": "Get individual medicine details",
+        "summary": "Get individual medicine info",
         "tags": [
           "Medicines"
         ],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
         "parameters": [
           {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Medicine ID"
+            "$ref": "#/components/parameters/medicineId"
           }
         ],
         "responses": {
           "200": {
-            "description": "Medicine details",
+            "description": "Medicine found",
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Medicine"
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "medicine": {
+                          "$ref": "#/components/schemas/Medicine"
+                        }
+                      }
+                    }
+                  }
                 }
               }
             }
           },
+          "400": {
+            "description": "Invalid ID"
+          },
           "404": {
             "description": "Medicine not found"
           },
-          "409": {
-            "description": "Invalid medicine ID"
-          },
           "500": {
-            "description": "Internal server error"
+            "description": "Server error"
           }
         }
       },
       "put": {
-        "summary": "Update an existing medicine",
+        "summary": "Update a medicine",
         "tags": [
           "Medicines"
         ],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
         "parameters": [
           {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Medicine ID"
+            "$ref": "#/components/parameters/medicineId"
           }
         ],
         "requestBody": {
@@ -2265,16 +2311,16 @@
             "description": "Medicine updated successfully"
           },
           "400": {
-            "description": "Validation failed"
+            "description": "Validation failed or invalid ID"
           },
           "404": {
-            "description": "Medicine not found or invalid category/brand"
+            "description": "Medicine, category, or brand not found"
           },
           "409": {
-            "description": "Duplicate medicine name or invalid ID"
+            "description": "Duplicate medicine name"
           },
           "500": {
-            "description": "Internal server error"
+            "description": "Server error"
           }
         }
       },
@@ -2283,34 +2329,23 @@
         "tags": [
           "Medicines"
         ],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
         "parameters": [
           {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Medicine ID"
+            "$ref": "#/components/parameters/medicineId"
           }
         ],
         "responses": {
           "200": {
             "description": "Medicine deleted successfully"
           },
+          "400": {
+            "description": "Invalid ID"
+          },
           "404": {
             "description": "Medicine not found"
           },
-          "409": {
-            "description": "Invalid medicine ID"
-          },
           "500": {
-            "description": "Internal server error"
+            "description": "Server error"
           }
         }
       }
@@ -4339,7 +4374,7 @@
     },
     {
       "name": "Medicines",
-      "description": "API endpoints for managing medicines"
+      "description": "Medicine management APIs"
     },
     {
       "name": "Organizations",
