@@ -1,8 +1,8 @@
 /**
  * @swagger
  * tags:
- *   name: Warehouse
- *   description: API endpoints for managing Warehouse
+ *   - name: Warehouses
+ *     description: Warehouse management APIs
  */
 
 /**
@@ -15,44 +15,62 @@
  *         - name
  *         - location
  *         - capacity
- *         - branchName
+ *         - isActive
  *       properties:
  *         _id:
  *           type: string
- *           example: "65f123abc1234567890abcd1"
+ *           description: MongoDB ObjectId
  *         name:
  *           type: string
- *           example: "Dhaka Main Warehouse"
  *         location:
  *           type: string
- *           example: "Dhaka, Bangladesh"
  *         capacity:
  *           type: number
- *           example: 5000
- *         branchName:
- *           type: string
- *           example: "Dhaka Branch"
  *         isActive:
  *           type: boolean
- *           example: true
+ *         organizationId:
+ *           type: string
  *         branchId:
  *           type: string
- *           example: "65f123abc1234567890abcd2"
  *         createdBy:
  *           type: string
- *           example: "65f123abc1234567890abcd3"
  *         createdAt:
  *           type: string
  *           format: date-time
  *         updatedAt:
  *           type: string
  *           format: date-time
- */
 
-/**
- * ============================================
- * CREATE WAREHOUSE
- * ============================================
+ *   parameters:
+ *     warehouseId:
+ *       in: path
+ *       name: id
+ *       required: true
+ *       schema:
+ *         type: string
+ *       description: Warehouse ID
+ *     page:
+ *       in: query
+ *       name: page
+ *       schema:
+ *         type: integer
+ *         default: 1
+ *     limit:
+ *       in: query
+ *       name: limit
+ *       schema:
+ *         type: integer
+ *         default: 10
+ *     isActive:
+ *       in: query
+ *       name: isActive
+ *       schema:
+ *         type: boolean
+ *     name:
+ *       in: query
+ *       name: name
+ *       schema:
+ *         type: string
  */
 
 /**
@@ -60,22 +78,34 @@
  * /api/v1/warehouses:
  *   post:
  *     summary: Create a new warehouse
- *     tags: [Warehouse]
- *     security:
- *       - bearerAuth: []
+ *     tags: [Warehouses]
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/Warehouse'
+ *             type: object
+ *             required:
+ *               - name
+ *               - location
+ *               - capacity
+ *               - branchName
+ *             properties:
+ *               name:
+ *                 type: string
+ *               location:
+ *                 type: string
+ *               capacity:
+ *                 type: number
+ *               branchName:
+ *                 type: string
+ *               isActive:
+ *                 type: boolean
  *     responses:
  *       201:
  *         description: Warehouse created successfully
  *       400:
  *         description: Validation failed
- *       404:
- *         description: Invalid branch name
  *       409:
  *         description: Warehouse already exists
  *       500:
@@ -83,22 +113,19 @@
  */
 
 /**
- * ============================================
- * LIST ACTIVE WAREHOUSES
- * ============================================
- */
-
-/**
  * @swagger
  * /api/v1/warehouses:
  *   get:
- *     summary: Get all active warehouses
- *     tags: [Warehouse]
- *     security:
- *       - bearerAuth: []
+ *     summary: Get list of warehouses
+ *     tags: [Warehouses]
+ *     parameters:
+ *       - $ref: '#/components/parameters/page'
+ *       - $ref: '#/components/parameters/limit'
+ *       - $ref: '#/components/parameters/isActive'
+ *       - $ref: '#/components/parameters/name'
  *     responses:
  *       200:
- *         description: List of active warehouses
+ *         description: List of warehouses
  *         content:
  *           application/json:
  *             schema:
@@ -106,8 +133,23 @@
  *               properties:
  *                 success:
  *                   type: boolean
- *                 length:
- *                   type: number
+ *                 message:
+ *                   type: string
+ *                 total:
+ *                   type: integer
+ *                 active:
+ *                   type: integer
+ *                 inActive:
+ *                   type: integer
+ *                 meta:
+ *                   type: object
+ *                   properties:
+ *                     page:
+ *                       type: integer
+ *                     limit:
+ *                       type: integer
+ *                     count:
+ *                       type: integer
  *                 data:
  *                   type: object
  *                   properties:
@@ -115,112 +157,96 @@
  *                       type: array
  *                       items:
  *                         $ref: '#/components/schemas/Warehouse'
- *       404:
- *         description: No warehouse found
  *       500:
  *         description: Server error
- */
-
-/**
- * ============================================
- * WAREHOUSE DETAILS
- * ============================================
  */
 
 /**
  * @swagger
  * /api/v1/warehouses/{id}:
  *   get:
- *     summary: Get warehouse information by ID
- *     tags: [Warehouse]
- *     security:
- *       - bearerAuth: []
+ *     summary: Get individual warehouse info
+ *     tags: [Warehouses]
  *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: Warehouse ID
+ *       - $ref: '#/components/parameters/warehouseId'
  *     responses:
  *       200:
- *         description: Warehouse details retrieved successfully
+ *         description: Warehouse found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     warehouse:
+ *                       $ref: '#/components/schemas/Warehouse'
  *       404:
  *         description: Warehouse not found
- *       409:
- *         description: Invalid ID format
+ *       400:
+ *         description: Invalid ID
  *       500:
  *         description: Server error
- */
-
-/**
- * ============================================
- * UPDATE WAREHOUSE
- * ============================================
  */
 
 /**
  * @swagger
  * /api/v1/warehouses/{id}:
  *   put:
- *     summary: Update warehouse by ID
- *     tags: [Warehouse]
- *     security:
- *       - bearerAuth: []
+ *     summary: Update a warehouse
+ *     tags: [Warehouses]
  *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: Warehouse MongoDB ID
+ *       - $ref: '#/components/parameters/warehouseId'
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/Warehouse'
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               location:
+ *                 type: string
+ *               capacity:
+ *                 type: number
+ *               branchName:
+ *                 type: string
+ *               isActive:
+ *                 type: boolean
  *     responses:
  *       200:
  *         description: Warehouse updated successfully
  *       400:
- *         description: Validation failed
+ *         description: Validation failed or invalid ID
  *       404:
  *         description: Warehouse not found
  *       409:
- *         description: Duplicate warehouse name or invalid ID
+ *         description: Warehouse name already exists
  *       500:
  *         description: Server error
- */
-
-/**
- * ============================================
- * DELETE WAREHOUSE
- * ============================================
  */
 
 /**
  * @swagger
  * /api/v1/warehouses/{id}:
  *   delete:
- *     summary: Delete warehouse by ID
- *     tags: [Warehouse]
- *     security:
- *       - bearerAuth: []
+ *     summary: Delete a warehouse
+ *     tags: [Warehouses]
  *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: Warehouse MongoDB ID
+ *       - $ref: '#/components/parameters/warehouseId'
  *     responses:
  *       200:
  *         description: Warehouse deleted successfully
  *       404:
  *         description: Warehouse not found
- *       409:
- *         description: Invalid ID format
+ *       400:
+ *         description: Invalid ID
  *       500:
  *         description: Server error
  */
