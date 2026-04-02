@@ -114,7 +114,7 @@ const createInventoryBatch = async (req: AuthRequest, res: Response) => {
 // list of inventoryBatch
 const inventoryBatchList = async (req: AuthRequest, res: Response) => {
   try {
-    const { status, medicineName, page = "1", limit = "10" } = req.query;
+    const { status, medicineName, page, limit, batchNo } = req.query;
 
     const search = typeof medicineName === "string" ? medicineName : "";
     const { name, strength, unit } = parseMedicineInput(search);
@@ -132,8 +132,11 @@ const inventoryBatchList = async (req: AuthRequest, res: Response) => {
     if (status) {
       baseFilter.status = status;
     }
+    if (batchNo) {
+      baseFilter.batchNo = { $regex: batchNo, $options: "i" };
+    }
 
-    // ✅ conditionally add match
+    // conditionally add match
     const medicinePopulate: any = {
       path: "medicineId",
       select: "name strength unit",
@@ -158,8 +161,6 @@ const inventoryBatchList = async (req: AuthRequest, res: Response) => {
       .skip(skip)
       .limit(limitNumber)
       .sort({ createdAt: -1 });
-
-    // ✅ ONLY filter when searching
 
     console.log(
       "filter: ",
