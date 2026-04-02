@@ -150,80 +150,54 @@
       "InventoryBatch": {
         "type": "object",
         "required": [
-          "orgName",
-          "branchName",
           "medicineName",
           "batchNo",
           "expiryDate",
           "quantity",
-          "purchasePrice",
-          "warehouseName"
+          "purchasePrice"
         ],
         "properties": {
           "_id": {
             "type": "string",
-            "example": "65f123abc1234567890abcd1"
-          },
-          "orgName": {
-            "type": "string",
-            "example": "Square Pharmaceuticals"
-          },
-          "branchName": {
-            "type": "string",
-            "example": "Dhaka Branch"
+            "description": "MongoDB ObjectId"
           },
           "medicineName": {
-            "type": "string",
-            "example": "Napa"
+            "type": "string"
+          },
+          "medicineId": {
+            "type": "string"
           },
           "batchNo": {
-            "type": "string",
-            "example": "NAPA-BATCH-2026-01"
+            "type": "string"
           },
           "expiryDate": {
             "type": "string",
-            "format": "date",
-            "example": "2027-05-20"
+            "format": "date"
           },
           "quantity": {
-            "type": "number",
-            "example": 500
+            "type": "number"
           },
           "purchasePrice": {
-            "type": "number",
-            "example": 3.5
+            "type": "number"
           },
-          "warehouseName": {
-            "type": "string",
-            "example": "Dhaka Main Warehouse"
+          "warehouseId": {
+            "type": "string"
+          },
+          "branchId": {
+            "type": "string"
+          },
+          "organizationId": {
+            "type": "string"
           },
           "status": {
             "type": "string",
             "enum": [
               "active",
               "expired"
-            ],
-            "example": "active"
-          },
-          "organizationId": {
-            "type": "string",
-            "example": "65f123abc1234567890abcd2"
-          },
-          "branchId": {
-            "type": "string",
-            "example": "65f123abc1234567890abcd3"
-          },
-          "medicineId": {
-            "type": "string",
-            "example": "65f123abc1234567890abcd4"
-          },
-          "warehouseId": {
-            "type": "string",
-            "example": "65f123abc1234567890abcd5"
+            ]
           },
           "createdBy": {
-            "type": "string",
-            "example": "65f123abc1234567890abcd6"
+            "type": "string"
           },
           "createdAt": {
             "type": "string",
@@ -681,6 +655,58 @@
             "type": "string",
             "format": "date-time"
           }
+        }
+      }
+    },
+    "parameters": {
+      "inventoryBatchId": {
+        "in": "path",
+        "name": "id",
+        "required": true,
+        "schema": {
+          "type": "string"
+        },
+        "description": "Inventory batch ID"
+      },
+      "page": {
+        "in": "query",
+        "name": "page",
+        "schema": {
+          "type": "integer",
+          "default": 1
+        }
+      },
+      "limit": {
+        "in": "query",
+        "name": "limit",
+        "schema": {
+          "type": "integer",
+          "default": 10
+        }
+      },
+      "status": {
+        "in": "query",
+        "name": "status",
+        "schema": {
+          "type": "string",
+          "enum": [
+            "active",
+            "expired"
+          ]
+        }
+      },
+      "medicineName": {
+        "in": "query",
+        "name": "medicineName",
+        "schema": {
+          "type": "string"
+        }
+      },
+      "batchNo": {
+        "in": "query",
+        "name": "batchNo",
+        "schema": {
+          "type": "string"
         }
       }
     }
@@ -1730,34 +1756,72 @@
     },
     "/api/v1/inventory-batches": {
       "post": {
-        "summary": "Create a new medicine inventory batch",
+        "summary": "Create a new inventory batch",
         "tags": [
-          "InventoryBatch"
-        ],
-        "security": [
-          {
-            "bearerAuth": []
-          }
+          "InventoryBatches"
         ],
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/InventoryBatch"
+                "type": "object",
+                "required": [
+                  "medicineName",
+                  "batchNo",
+                  "expiryDate",
+                  "quantity",
+                  "purchasePrice"
+                ],
+                "properties": {
+                  "medicineName": {
+                    "type": "string"
+                  },
+                  "batchNo": {
+                    "type": "string"
+                  },
+                  "expiryDate": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "quantity": {
+                    "type": "number"
+                  },
+                  "purchasePrice": {
+                    "type": "number"
+                  }
+                }
               }
             }
           }
         },
         "responses": {
           "201": {
-            "description": "Inventory batch created successfully"
+            "description": "Inventory batch created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "id": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
             "description": "Validation failed"
           },
           "404": {
-            "description": "Invalid organization, branch, medicine, or warehouse name"
+            "description": "Invalid medicine name"
           },
           "409": {
             "description": "Batch number already exists"
@@ -1768,13 +1832,25 @@
         }
       },
       "get": {
-        "summary": "Get all inventory batches",
+        "summary": "List all inventory batches",
         "tags": [
-          "InventoryBatch"
+          "InventoryBatches"
         ],
-        "security": [
+        "parameters": [
           {
-            "bearerAuth": []
+            "$ref": "#/components/parameters/page"
+          },
+          {
+            "$ref": "#/components/parameters/limit"
+          },
+          {
+            "$ref": "#/components/parameters/status"
+          },
+          {
+            "$ref": "#/components/parameters/medicineName"
+          },
+          {
+            "$ref": "#/components/parameters/batchNo"
           }
         ],
         "responses": {
@@ -1788,17 +1864,76 @@
                     "success": {
                       "type": "boolean"
                     },
-                    "length": {
-                      "type": "number"
+                    "message": {
+                      "type": "string"
+                    },
+                    "meta": {
+                      "type": "object",
+                      "properties": {
+                        "page": {
+                          "type": "integer"
+                        },
+                        "limit": {
+                          "type": "integer"
+                        },
+                        "count": {
+                          "type": "integer"
+                        }
+                      }
+                    },
+                    "total": {
+                      "type": "integer"
+                    },
+                    "active": {
+                      "type": "integer"
+                    },
+                    "expired": {
+                      "type": "integer"
+                    },
+                    "data": {
+                      "type": "array",
+                      "items": {
+                        "$ref": "#/components/schemas/InventoryBatch"
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/inventory-batches/{id}": {
+      "get": {
+        "summary": "Get individual inventory batch info",
+        "tags": [
+          "InventoryBatches"
+        ],
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/inventoryBatchId"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Inventory batch found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
                     },
                     "data": {
                       "type": "object",
                       "properties": {
                         "inventoryBatch": {
-                          "type": "array",
-                          "items": {
-                            "$ref": "#/components/schemas/InventoryBatch"
-                          }
+                          "$ref": "#/components/schemas/InventoryBatch"
                         }
                       }
                     }
@@ -1808,45 +1943,10 @@
             }
           },
           "404": {
-            "description": "No inventory batch found"
-          },
-          "500": {
-            "description": "Server error"
-          }
-        }
-      }
-    },
-    "/api/v1/inventory-batches/{id}": {
-      "get": {
-        "summary": "Get inventory batch information by ID",
-        "tags": [
-          "InventoryBatch"
-        ],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ],
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Inventory batch ID"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "Inventory batch retrieved successfully"
-          },
-          "404": {
             "description": "Inventory batch not found"
           },
           "409": {
-            "description": "Invalid ID format"
+            "description": "Invalid ID"
           },
           "500": {
             "description": "Server error"
@@ -1854,24 +1954,13 @@
         }
       },
       "put": {
-        "summary": "Update inventory batch by ID",
+        "summary": "Update inventory batch",
         "tags": [
-          "InventoryBatch"
-        ],
-        "security": [
-          {
-            "bearerAuth": []
-          }
+          "InventoryBatches"
         ],
         "parameters": [
           {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Inventory batch MongoDB ID"
+            "$ref": "#/components/parameters/inventoryBatchId"
           }
         ],
         "requestBody": {
@@ -1879,7 +1968,25 @@
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/InventoryBatch"
+                "type": "object",
+                "properties": {
+                  "medicineName": {
+                    "type": "string"
+                  },
+                  "batchNo": {
+                    "type": "string"
+                  },
+                  "expiryDate": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "quantity": {
+                    "type": "number"
+                  },
+                  "purchasePrice": {
+                    "type": "number"
+                  }
+                }
               }
             }
           }
@@ -1895,7 +2002,7 @@
             "description": "Inventory batch not found"
           },
           "409": {
-            "description": "Duplicate batch number or invalid ID"
+            "description": "Batch number already exists"
           },
           "500": {
             "description": "Server error"
@@ -1903,24 +2010,13 @@
         }
       },
       "delete": {
-        "summary": "Delete inventory batch by ID",
+        "summary": "Delete inventory batch",
         "tags": [
-          "InventoryBatch"
-        ],
-        "security": [
-          {
-            "bearerAuth": []
-          }
+          "InventoryBatches"
         ],
         "parameters": [
           {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "type": "string"
-            },
-            "description": "Inventory batch MongoDB ID"
+            "$ref": "#/components/parameters/inventoryBatchId"
           }
         ],
         "responses": {
@@ -1931,7 +2027,7 @@
             "description": "Inventory batch not found"
           },
           "409": {
-            "description": "Invalid ID format"
+            "description": "Invalid ID"
           },
           "500": {
             "description": "Server error"
@@ -4266,8 +4362,8 @@
       "description": "API endpoints for managing categories"
     },
     {
-      "name": "InventoryBatch",
-      "description": "API endpoints for managing medicine inventory batches"
+      "name": "InventoryBatches",
+      "description": "Inventory batch management APIs"
     },
     {
       "name": "Medicines",

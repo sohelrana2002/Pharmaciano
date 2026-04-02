@@ -1,8 +1,8 @@
 /**
  * @swagger
  * tags:
- *   name: InventoryBatch
- *   description: API endpoints for managing medicine inventory batches
+ *   - name: InventoryBatches
+ *     description: Inventory batch management APIs
  */
 
 /**
@@ -12,97 +12,132 @@
  *     InventoryBatch:
  *       type: object
  *       required:
- *         - orgName
- *         - branchName
  *         - medicineName
  *         - batchNo
  *         - expiryDate
  *         - quantity
  *         - purchasePrice
- *         - warehouseName
  *       properties:
  *         _id:
  *           type: string
- *           example: "65f123abc1234567890abcd1"
- *         orgName:
- *           type: string
- *           example: "Square Pharmaceuticals"
- *         branchName:
- *           type: string
- *           example: "Dhaka Branch"
+ *           description: MongoDB ObjectId
  *         medicineName:
  *           type: string
- *           example: "Napa"
+ *         medicineId:
+ *           type: string
  *         batchNo:
  *           type: string
- *           example: "NAPA-BATCH-2026-01"
  *         expiryDate:
  *           type: string
  *           format: date
- *           example: "2027-05-20"
  *         quantity:
  *           type: number
- *           example: 500
  *         purchasePrice:
  *           type: number
- *           example: 3.5
- *         warehouseName:
+ *         warehouseId:
  *           type: string
- *           example: "Dhaka Main Warehouse"
+ *         branchId:
+ *           type: string
+ *         organizationId:
+ *           type: string
  *         status:
  *           type: string
  *           enum: [active, expired]
- *           example: "active"
- *         organizationId:
- *           type: string
- *           example: "65f123abc1234567890abcd2"
- *         branchId:
- *           type: string
- *           example: "65f123abc1234567890abcd3"
- *         medicineId:
- *           type: string
- *           example: "65f123abc1234567890abcd4"
- *         warehouseId:
- *           type: string
- *           example: "65f123abc1234567890abcd5"
  *         createdBy:
  *           type: string
- *           example: "65f123abc1234567890abcd6"
  *         createdAt:
  *           type: string
  *           format: date-time
  *         updatedAt:
  *           type: string
  *           format: date-time
- */
-
-/**
- * ============================================
- * CREATE INVENTORY BATCH
- * ============================================
+ *
+ *   parameters:
+ *     inventoryBatchId:
+ *       in: path
+ *       name: id
+ *       required: true
+ *       schema:
+ *         type: string
+ *       description: Inventory batch ID
+ *     page:
+ *       in: query
+ *       name: page
+ *       schema:
+ *         type: integer
+ *         default: 1
+ *     limit:
+ *       in: query
+ *       name: limit
+ *       schema:
+ *         type: integer
+ *         default: 10
+ *     status:
+ *       in: query
+ *       name: status
+ *       schema:
+ *         type: string
+ *         enum: [active, expired]
+ *     medicineName:
+ *       in: query
+ *       name: medicineName
+ *       schema:
+ *         type: string
+ *     batchNo:
+ *       in: query
+ *       name: batchNo
+ *       schema:
+ *         type: string
  */
 
 /**
  * @swagger
  * /api/v1/inventory-batches:
  *   post:
- *     summary: Create a new medicine inventory batch
- *     tags: [InventoryBatch]
- *     security:
- *       - bearerAuth: []
+ *     summary: Create a new inventory batch
+ *     tags: [InventoryBatches]
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/InventoryBatch'
+ *             type: object
+ *             required:
+ *               - medicineName
+ *               - batchNo
+ *               - expiryDate
+ *               - quantity
+ *               - purchasePrice
+ *             properties:
+ *               medicineName:
+ *                 type: string
+ *               batchNo:
+ *                 type: string
+ *               expiryDate:
+ *                 type: string
+ *                 format: date
+ *               quantity:
+ *                 type: number
+ *               purchasePrice:
+ *                 type: number
  *     responses:
  *       201:
  *         description: Inventory batch created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 id:
+ *                   type: string
  *       400:
  *         description: Validation failed
  *       404:
- *         description: Invalid organization, branch, medicine, or warehouse name
+ *         description: Invalid medicine name
  *       409:
  *         description: Batch number already exists
  *       500:
@@ -110,19 +145,17 @@
  */
 
 /**
- * ============================================
- * LIST INVENTORY BATCHES
- * ============================================
- */
-
-/**
  * @swagger
  * /api/v1/inventory-batches:
  *   get:
- *     summary: Get all inventory batches
- *     tags: [InventoryBatch]
- *     security:
- *       - bearerAuth: []
+ *     summary: List all inventory batches
+ *     tags: [InventoryBatches]
+ *     parameters:
+ *       - $ref: '#/components/parameters/page'
+ *       - $ref: '#/components/parameters/limit'
+ *       - $ref: '#/components/parameters/status'
+ *       - $ref: '#/components/parameters/medicineName'
+ *       - $ref: '#/components/parameters/batchNo'
  *     responses:
  *       200:
  *         description: List of inventory batches
@@ -133,80 +166,88 @@
  *               properties:
  *                 success:
  *                   type: boolean
- *                 length:
- *                   type: number
- *                 data:
+ *                 message:
+ *                   type: string
+ *                 meta:
  *                   type: object
  *                   properties:
- *                     inventoryBatch:
- *                       type: array
- *                       items:
- *                         $ref: '#/components/schemas/InventoryBatch'
- *       404:
- *         description: No inventory batch found
- *       500:
- *         description: Server error
- */
-
-/**
- * ============================================
- * INVENTORY BATCH DETAILS
- * ============================================
+ *                     page:
+ *                       type: integer
+ *                     limit:
+ *                       type: integer
+ *                     count:
+ *                       type: integer
+ *                 total:
+ *                   type: integer
+ *                 active:
+ *                   type: integer
+ *                 expired:
+ *                   type: integer
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/InventoryBatch'
  */
 
 /**
  * @swagger
  * /api/v1/inventory-batches/{id}:
  *   get:
- *     summary: Get inventory batch information by ID
- *     tags: [InventoryBatch]
- *     security:
- *       - bearerAuth: []
+ *     summary: Get individual inventory batch info
+ *     tags: [InventoryBatches]
  *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: Inventory batch ID
+ *       - $ref: '#/components/parameters/inventoryBatchId'
  *     responses:
  *       200:
- *         description: Inventory batch retrieved successfully
+ *         description: Inventory batch found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 data:
+ *                   type: object
+ *                   properties:
+ *                     inventoryBatch:
+ *                       $ref: '#/components/schemas/InventoryBatch'
  *       404:
  *         description: Inventory batch not found
  *       409:
- *         description: Invalid ID format
+ *         description: Invalid ID
  *       500:
  *         description: Server error
- */
-
-/**
- * ============================================
- * UPDATE INVENTORY BATCH
- * ============================================
  */
 
 /**
  * @swagger
  * /api/v1/inventory-batches/{id}:
  *   put:
- *     summary: Update inventory batch by ID
- *     tags: [InventoryBatch]
- *     security:
- *       - bearerAuth: []
+ *     summary: Update inventory batch
+ *     tags: [InventoryBatches]
  *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: Inventory batch MongoDB ID
+ *       - $ref: '#/components/parameters/inventoryBatchId'
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             $ref: '#/components/schemas/InventoryBatch'
+ *             type: object
+ *             properties:
+ *               medicineName:
+ *                 type: string
+ *               batchNo:
+ *                 type: string
+ *               expiryDate:
+ *                 type: string
+ *                 format: date
+ *               quantity:
+ *                 type: number
+ *               purchasePrice:
+ *                 type: number
  *     responses:
  *       200:
  *         description: Inventory batch updated successfully
@@ -215,39 +256,26 @@
  *       404:
  *         description: Inventory batch not found
  *       409:
- *         description: Duplicate batch number or invalid ID
+ *         description: Batch number already exists
  *       500:
  *         description: Server error
- */
-
-/**
- * ============================================
- * DELETE INVENTORY BATCH
- * ============================================
  */
 
 /**
  * @swagger
  * /api/v1/inventory-batches/{id}:
  *   delete:
- *     summary: Delete inventory batch by ID
- *     tags: [InventoryBatch]
- *     security:
- *       - bearerAuth: []
+ *     summary: Delete inventory batch
+ *     tags: [InventoryBatches]
  *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: Inventory batch MongoDB ID
+ *       - $ref: '#/components/parameters/inventoryBatchId'
  *     responses:
  *       200:
  *         description: Inventory batch deleted successfully
  *       404:
  *         description: Inventory batch not found
  *       409:
- *         description: Invalid ID format
+ *         description: Invalid ID
  *       500:
  *         description: Server error
  */
