@@ -35,7 +35,10 @@ const createWarehouse = async (req: AuthRequest, res: Response) => {
       validationResult.data;
 
     //   check if warehouse already exist
-    const existingWarehouse = await Warehouse.findOne({ name });
+    const existingWarehouse = await Warehouse.findOne({
+      name,
+      organizationId: req.user!.organizationId,
+    });
 
     if (existingWarehouse) {
       return res.status(409).json({
@@ -45,10 +48,16 @@ const createWarehouse = async (req: AuthRequest, res: Response) => {
     }
 
     //   fetch all active branch
-    const activeBranch = await Branch.find({ isActive: true }).select("name");
+    const activeBranch = await Branch.find({
+      isActive: true,
+      organizationId: req.user!.organizationId,
+    }).select("name");
 
     //   find branch name, exist or not
-    const branch = await Branch.findOne({ name: branchName });
+    const branch = await Branch.findOne({
+      name: branchName,
+      organizationId: req.user!.organizationId,
+    });
 
     if (!branch) {
       return res.status(404).json({
@@ -64,8 +73,9 @@ const createWarehouse = async (req: AuthRequest, res: Response) => {
       name,
       location,
       capacity,
-      branchId: branch._id,
       isActive,
+      organizationId: req.user!.organizationId,
+      branchId: branch._id,
       createdBy: req.user!.userId,
     });
 
@@ -103,9 +113,44 @@ const createWarehouse = async (req: AuthRequest, res: Response) => {
 // list of Warehouse
 const warehouseList = async (req: AuthRequest, res: Response) => {
   try {
-    const warehouse = await Warehouse.find({ isActive: true }).select(
-      "-branchId -createdBy",
-    );
+    const { name, isActive, page, limit } = req.query;
+
+    const baseFilter: any = {
+      organizationId: req.user!.organizationId,
+    };
+
+    const filter: any = { ...baseFilter };
+
+    if (name) {
+      filter.name = { $regex: name, $options: "i" };
+    }
+
+    if (isActive !== undefined) {
+      filter.isActive = isActive;
+    }
+
+    const pageNumber = parseInt(page as string) || 1;
+    const limitNumber = parseInt(limit as string) || 10;
+    const skip = (pageNumber - 1) * limitNumber;
+
+    const warehouse = await Warehouse.find(filter)
+      .populate([
+        {
+          path: "organizationId",
+          select: "name -_id",
+        },
+        {
+          path: "branchId",
+          select: "name -_id",
+        },
+        {
+          path: "createdBy",
+          select: "name email -_id",
+        },
+      ])
+      .skip(skip)
+      .limit(limitNumber)
+      .sort({ createdAt: -1 });
 
     if (!warehouse) {
       return res.status(404).json({
@@ -114,10 +159,33 @@ const warehouseList = async (req: AuthRequest, res: Response) => {
       });
     }
 
+    const total = await Warehouse.countDocuments({ ...baseFilter });
+
+    const activeCount = await Warehouse.countDocuments({
+      ...baseFilter,
+      isActive: true,
+    });
+
+    const inActiveCount = await Warehouse.countDocuments({
+      ...baseFilter,
+      isActive: false,
+    });
+
     return res.status(200).json({
       success: true,
-      message: customMessage.found("Warehouse"),
-      length: warehouse.length,
+      message:
+        warehouse.length > 0
+          ? customMessage.found("Warehouse")
+          : "No warehouse found!",
+      meta: {
+        page: pageNumber,
+        limit: limitNumber,
+        count: warehouse.length,
+      },
+
+      total,
+      active: activeCount,
+      inActive: inActiveCount,
       data: { warehouse },
     });
   } catch (error: any) {
@@ -142,7 +210,14 @@ const warehouseInfo = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const warehouse = await Warehouse.findById(id).populate([
+    const warehouse = await Warehouse.findOne({
+      _id: id,
+      organizationId: req.user!.organizationId,
+    }).populate([
+      {
+        path: "organizationId",
+        select: "name address contact -_id",
+      },
       {
         path: "branchId",
         select: "name address contact -_id",
@@ -213,7 +288,10 @@ const updateWarehouse = async (req: AuthRequest, res: Response) => {
     const { name, location, capacity, branchName, isActive } =
       validationResult.data;
 
-    const warehouse = await Warehouse.findById(id);
+    const warehouse = await Warehouse.findOne({
+      _id: id,
+      organizationId: req.user!.organizationId,
+    });
 
     if (!warehouse) {
       return res.status(404).json({
@@ -223,7 +301,10 @@ const updateWarehouse = async (req: AuthRequest, res: Response) => {
     }
 
     if (name && name !== warehouse.name) {
-      const existing = await Warehouse.findOne({ name });
+      const existing = await Warehouse.findOne({
+        name,
+        organizationId: req.user!.organizationId,
+      });
 
       if (existing) {
         return res.status(404).json({
@@ -242,10 +323,16 @@ const updateWarehouse = async (req: AuthRequest, res: Response) => {
     if (isActive) updateData.isActive = isActive;
 
     //   fetch all active branch
-    const activeBranch = await Branch.find({ isActive: true }).select("name");
+    const activeBranch = await Branch.find({
+      isActive: true,
+      organizationId: req.user!.organizationId,
+    }).select("name");
 
     //   find branch name, exist or not
-    const branch = await Branch.findOne({ name: branchName });
+    const branch = await Branch.findOne({
+      name: branchName,
+      organizationId: req.user!.organizationId,
+    });
 
     if (!branch) {
       return res.status(404).json({
@@ -259,9 +346,16 @@ const updateWarehouse = async (req: AuthRequest, res: Response) => {
 
     updateData.branchId = branch._id;
 
-    const updateResult = await Warehouse.findByIdAndUpdate(id, updateData, {
-      new: true,
-    });
+    const updateResult = await Warehouse.findByIdAndUpdate(
+      {
+        _id: id,
+        organizationId: req.user!.organizationId,
+      },
+      updateData,
+      {
+        new: true,
+      },
+    );
 
     return res.status(200).json({
       success: true,
@@ -306,7 +400,10 @@ const deleteWarehouse = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const warehouse = await Warehouse.findByIdAndDelete(id);
+    const warehouse = await Warehouse.findByIdAndDelete({
+      _id: id,
+      organizationId: req.user!.organizationId,
+    });
 
     if (!warehouse) {
       return res.status(404).json({
