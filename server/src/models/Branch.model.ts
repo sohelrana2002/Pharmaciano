@@ -10,14 +10,12 @@ const BranchSchema = new Schema<IBranch>(
       trim: true,
       lowercase: true,
     },
-
     address: {
       type: String,
       required: true,
       trim: true,
       lowercase: true,
     },
-
     contact: {
       phone: {
         type: String,
@@ -30,23 +28,15 @@ const BranchSchema = new Schema<IBranch>(
         unique: true,
       },
     },
-
-    orgName: {
-      type: String,
-      lowercase: true,
-    },
-
     isActive: {
       type: Boolean,
       default: true,
     },
-
     organizationId: {
       type: Schema.Types.ObjectId,
       ref: "Organization",
       required: true,
     },
-
     createdBy: {
       type: Schema.Types.ObjectId,
       ref: "User",
