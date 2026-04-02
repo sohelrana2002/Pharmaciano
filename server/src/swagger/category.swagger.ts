@@ -1,5 +1,12 @@
 /**
  * @swagger
+ * tags:
+ *   - name: Categories
+ *     description: Category management APIs
+ */
+
+/**
+ * @swagger
  * components:
  *   schemas:
  *     Category:
@@ -7,35 +14,58 @@
  *       required:
  *         - name
  *         - description
+ *         - isActive
  *       properties:
  *         _id:
  *           type: string
- *           example: 65b8f1a2c9e77a0012abc123
+ *           description: MongoDB ObjectId
  *         name:
  *           type: string
- *           example: Pain Killer
  *         description:
  *           type: string
- *           example: Medicines used to relieve pain
  *         isActive:
  *           type: boolean
- *           example: true
+ *         organizationId:
+ *           type: string
  *         createdBy:
  *           type: string
- *           example: 65a7e91f9b1c220012de456
  *         createdAt:
  *           type: string
  *           format: date-time
  *         updatedAt:
  *           type: string
  *           format: date-time
- */
-
-/**
- * @swagger
- * tags:
- *   name: Category
- *   description: API endpoints for managing categories
+ *
+ *   parameters:
+ *     categoryId:
+ *       in: path
+ *       name: id
+ *       required: true
+ *       schema:
+ *         type: string
+ *       description: Category ID
+ *     page:
+ *       in: query
+ *       name: page
+ *       schema:
+ *         type: integer
+ *         default: 1
+ *     limit:
+ *       in: query
+ *       name: limit
+ *       schema:
+ *         type: integer
+ *         default: 10
+ *     isActive:
+ *       in: query
+ *       name: isActive
+ *       schema:
+ *         type: boolean
+ *     name:
+ *       in: query
+ *       name: name
+ *       schema:
+ *         type: string
  */
 
 /**
@@ -43,10 +73,7 @@
  * /api/v1/categories:
  *   post:
  *     summary: Create a new category
- *     description: Create a new category. Only authenticated users can create categories.
- *     tags: [Category]
- *     security:
- *       - bearerAuth: []
+ *     tags: [Categories]
  *     requestBody:
  *       required: true
  *       content:
@@ -56,47 +83,39 @@
  *             required:
  *               - name
  *               - description
+ *               - isActive
  *             properties:
  *               name:
  *                 type: string
- *                 example: Antibiotics
  *               description:
  *                 type: string
- *                 example: Medicines used to treat bacterial infections
+ *               isActive:
+ *                 type: boolean
  *     responses:
  *       201:
  *         description: Category created successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: true
- *                 message:
- *                   type: string
- *                   example: Category created successfully!
- *                 id:
- *                   type: string
- *       409:
- *         description: Category already exists
  *       400:
  *         description: Validation failed
+ *       409:
+ *         description: Category already exists
  *       500:
- *         description: Internal server error
+ *         description: Server error
  */
 
 /**
  * @swagger
  * /api/v1/categories:
  *   get:
- *     summary: Get all active categories
- *     description: Retrieve a list of all active categories.
- *     tags: [Category]
+ *     summary: Get list of categories
+ *     tags: [Categories]
+ *     parameters:
+ *       - $ref: '#/components/parameters/page'
+ *       - $ref: '#/components/parameters/limit'
+ *       - $ref: '#/components/parameters/isActive'
+ *       - $ref: '#/components/parameters/name'
  *     responses:
  *       200:
- *         description: Category list retrieved successfully
+ *         description: List of categories
  *         content:
  *           application/json:
  *             schema:
@@ -104,10 +123,23 @@
  *               properties:
  *                 success:
  *                   type: boolean
- *                   example: true
- *                 length:
- *                   type: number
- *                   example: 5
+ *                 message:
+ *                   type: string
+ *                 total:
+ *                   type: integer
+ *                 active:
+ *                   type: integer
+ *                 inActive:
+ *                   type: integer
+ *                 meta:
+ *                   type: object
+ *                   properties:
+ *                     page:
+ *                       type: integer
+ *                     limit:
+ *                       type: integer
+ *                     count:
+ *                       type: integer
  *                 data:
  *                   type: object
  *                   properties:
@@ -115,29 +147,21 @@
  *                       type: array
  *                       items:
  *                         $ref: '#/components/schemas/Category'
- *       404:
- *         description: Category not found
  *       500:
- *         description: Internal server error
+ *         description: Server error
  */
 
 /**
  * @swagger
  * /api/v1/categories/{id}:
  *   get:
- *     summary: Get category details
- *     description: Retrieve individual category information by category ID.
- *     tags: [Category]
+ *     summary: Get individual category info
+ *     tags: [Categories]
  *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: Category ID
+ *       - $ref: '#/components/parameters/categoryId'
  *     responses:
  *       200:
- *         description: Category details retrieved successfully
+ *         description: Category found
  *         content:
  *           application/json:
  *             schema:
@@ -145,39 +169,29 @@
  *               properties:
  *                 success:
  *                   type: boolean
- *                   example: true
  *                 message:
  *                   type: string
- *                   example: Individual category info!
  *                 data:
  *                   type: object
  *                   properties:
  *                     category:
  *                       $ref: '#/components/schemas/Category'
- *       400:
- *         description: Invalid category ID
  *       404:
  *         description: Category not found
+ *       400:
+ *         description: Invalid ID
  *       500:
- *         description: Internal server error
+ *         description: Server error
  */
 
 /**
  * @swagger
  * /api/v1/categories/{id}:
  *   put:
- *     summary: Update category
- *     description: Update category name or description by ID.
- *     tags: [Category]
- *     security:
- *       - bearerAuth: []
+ *     summary: Update a category
+ *     tags: [Categories]
  *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: Category ID
+ *       - $ref: '#/components/parameters/categoryId'
  *     requestBody:
  *       required: true
  *       content:
@@ -187,46 +201,38 @@
  *             properties:
  *               name:
  *                 type: string
- *                 example: Vitamins
  *               description:
  *                 type: string
- *                 example: Supplements for daily health
+ *               isActive:
+ *                 type: boolean
  *     responses:
  *       200:
  *         description: Category updated successfully
  *       400:
- *         description: Validation failed
+ *         description: Validation failed or invalid ID
  *       404:
  *         description: Category not found
  *       409:
- *         description: Duplicate category name
+ *         description: Category name already exists
  *       500:
- *         description: Internal server error
+ *         description: Server error
  */
 
 /**
  * @swagger
  * /api/v1/categories/{id}:
  *   delete:
- *     summary: Delete category
- *     description: Permanently delete a category by ID.
- *     tags: [Category]
- *     security:
- *       - bearerAuth: []
+ *     summary: Delete a category
+ *     tags: [Categories]
  *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         schema:
- *           type: string
- *         description: Category ID
+ *       - $ref: '#/components/parameters/categoryId'
  *     responses:
  *       200:
  *         description: Category deleted successfully
  *       404:
  *         description: Category not found
- *       409:
- *         description: Invalid category ID
+ *       400:
+ *         description: Invalid ID
  *       500:
- *         description: Internal server error
+ *         description: Server error
  */
