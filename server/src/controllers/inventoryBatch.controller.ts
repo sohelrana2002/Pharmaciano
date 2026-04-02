@@ -162,11 +162,6 @@ const inventoryBatchList = async (req: AuthRequest, res: Response) => {
       .limit(limitNumber)
       .sort({ createdAt: -1 });
 
-    console.log(
-      "filter: ",
-      inventoryBatch.filter((item) => item.medicineId),
-    );
-
     const finalData = search
       ? inventoryBatch.filter((item) => item.medicineId)
       : inventoryBatch;
