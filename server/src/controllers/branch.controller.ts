@@ -6,7 +6,6 @@ import {
   branchSchemaValidator,
   updateBranchVaidator,
 } from "../validators/branch.validator";
-import Organization from "../models/Organization.model";
 import Branch from "../models/Branch.model";
 import mongoose from "mongoose";
 import { customMessage } from "../constants/customMessage";
@@ -30,10 +29,13 @@ const createBranch = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const { name, address, contact, orgName } = validationResult.data;
+    const { name, address, contact, isActive } = validationResult.data;
 
     //   Check if branch already exists
-    const branchExist = await Branch.findOne({ name });
+    const branchExist = await Branch.findOne({
+      name,
+      organizationId: req.user!.organizationId,
+    });
 
     if (branchExist) {
       return res.status(409).json({
@@ -42,30 +44,12 @@ const createBranch = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    //   Fetch all active organization
-    const activeOrganization = await Organization.find({
-      isActive: true,
-    }).select("name");
-    // console.log("activeOrganization", activeOrganization);
-
-    const organization = await Organization.findOne({ name: orgName });
-    // console.log("organization", organization);
-
-    if (!organization) {
-      return res.status(404).json({
-        success: false,
-        message: "Invalid organization name",
-        hint: `Available organization names are ${activeOrganization
-          .map((org) => org.name)
-          .join(", ")}`,
-      });
-    }
-
     const branch = new Branch({
       name,
       address,
       contact,
-      organizationId: organization._id,
+      isActive,
+      organizationId: req.user!.organizationId,
       createdBy: req.user!.userId,
     });
 
@@ -105,9 +89,40 @@ const createBranch = async (req: AuthRequest, res: Response) => {
 // list of branch
 const branchList = async (req: AuthRequest, res: Response) => {
   try {
-    const branch = await Branch.find({ isActive: true }).select(
-      "-createdBy -organizationId",
-    );
+    const { name, isActive, page, limit } = req.query;
+
+    const baseFilter: any = {
+      organizationId: req.user!.organizationId,
+    };
+
+    const filter: any = { ...baseFilter };
+
+    if (name) {
+      filter.name = { $regex: name, $options: "i" };
+    }
+
+    if (isActive !== undefined) {
+      filter.isActive = isActive;
+    }
+
+    const pageNumber = parseInt(page as string) || 1;
+    const limitNumber = parseInt(limit as string) || 10;
+    const skip = (pageNumber - 1) * limitNumber;
+
+    const branch = await Branch.find(filter)
+      .populate([
+        {
+          path: "organizationId",
+          select: "name",
+        },
+        {
+          path: "createdBy",
+          select: "name email",
+        },
+      ])
+      .skip(skip)
+      .limit(limitNumber)
+      .sort({ createdAt: -1 });
 
     if (!branch) {
       res.status(404).json({
@@ -116,10 +131,30 @@ const branchList = async (req: AuthRequest, res: Response) => {
       });
     }
 
+    const total = await Branch.countDocuments({ ...baseFilter });
+
+    const activeCount = await Branch.countDocuments({
+      ...baseFilter,
+      isActive: true,
+    });
+
+    const inActiveCount = await Branch.countDocuments({
+      ...baseFilter,
+      isActive: false,
+    });
+
     return res.status(200).json({
       success: true,
-      message: customMessage.found("Branch"),
-      length: branch.length,
+      message:
+        branch.length > 0 ? customMessage.found("Branch") : "No branch found!",
+      meta: {
+        page: pageNumber,
+        limit: limitNumber,
+        count: branch.length,
+      },
+      total,
+      active: activeCount,
+      inActive: inActiveCount,
       data: { branch },
     });
   } catch (error: any) {
@@ -144,7 +179,10 @@ const branchInfo = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const branch = await Branch.findById(id).populate([
+    const branch = await Branch.findOne({
+      _id: id,
+      organizationId: req.user!.organizationId,
+    }).populate([
       {
         path: "organizationId",
         select: "name address contact -_id",
@@ -205,9 +243,12 @@ const updateBranch = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const { name, address, contact, orgName } = validationResult.data;
+    const { name, address, contact, isActive } = validationResult.data;
 
-    const branchExist = await Branch.findById(id);
+    const branchExist = await Branch.findOne({
+      _id: id,
+      organizationId: req.user!.organizationId,
+    });
 
     if (!branchExist) {
       return res.status(404).json({
@@ -218,7 +259,10 @@ const updateBranch = async (req: AuthRequest, res: Response) => {
 
     // Prevent duplicate fields (industry practice)
     if (name && name != branchExist.name) {
-      const existing = await Branch.findOne({ name });
+      const existing = await Branch.findOne({
+        name,
+        organizationId: req.user!.organizationId,
+      });
 
       if (existing) {
         return res.status(409).json({
@@ -234,32 +278,19 @@ const updateBranch = async (req: AuthRequest, res: Response) => {
     if (name) updateData.name = name;
     if (address) updateData.address = address;
     if (contact) updateData.contact = contact;
-
-    //   Fetch all active organization
-    const activeOrganization = await Organization.find({
-      isActive: true,
-    }).select("name");
-
-    // console.log("activeOrganization", activeOrganization);
-
-    const organization = await Organization.findOne({ name: orgName });
-    // console.log("organization", organization);
-
-    if (!organization) {
-      return res.status(404).json({
-        success: false,
-        message: "Invalid organization name",
-        hint: `Available organization names are ${activeOrganization.map(
-          (org) => org.name,
-        )}`,
-      });
-    }
-    updateData.organizationId = organization._id;
+    if (isActive) updateData.isActive = isActive;
 
     // Update Branch
-    const updateResult = await Branch.findByIdAndUpdate(id, updateData, {
-      new: true,
-    });
+    const updateResult = await Branch.findByIdAndUpdate(
+      {
+        _id: id,
+        organizationId: req.user!.organizationId,
+      },
+      updateData,
+      {
+        new: true,
+      },
+    );
 
     return res.status(200).json({
       success: true,
@@ -304,7 +335,10 @@ const deleteBranch = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const branch = await Branch.findByIdAndDelete(id);
+    const branch = await Branch.findByIdAndDelete({
+      _id: id,
+      organizationId: req.user!.organizationId,
+    });
 
     if (!branch) {
       return res.status(404).json({
