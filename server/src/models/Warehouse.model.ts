@@ -29,6 +29,11 @@ const wareHousesSchema = new Schema<IWarehouse>(
       type: Boolean,
       default: true,
     },
+    organizationId: {
+      type: Schema.Types.ObjectId,
+      ref: "Organization",
+      required: true,
+    },
     branchId: {
       type: Schema.Types.ObjectId,
       ref: "Branch",

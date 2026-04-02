@@ -149,6 +149,7 @@ export interface IWarehouse extends Document {
   capacity: number;
   branchName: string;
   isActive: boolean;
+  organizationId: Types.ObjectId;
   branchId: Types.ObjectId;
   createdBy: Types.ObjectId;
   createdAt?: Date;
