@@ -144,6 +144,11 @@ const brandList = async (req: AuthRequest, res: Response) => {
         brands.length > 0
           ? customMessage.found("List of brands")
           : "No brand found!",
+      meta: {
+        page: pageNumber,
+        limit: limitNumber,
+        count: brands.length,
+      },
       total,
       active: activeCount,
       inActive: inActiveCount,
