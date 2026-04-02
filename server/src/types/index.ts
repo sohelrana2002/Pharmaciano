@@ -110,7 +110,6 @@ export interface IBranch extends Document {
     phone: string;
     email: string;
   };
-  orgName: string;
   isActive: boolean;
   organizationId: Types.ObjectId;
   createdBy: Types.ObjectId;
