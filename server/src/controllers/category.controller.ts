@@ -82,7 +82,7 @@ const createCategory = async (req: AuthRequest, res: Response) => {
 // list of category
 const categoryList = async (req: AuthRequest, res: Response) => {
   try {
-    const { isActive } = req.query;
+    const { isActive, name, page, limit } = req.query;
 
     const baseFilter: any = {
       organizationId: req.user!.organizationId,
@@ -90,20 +90,32 @@ const categoryList = async (req: AuthRequest, res: Response) => {
 
     const filter: any = { ...baseFilter };
 
+    if (name) {
+      filter.name = { $regex: name, $options: "i" };
+    }
+
     if (isActive !== undefined) {
       filter.isActive = isActive;
     }
 
-    const category = await Category.find(filter).populate([
-      {
-        path: "organizationId",
-        select: "name",
-      },
-      {
-        path: "createdBy",
-        select: "name email",
-      },
-    ]);
+    const pageNumber = parseInt(page as string) || 1;
+    const limitNumber = parseInt(limit as string) || 10;
+    const skip = (pageNumber - 1) * limitNumber;
+
+    const category = await Category.find(filter)
+      .populate([
+        {
+          path: "organizationId",
+          select: "name",
+        },
+        {
+          path: "createdBy",
+          select: "name email",
+        },
+      ])
+      .skip(skip)
+      .limit(limitNumber)
+      .sort({ createdAt: -1 });
 
     if (!category) {
       return res.status(404).json({
@@ -130,6 +142,11 @@ const categoryList = async (req: AuthRequest, res: Response) => {
         category.length > 0
           ? customMessage.found("List of category")
           : "No category found!",
+      meta: {
+        page: pageNumber,
+        limit: limitNumber,
+        count: category.length,
+      },
       total,
       active: activeCount,
       inActive: inActiveCount,
