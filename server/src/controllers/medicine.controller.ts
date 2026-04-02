@@ -154,12 +154,11 @@ const createMedicine = async (req: AuthRequest, res: Response) => {
 // list of medicine
 const medicineList = async (req: AuthRequest, res: Response) => {
   try {
-    const rawSearch = req.query.search;
-    const isActive = req.query.isActive;
+    const { search, isActive, page, limit } = req.query;
 
-    const search = typeof rawSearch === "string" ? rawSearch : "";
+    const searchString = typeof search === "string" ? search : "";
 
-    const { name, strength, unit } = parseMedicineInput(search);
+    const { name, strength, unit } = parseMedicineInput(searchString);
 
     const baseFilter: any = {
       organizationId: req.user!.organizationId,
@@ -182,24 +181,32 @@ const medicineList = async (req: AuthRequest, res: Response) => {
       filter.isActive = isActive;
     }
 
-    const medicine = await Medicine.find(filter).populate([
-      {
-        path: "organizationId",
-        select: "name",
-      },
-      {
-        path: "categoryId",
-        select: "name",
-      },
-      {
-        path: "brandId",
-        select: "name",
-      },
-      {
-        path: "createdBy",
-        select: "name",
-      },
-    ]);
+    const pageNumber = parseInt(page as string) || 1;
+    const limitNumber = parseInt(limit as string) || 20;
+    const skip = (pageNumber - 1) * limitNumber;
+
+    const medicine = await Medicine.find(filter)
+      .populate([
+        {
+          path: "organizationId",
+          select: "name",
+        },
+        {
+          path: "categoryId",
+          select: "name",
+        },
+        {
+          path: "brandId",
+          select: "name",
+        },
+        {
+          path: "createdBy",
+          select: "name",
+        },
+      ])
+      .skip(skip)
+      .limit(limitNumber)
+      .sort({ createdAt: -1 });
 
     if (!medicine) {
       return res.status(404).json({
@@ -226,6 +233,11 @@ const medicineList = async (req: AuthRequest, res: Response) => {
         medicine.length > 0
           ? customMessage.found("List of medicine")
           : "No Medicinees found!",
+      meta: {
+        page: pageNumber,
+        limit: limitNumber,
+        count: medicine.length,
+      },
       total,
       active: activeCount,
       inActive: inActiveCount,
