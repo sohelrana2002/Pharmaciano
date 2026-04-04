@@ -94,7 +94,7 @@ export const authorize = (requiredPermissions: string[]) => {
       });
     }
 
-    const hasAccess = requiredPermissions.every((permission) => {
+    const hasAccess = requiredPermissions.some((permission) => {
       return existUser!.permissions.includes(permission);
     });
     // console.log("hasAccess", hasAccess);
