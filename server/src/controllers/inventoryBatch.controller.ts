@@ -10,10 +10,15 @@ import Medicine from "../models/Medicine.model";
 import InventoryBatch from "../models/InventoryBatch.model";
 import mongoose from "mongoose";
 import { parseMedicineInput } from "../helper/parseMedicineInput";
+import Organization from "../models/Organization.model";
+import Branch from "../models/Branch.model";
+import Warehouse from "../models/Warehouse.model";
 
 // create inventoryBatch
 const createInventoryBatch = async (req: AuthRequest, res: Response) => {
   try {
+    const isSuperAdmin = req.user!.permissions.includes("superAdmin:manage");
+
     // Validate request body using Zod
     const validationResult = inventoryBatchSchemaValidator.safeParse(req.body);
 
@@ -33,15 +38,89 @@ const createInventoryBatch = async (req: AuthRequest, res: Response) => {
     const { medicineName, batchNo, expiryDate, quantity, purchasePrice } =
       validationResult.data;
 
+    const { organizationName, branchName, warehouseName } = req.body;
+
+    // dynamic assign
+    let organizationId = req.user!.organizationId;
+    let branchId = req.user!.branchId;
+    let warehouseId = req.user!.warehouseId;
+
+    if (isSuperAdmin) {
+      // manage organizaton
+      if (!organizationName) {
+        return res.status(400).json({
+          success: false,
+          message: "Organization name is required",
+        });
+      } else {
+        const organization = await Organization.findOne({
+          name: organizationName,
+        });
+
+        if (!organization) {
+          const activeOrganization = await Organization.find();
+
+          return res.status(404).json({
+            success: false,
+            message: customMessage.notFound("Organization"),
+            hints: `Active organization names are: ${activeOrganization.map((org) => org.name).join(", ")}`,
+          });
+        }
+        organizationId = organization._id.toString();
+      }
+
+      // manage branch
+      if (!branchName) {
+        return res.status(400).json({
+          success: false,
+          message: "Branch name is required!",
+        });
+      } else {
+        const branch = await Branch.findOne({ name: branchName });
+
+        if (!branch) {
+          const activeBranch = await Branch.find();
+
+          return res.status(404).json({
+            success: false,
+            message: customMessage.notFound("Branch"),
+            hints: `Active branch names are: ${activeBranch.map((bra) => bra.name).join(", ")}`,
+          });
+        }
+        branchId = branch._id.toString();
+      }
+
+      // manage branch
+      if (!warehouseName) {
+        return res.status(400).json({
+          success: false,
+          message: "Warehouse name is required!",
+        });
+      } else {
+        const warehouse = await Warehouse.findOne({ name: warehouseName });
+
+        if (!warehouse) {
+          const activeWarehouse = await Warehouse.find();
+
+          return res.status(404).json({
+            success: false,
+            message: customMessage.notFound("Warehouse"),
+            hints: `Active branch names are: ${activeWarehouse.map((wh) => wh.name).join(", ")}`,
+          });
+        }
+        warehouseId = warehouse._id.toString();
+      }
+    }
+
     //   check valid medicine name
     const activeMedicine = await Medicine.find({
-      organizationId: req.user!.organizationId,
+      organizationId,
       isActive: true,
     }).select("name");
 
     const medicine = await Medicine.findOne({
       name: medicineName,
-      organizationId: req.user!.organizationId,
+      organizationId,
     });
 
     if (!medicine) {
@@ -54,9 +133,9 @@ const createInventoryBatch = async (req: AuthRequest, res: Response) => {
 
     const existingBatchNo = await InventoryBatch.findOne({
       batchNo,
-      organizationId: req.user!.organizationId,
-      branchId: req.user!.branchId,
-      warehouseId: req.user!.warehouseId,
+      organizationId,
+      branchId,
+      warehouseId,
     });
 
     if (existingBatchNo) {
@@ -68,14 +147,14 @@ const createInventoryBatch = async (req: AuthRequest, res: Response) => {
 
     //   create inventoryBatch
     const inventoryBatch = await InventoryBatch.create({
-      organizationId: req.user!.organizationId,
-      branchId: req.user!.branchId,
+      organizationId,
+      branchId,
       medicineId: medicine._id,
       batchNo,
       expiryDate,
       quantity,
       purchasePrice,
-      warehouseId: req.user!.warehouseId,
+      warehouseId,
       status: new Date(expiryDate) < new Date() ? "expired" : "active",
       createdBy: req.user!.userId,
     });
@@ -114,6 +193,8 @@ const createInventoryBatch = async (req: AuthRequest, res: Response) => {
 // list of inventoryBatch
 const inventoryBatchList = async (req: AuthRequest, res: Response) => {
   try {
+    const isSuperAdmin = req.user!.permissions.includes("superAdmin:manage");
+
     const { status, medicineName, page, limit, batchNo } = req.query;
 
     const search = typeof medicineName === "string" ? medicineName : "";
@@ -123,11 +204,13 @@ const inventoryBatchList = async (req: AuthRequest, res: Response) => {
     const limitNumber = parseInt(limit as string) || 10;
     const skip = (pageNumber - 1) * limitNumber;
 
-    const baseFilter: any = {
-      organizationId: req.user!.organizationId,
-      branchId: req.user!.branchId,
-      warehouseId: req.user!.warehouseId,
-    };
+    const baseFilter: any = {};
+
+    if (!isSuperAdmin) {
+      baseFilter.organizationId = req.user!.organizationId;
+      baseFilter.branchId = req.user!.branchId;
+      baseFilter.warehouseId = req.user!.warehouseId;
+    }
 
     if (status) {
       baseFilter.status = status;
@@ -167,11 +250,7 @@ const inventoryBatchList = async (req: AuthRequest, res: Response) => {
       : inventoryBatch;
 
     // counts
-    const total = await InventoryBatch.countDocuments({
-      organizationId: req.user!.organizationId,
-      branchId: req.user!.branchId,
-      warehouseId: req.user!.warehouseId,
-    });
+    const total = await InventoryBatch.countDocuments({ ...baseFilter });
 
     const activeCount = await InventoryBatch.countDocuments({
       ...baseFilter,
