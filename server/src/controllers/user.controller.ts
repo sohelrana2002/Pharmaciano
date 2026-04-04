@@ -335,39 +335,43 @@ const updateUser = async (req: AuthRequest, res: Response) => {
     if (phone) updateData.phone = phone;
     if (typeof isActive !== "undefined") updateData.isActive = isActive;
 
-    // fetch active organization
-    const activeOrganization = await Organization.find({
-      isActive: true,
-    }).select("name");
+    if (orgName !== undefined) {
+      // fetch active organization
+      const activeOrganization = await Organization.find({
+        isActive: true,
+      }).select("name");
 
-    const organization = await Organization.findOne({ name: orgName });
+      const organization = await Organization.findOne({ name: orgName });
 
-    if (!organization) {
-      return res.status(404).json({
-        success: false,
-        message: "Invalid organization name",
-        hint: `Available organization names are ${activeOrganization.map((org) => org.name)}`,
-      });
+      if (!organization) {
+        return res.status(404).json({
+          success: false,
+          message: "Invalid organization name",
+          hint: `Available organization names are ${activeOrganization.map((org) => org.name)}`,
+        });
+      }
+      updateData.organizationId = organization._id;
     }
-    updateData.organizationId = organization._id;
 
     // fetch active branch
-    const activeBranch = await Branch.find({ isActive: true }).select("name");
+    if (branchName !== undefined) {
+      const activeBranch = await Branch.find({ isActive: true }).select("name");
 
-    const branch = await Branch.findOne({ name: branchName });
+      const branch = await Branch.findOne({ name: branchName });
 
-    if (!branch) {
-      return res.status(404).json({
-        success: false,
-        message: "Invalid branch name.",
-        hint: `Available branch names are ${activeBranch.map((branch) => branch.name)}`,
-      });
+      if (!branch) {
+        return res.status(404).json({
+          success: false,
+          message: "Invalid branch name.",
+          hint: `Available branch names are ${activeBranch.map((branch) => branch.name)}`,
+        });
+      }
+      updateData.branchId = branch._id;
     }
-    updateData.branchId = branch._id;
 
     //  if warehouse name provide then
     let warehouse;
-    if (warehouseName) {
+    if (warehouseName !== undefined) {
       // fetch active warehouse
       const activeWarehouse = await Warehouse.find({ isActive: true }).select(
         "name",
