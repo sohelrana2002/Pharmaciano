@@ -110,16 +110,8 @@ export const authorize = (requiredPermissions: string[]) => {
   };
 };
 
-export const isSuperAdmin = (
-  req: AuthRequest,
-  res: Response,
-  next: NextFunction,
-) => {
-  if (!req.user || req.user.role !== "Super Admin") {
-    return res.status(403).json({
-      success: false,
-      message: "Super admin access required.",
-    });
-  }
-  next();
+export const isSuperAdmin = (user: AuthRequest["user"]): boolean => {
+  if (!user || !user.permissions) return false;
+
+  return user.permissions.includes("superAdmin:manage");
 };
