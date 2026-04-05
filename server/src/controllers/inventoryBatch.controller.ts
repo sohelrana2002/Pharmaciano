@@ -13,11 +13,12 @@ import { parseMedicineInput } from "../helper/parseMedicineInput";
 import Organization from "../models/Organization.model";
 import Branch from "../models/Branch.model";
 import Warehouse from "../models/Warehouse.model";
+import { isSuperAdmin } from "../middlewares/auth.middleware";
 
 // create inventoryBatch
 const createInventoryBatch = async (req: AuthRequest, res: Response) => {
   try {
-    const isSuperAdmin = req.user!.permissions.includes("superAdmin:manage");
+    const superAdmin = isSuperAdmin(req.user);
 
     // Validate request body using Zod
     const validationResult = inventoryBatchSchemaValidator.safeParse(req.body);
@@ -45,7 +46,7 @@ const createInventoryBatch = async (req: AuthRequest, res: Response) => {
     let branchId = req.user!.branchId;
     let warehouseId = req.user!.warehouseId;
 
-    if (isSuperAdmin) {
+    if (superAdmin) {
       // manage organizaton
       if (!organizationName) {
         return res.status(400).json({
@@ -193,7 +194,7 @@ const createInventoryBatch = async (req: AuthRequest, res: Response) => {
 // list of inventoryBatch
 const inventoryBatchList = async (req: AuthRequest, res: Response) => {
   try {
-    const isSuperAdmin = req.user!.permissions.includes("superAdmin:manage");
+    const superAdmin = isSuperAdmin(req.user);
 
     const { status, medicineName, page, limit, batchNo } = req.query;
 
@@ -206,7 +207,7 @@ const inventoryBatchList = async (req: AuthRequest, res: Response) => {
 
     const baseFilter: any = {};
 
-    if (!isSuperAdmin) {
+    if (!superAdmin) {
       baseFilter.organizationId = req.user!.organizationId;
       baseFilter.branchId = req.user!.branchId;
       baseFilter.warehouseId = req.user!.warehouseId;
@@ -291,6 +292,7 @@ const inventoryBatchList = async (req: AuthRequest, res: Response) => {
 // individual inventoryBatch info
 const inventoryBatchInfo = async (req: AuthRequest, res: Response) => {
   try {
+    const superAdmin = isSuperAdmin(req.user);
     const { id } = req.params;
 
     if (!mongoose.Types.ObjectId.isValid(id)) {
@@ -300,12 +302,15 @@ const inventoryBatchInfo = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const inventoryBatch = await InventoryBatch.findOne({
-      _id: id,
-      organizationId: req.user!.organizationId,
-      branchId: req.user!.branchId,
-      warehouseId: req.user!.warehouseId,
-    }).populate([
+    const filter: any = { _id: id };
+
+    if (!superAdmin) {
+      filter.organizationId = req.user!.organizationId;
+      filter.branchId = req.user!.branchId;
+      filter.warehouseId = req.user!.warehouseId;
+    }
+
+    const inventoryBatch = await InventoryBatch.findOne(filter).populate([
       {
         path: "organizationId",
         select: "name contact address",
@@ -362,6 +367,16 @@ const updateInventoryBatch = async (req: AuthRequest, res: Response) => {
       });
     }
 
+    const superAdmin = isSuperAdmin(req.user);
+
+    const filter: any = { _id: id };
+
+    if (!superAdmin) {
+      filter.organizationId = req.user!.organizationId;
+      filter.branchId = req.user!.branchId;
+      filter.warehouseId = req.user!.warehouseId;
+    }
+
     // Validate request body using Zod
     const validationResult = updateInventoryBatchValidator.safeParse(req.body);
 
@@ -381,12 +396,9 @@ const updateInventoryBatch = async (req: AuthRequest, res: Response) => {
     const { medicineName, batchNo, expiryDate, quantity, purchasePrice } =
       validationResult.data;
 
-    const inventoryBatch = await InventoryBatch.findOne({
-      _id: id,
-      organizationId: req.user!.organizationId,
-      branchId: req.user!.branchId,
-      warehouseId: req.user!.warehouseId,
-    });
+    const { organizationName, branchName, warehouseName } = req.body;
+
+    const inventoryBatch = await InventoryBatch.findOne(filter);
 
     if (!inventoryBatch) {
       return res.status(404).json({
@@ -398,10 +410,8 @@ const updateInventoryBatch = async (req: AuthRequest, res: Response) => {
     //   prevent duplicate batch no
     if (batchNo && batchNo !== inventoryBatch.batchNo) {
       const existingBatchNo = await InventoryBatch.findOne({
+        ...filter,
         batchNo,
-        organizationId: req.user!.organizationId,
-        branchId: req.user!.branchId,
-        warehouseId: req.user!.warehouseId,
         _id: { $ne: id }, // exclude current inventoryBatch
       });
 
@@ -421,36 +431,91 @@ const updateInventoryBatch = async (req: AuthRequest, res: Response) => {
     if (quantity) updateData.quantity = quantity;
     if (purchasePrice) updateData.purchasePrice = purchasePrice;
 
-    //   check valid medicine name
-    const activeMedicine = await Medicine.find({
-      organizationId: req.user!.organizationId,
-      isActive: true,
-    }).select("name");
+    // update for super admin
+    if (superAdmin) {
+      // manage organizaton
+      if (organizationName) {
+        const organization = await Organization.findOne({
+          name: organizationName,
+        });
 
-    const medicine = await Medicine.findOne({
-      name: medicineName,
-      organizationId: req.user!.organizationId,
-      isActive: true,
-    });
+        if (!organization) {
+          const activeOrganization = await Organization.find();
 
-    if (!medicine) {
-      return res.status(404).json({
-        success: false,
-        message: "Invalid medicine name.",
-        hints: `Active medicine names are ${activeMedicine.map((m) => m.name).join(", ")}`,
-      });
+          return res.status(404).json({
+            success: false,
+            message: customMessage.notFound("Organization"),
+            hints: `Active organization names are: ${activeOrganization.map((org) => org.name).join(", ")}`,
+          });
+        }
+        updateData.organizationId = organization._id.toString();
+      }
+
+      // manage branch
+      if (branchName) {
+        const branch = await Branch.findOne({ name: branchName });
+
+        if (!branch) {
+          const activeBranch = await Branch.find();
+
+          return res.status(404).json({
+            success: false,
+            message: customMessage.notFound("Branch"),
+            hints: `Active branch names are: ${activeBranch.map((bra) => bra.name).join(", ")}`,
+          });
+        }
+        updateData.branchId = branch._id.toString();
+      }
+
+      // manage branch
+      if (warehouseName) {
+        const warehouse = await Warehouse.findOne({ name: warehouseName });
+
+        if (!warehouse) {
+          const activeWarehouse = await Warehouse.find();
+
+          return res.status(404).json({
+            success: false,
+            message: customMessage.notFound("Warehouse"),
+            hints: `Active branch names are: ${activeWarehouse.map((wh) => wh.name).join(", ")}`,
+          });
+        }
+        updateData.warehouseId = warehouse._id.toString();
+      }
     }
-    //   update medicineId
-    updateData.medicineId = medicine._id;
+
+    if (medicineName) {
+      const orgIdForMedicine =
+        superAdmin && updateData.organizationId
+          ? updateData.organizationId
+          : inventoryBatch.organizationId;
+
+      //   check valid medicine name
+      const activeMedicine = await Medicine.find({
+        organizationId: orgIdForMedicine,
+        isActive: true,
+      }).select("name");
+
+      const medicine = await Medicine.findOne({
+        name: medicineName,
+        organizationId: orgIdForMedicine,
+        isActive: true,
+      });
+
+      if (!medicine) {
+        return res.status(404).json({
+          success: false,
+          message: "Invalid medicine name.",
+          hints: `Active medicine names are ${activeMedicine.map((m) => m.name).join(", ")}`,
+        });
+      }
+      //   update medicineId
+      updateData.medicineId = medicine._id;
+    }
 
     // Update inventoryBatch
     const updatedInventoryBatch = await InventoryBatch.findByIdAndUpdate(
-      {
-        _id: id,
-        organizationId: req.user!.organizationId,
-        branchId: req.user!.branchId,
-        warehouseId: req.user!.warehouseId,
-      },
+      filter,
       updateData,
       {
         new: true,
@@ -500,12 +565,17 @@ const deleteInventoryBatch = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const inventoryBatch = await InventoryBatch.findByIdAndDelete({
-      _id: id,
-      organizationId: req.user!.organizationId,
-      branchId: req.user!.branchId,
-      warehouseId: req.user!.warehouseId,
-    });
+    const superAdmin = isSuperAdmin(req.user);
+
+    const filter: any = { _id: id };
+
+    if (!superAdmin) {
+      filter.organizationId = req.user!.organizationId;
+      filter.branchId = req.user!.branchId;
+      filter.warehouseId = req.user!.warehouseId;
+    }
+
+    const inventoryBatch = await InventoryBatch.findByIdAndDelete(filter);
 
     if (!inventoryBatch) {
       return res.status(404).json({
