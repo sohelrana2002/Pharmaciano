@@ -19,7 +19,7 @@ const router = Router();
 router.post(
   "/",
   authenticate,
-  authorize(["inventory:manage"]),
+  authorize(["inventory:manage", "superAdmin:manage"]),
   validate(inventoryBatchSchemaValidator),
   createInventoryBatch,
 );
@@ -28,7 +28,7 @@ router.post(
 router.get(
   "/",
   authenticate,
-  authorize(["inventory:manage"]),
+  authorize(["inventory:manage", "superAdmin:manage"]),
   inventoryBatchList,
 );
 
@@ -36,7 +36,7 @@ router.get(
 router.get(
   "/:id",
   authenticate,
-  authorize(["inventory:manage"]),
+  authorize(["inventory:manage", "superAdmin:manage"]),
   inventoryBatchInfo,
 );
 
@@ -44,7 +44,7 @@ router.get(
 router.put(
   "/:id",
   authenticate,
-  authorize(["inventory:manage"]),
+  authorize(["inventory:manage", "superAdmin:manage"]),
   validate(updateInventoryBatchValidator),
   updateInventoryBatch,
 );
@@ -53,7 +53,7 @@ router.put(
 router.delete(
   "/:id",
   authenticate,
-  authorize(["inventory:manage"]),
+  authorize(["inventory:manage", "superAdmin:manage"]),
   deleteInventoryBatch,
 );
 
