@@ -101,29 +101,6 @@ const createInventoryBatch = async (req: AuthRequest, res: Response) => {
         }
         branchId = branch._id.toString();
       }
-
-      // manage warehouse
-      if (warehouseName) {
-        const warehouse = await Warehouse.findOne({
-          name: warehouseName,
-          organizationId,
-          branchId,
-        });
-
-        if (!warehouse) {
-          const activeWarehouse = await Warehouse.find({
-            organizationId,
-            branchId,
-          }).select("name");
-
-          return res.status(404).json({
-            success: false,
-            message: customMessage.notFound("Warehouse"),
-            hints: `Active warehouse names are: ${activeWarehouse.map((wh) => wh.name).join(", ")}`,
-          });
-        }
-        warehouseId = warehouse._id.toString();
-      }
     }
 
     //   check valid medicine name
@@ -245,7 +222,6 @@ const inventoryBatchList = async (req: AuthRequest, res: Response) => {
     if (!superAdmin) {
       baseFilter.organizationId = req.user!.organizationId;
       baseFilter.branchId = req.user!.branchId;
-      baseFilter.warehouseId = req.user!.warehouseId;
     }
 
     if (status) {
@@ -342,7 +318,6 @@ const inventoryBatchInfo = async (req: AuthRequest, res: Response) => {
     if (!superAdmin) {
       filter.organizationId = req.user!.organizationId;
       filter.branchId = req.user!.branchId;
-      filter.warehouseId = req.user!.warehouseId;
     }
 
     const inventoryBatch = await InventoryBatch.findOne(filter).populate([
@@ -409,7 +384,6 @@ const updateInventoryBatch = async (req: AuthRequest, res: Response) => {
     if (!superAdmin) {
       filter.organizationId = req.user!.organizationId;
       filter.branchId = req.user!.branchId;
-      filter.warehouseId = req.user!.warehouseId;
     }
 
     // Validate request body using Zod
@@ -428,10 +402,16 @@ const updateInventoryBatch = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const { medicineName, batchNo, expiryDate, quantity, purchasePrice } =
-      validationResult.data;
+    const {
+      medicineName,
+      batchNo,
+      expiryDate,
+      quantity,
+      purchasePrice,
+      warehouseName,
+    } = validationResult.data;
 
-    const { organizationName, branchName, warehouseName } = req.body;
+    const { organizationName, branchName } = req.body;
 
     const inventoryBatch = await InventoryBatch.findOne(filter);
 
@@ -442,29 +422,8 @@ const updateInventoryBatch = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    //   prevent duplicate batch no
-    if (batchNo && batchNo !== inventoryBatch.batchNo) {
-      const existingBatchNo = await InventoryBatch.findOne({
-        ...filter,
-        batchNo,
-        _id: { $ne: id }, // exclude current inventoryBatch
-      });
-
-      if (existingBatchNo) {
-        return res.status(409).json({
-          success: false,
-          message: "Medicine batch No already exist.",
-        });
-      }
-    }
-
     //   build update object dynamically
     const updateData: any = {};
-
-    if (batchNo) updateData.batchNo = batchNo;
-    if (expiryDate) updateData.expiryDate = expiryDate;
-    if (quantity) updateData.quantity = quantity;
-    if (purchasePrice) updateData.purchasePrice = purchasePrice;
 
     // update for super admin
     if (superAdmin) {
@@ -475,7 +434,7 @@ const updateInventoryBatch = async (req: AuthRequest, res: Response) => {
         });
 
         if (!organization) {
-          const activeOrganization = await Organization.find();
+          const activeOrganization = await Organization.find().select("name");
 
           return res.status(404).json({
             success: false,
@@ -488,10 +447,15 @@ const updateInventoryBatch = async (req: AuthRequest, res: Response) => {
 
       // manage branch
       if (branchName) {
-        const branch = await Branch.findOne({ name: branchName });
+        const branch = await Branch.findOne({
+          name: branchName,
+          organizationId: updateData.organizationId,
+        });
 
         if (!branch) {
-          const activeBranch = await Branch.find();
+          const activeBranch = await Branch.find({
+            organizationId: updateData.organizationId,
+          }).select("name");
 
           return res.status(404).json({
             success: false,
@@ -501,39 +465,23 @@ const updateInventoryBatch = async (req: AuthRequest, res: Response) => {
         }
         updateData.branchId = branch._id.toString();
       }
-
-      // manage branch
-      if (warehouseName) {
-        const warehouse = await Warehouse.findOne({ name: warehouseName });
-
-        if (!warehouse) {
-          const activeWarehouse = await Warehouse.find();
-
-          return res.status(404).json({
-            success: false,
-            message: customMessage.notFound("Warehouse"),
-            hints: `Active branch names are: ${activeWarehouse.map((wh) => wh.name).join(", ")}`,
-          });
-        }
-        updateData.warehouseId = warehouse._id.toString();
-      }
     }
 
-    if (medicineName) {
-      const orgIdForMedicine =
-        superAdmin && updateData.organizationId
-          ? updateData.organizationId
-          : inventoryBatch.organizationId;
+    const finalOrganizationId =
+      updateData.organizationId || inventoryBatch.organizationId;
 
+    const finalBranchId = updateData.branchId || inventoryBatch.branchId;
+
+    if (medicineName) {
       //   check valid medicine name
       const activeMedicine = await Medicine.find({
-        organizationId: orgIdForMedicine,
+        organizationId: finalOrganizationId,
         isActive: true,
       }).select("name");
 
       const medicine = await Medicine.findOne({
         name: medicineName,
-        organizationId: orgIdForMedicine,
+        organizationId: finalOrganizationId,
         isActive: true,
       });
 
@@ -547,6 +495,55 @@ const updateInventoryBatch = async (req: AuthRequest, res: Response) => {
       //   update medicineId
       updateData.medicineId = medicine._id;
     }
+
+    // manage branch
+    if (warehouseName) {
+      const warehouse = await Warehouse.findOne({
+        name: warehouseName,
+        organizationId: finalOrganizationId,
+        branchId: finalBranchId,
+      });
+
+      if (!warehouse) {
+        const activeWarehouse = await Warehouse.find({
+          organizationId: finalOrganizationId,
+          branchId: finalBranchId,
+        }).select("name");
+
+        return res.status(404).json({
+          success: false,
+          message: customMessage.notFound("Warehouse"),
+          hints: `Active warehouse names are: ${activeWarehouse.map((wh) => wh.name).join(", ")}`,
+        });
+      }
+      updateData.warehouseId = warehouse._id.toString();
+    }
+
+    const finalWarehouseId =
+      updateData.warehouseId || inventoryBatch.warehouseId;
+
+    //   prevent duplicate batch no
+    if (batchNo && batchNo !== inventoryBatch.batchNo) {
+      const existingBatchNo = await InventoryBatch.findOne({
+        batchNo,
+        organizationId: finalOrganizationId,
+        branchId: finalBranchId,
+        warehouseId: finalWarehouseId,
+        _id: { $ne: id }, // exclude current inventoryBatch
+      });
+
+      if (existingBatchNo) {
+        return res.status(409).json({
+          success: false,
+          message: "Medicine batch No already exist.",
+        });
+      }
+    }
+
+    if (batchNo) updateData.batchNo = batchNo;
+    if (expiryDate) updateData.expiryDate = expiryDate;
+    if (quantity) updateData.quantity = quantity;
+    if (purchasePrice) updateData.purchasePrice = purchasePrice;
 
     // Update inventoryBatch
     const updatedInventoryBatch = await InventoryBatch.findByIdAndUpdate(
@@ -607,7 +604,6 @@ const deleteInventoryBatch = async (req: AuthRequest, res: Response) => {
     if (!superAdmin) {
       filter.organizationId = req.user!.organizationId;
       filter.branchId = req.user!.branchId;
-      filter.warehouseId = req.user!.warehouseId;
     }
 
     const inventoryBatch = await InventoryBatch.findByIdAndDelete(filter);
