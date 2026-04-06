@@ -18,6 +18,11 @@ export const inventoryBatchSchemaValidator = z.object({
       error: "Status must be either 'active' or 'expired'",
     })
     .default("active"),
+  warehouseName: z
+    .string({ error: "Warehouse name is required!" })
+    .min(1, "Warehouse name at least 1 character!")
+    .toLowerCase()
+    .trim(),
 });
 
 // Validator for updating a brand (all fields optional)
