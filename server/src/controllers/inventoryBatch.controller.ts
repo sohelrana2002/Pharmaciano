@@ -36,15 +36,21 @@ const createInventoryBatch = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const { medicineName, batchNo, expiryDate, quantity, purchasePrice } =
-      validationResult.data;
+    const {
+      medicineName,
+      batchNo,
+      expiryDate,
+      quantity,
+      purchasePrice,
+      warehouseName,
+    } = validationResult.data;
 
-    const { organizationName, branchName, warehouseName } = req.body;
+    const { organizationName, branchName } = req.body;
 
     // dynamic assign
     let organizationId = req.user!.organizationId;
     let branchId = req.user!.branchId;
-    let warehouseId = req.user!.warehouseId;
+    let warehouseId;
 
     if (superAdmin) {
       // manage organizaton
@@ -77,10 +83,15 @@ const createInventoryBatch = async (req: AuthRequest, res: Response) => {
           message: "Branch name is required!",
         });
       } else {
-        const branch = await Branch.findOne({ name: branchName });
+        const branch = await Branch.findOne({
+          name: branchName,
+          organizationId,
+        });
 
         if (!branch) {
-          const activeBranch = await Branch.find();
+          const activeBranch = await Branch.find({ organizationId }).select(
+            "name",
+          );
 
           return res.status(404).json({
             success: false,
@@ -91,22 +102,24 @@ const createInventoryBatch = async (req: AuthRequest, res: Response) => {
         branchId = branch._id.toString();
       }
 
-      // manage branch
-      if (!warehouseName) {
-        return res.status(400).json({
-          success: false,
-          message: "Warehouse name is required!",
+      // manage warehouse
+      if (warehouseName) {
+        const warehouse = await Warehouse.findOne({
+          name: warehouseName,
+          organizationId,
+          branchId,
         });
-      } else {
-        const warehouse = await Warehouse.findOne({ name: warehouseName });
 
         if (!warehouse) {
-          const activeWarehouse = await Warehouse.find();
+          const activeWarehouse = await Warehouse.find({
+            organizationId,
+            branchId,
+          }).select("name");
 
           return res.status(404).json({
             success: false,
             message: customMessage.notFound("Warehouse"),
-            hints: `Active branch names are: ${activeWarehouse.map((wh) => wh.name).join(", ")}`,
+            hints: `Active warehouse names are: ${activeWarehouse.map((wh) => wh.name).join(", ")}`,
           });
         }
         warehouseId = warehouse._id.toString();
@@ -130,6 +143,28 @@ const createInventoryBatch = async (req: AuthRequest, res: Response) => {
         message: "Invalid medicine name.",
         hints: `Active medicine names are: ${activeMedicine.map((m) => m.name).join(", ")}`,
       });
+    }
+
+    if (warehouseName) {
+      const warehouse = await Warehouse.findOne({
+        name: warehouseName,
+        organizationId,
+        branchId,
+      });
+
+      if (!warehouse) {
+        const activeWarehouse = await Warehouse.find({
+          organizationId,
+          branchId,
+        }).select("name");
+
+        return res.status(404).json({
+          success: false,
+          message: customMessage.notFound("Warehouse"),
+          hints: `Active warehouse names are: ${activeWarehouse.map((wh) => wh.name).join(", ")}`,
+        });
+      }
+      warehouseId = warehouse._id.toString();
     }
 
     const existingBatchNo = await InventoryBatch.findOne({
