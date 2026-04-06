@@ -1,15 +1,10 @@
 import { Router } from "express";
-import { authenticate, authorize } from "../middlewares/auth.middleware";
+import { authenticate } from "../middlewares/auth.middleware";
 import { uniqueNameList } from "../shared/uniqueName.controller";
 
 const router = Router();
 
 // all necessary unique name
-router.get(
-  "/",
-  authenticate,
-  authorize(["user:manage", "role:manage"]),
-  uniqueNameList,
-);
+router.get("/", authenticate, uniqueNameList);
 
 export default router;
