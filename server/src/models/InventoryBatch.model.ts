@@ -60,4 +60,9 @@ const inventoryBatchSchema = new Schema<IInventoryBatch>(
   },
 );
 
+inventoryBatchSchema.index(
+  { batchNo: 1, organizationId: 1, branchId: 1, warehouseId: 1 },
+  { unique: true },
+);
+
 export default model<IInventoryBatch>("InventoryBatch", inventoryBatchSchema);
