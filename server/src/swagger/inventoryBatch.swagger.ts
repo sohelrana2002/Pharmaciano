@@ -1,7 +1,7 @@
 /**
  * @swagger
  * tags:
- *   - name: InventoryBatches
+ *   - name: Inventory Batches
  *     description: Inventory batch management APIs
  */
 
@@ -12,7 +12,6 @@
  *     InventoryBatch:
  *       type: object
  *       required:
- *         - medicineName
  *         - batchNo
  *         - expiryDate
  *         - quantity
@@ -21,7 +20,11 @@
  *         _id:
  *           type: string
  *           description: MongoDB ObjectId
- *         medicineName:
+ *         organizationId:
+ *           type: string
+ *         branchId:
+ *           type: string
+ *         warehouseId:
  *           type: string
  *         medicineId:
  *           type: string
@@ -34,12 +37,6 @@
  *           type: number
  *         purchasePrice:
  *           type: number
- *         warehouseId:
- *           type: string
- *         branchId:
- *           type: string
- *         organizationId:
- *           type: string
  *         status:
  *           type: string
  *           enum: [active, expired]
@@ -51,7 +48,101 @@
  *         updatedAt:
  *           type: string
  *           format: date-time
- *
+
+ *     CreateInventoryBatchUser:
+ *       type: object
+ *       required:
+ *         - medicineName
+ *         - batchNo
+ *         - expiryDate
+ *         - quantity
+ *         - purchasePrice
+ *       properties:
+ *         medicineName:
+ *           type: string
+ *         batchNo:
+ *           type: string
+ *         expiryDate:
+ *           type: string
+ *           format: date
+ *         quantity:
+ *           type: number
+ *         purchasePrice:
+ *           type: number
+ *         warehouseName:
+ *           type: string
+
+ *     CreateInventoryBatchSuperAdmin:
+ *       type: object
+ *       required:
+ *         - medicineName
+ *         - batchNo
+ *         - expiryDate
+ *         - quantity
+ *         - purchasePrice
+ *         - organizationName
+ *         - branchName
+ *       properties:
+ *         medicineName:
+ *           type: string
+ *         batchNo:
+ *           type: string
+ *         expiryDate:
+ *           type: string
+ *           format: date
+ *         quantity:
+ *           type: number
+ *         purchasePrice:
+ *           type: number
+ *         warehouseName:
+ *           type: string
+ *         organizationName:
+ *           type: string
+ *           description: Required only for Super Admin
+ *         branchName:
+ *           type: string
+ *           description: Required only for Super Admin
+
+ *     UpdateInventoryBatchUser:
+ *       type: object
+ *       properties:
+ *         medicineName:
+ *           type: string
+ *         batchNo:
+ *           type: string
+ *         expiryDate:
+ *           type: string
+ *           format: date
+ *         quantity:
+ *           type: number
+ *         purchasePrice:
+ *           type: number
+ *         warehouseName:
+ *           type: string
+
+ *     UpdateInventoryBatchSuperAdmin:
+ *       type: object
+ *       properties:
+ *         medicineName:
+ *           type: string
+ *         batchNo:
+ *           type: string
+ *         expiryDate:
+ *           type: string
+ *           format: date
+ *         quantity:
+ *           type: number
+ *         purchasePrice:
+ *           type: number
+ *         warehouseName:
+ *           type: string
+ *         organizationName:
+ *           type: string
+ *           description: Only for Super Admin
+ *         branchName:
+ *           type: string
+ *           description: Only for Super Admin
+
  *   parameters:
  *     inventoryBatchId:
  *       in: path
@@ -59,7 +150,7 @@
  *       required: true
  *       schema:
  *         type: string
- *       description: Inventory batch ID
+ *       description: Inventory Batch ID
  *     page:
  *       in: query
  *       name: page
@@ -95,51 +186,27 @@
  * /api/v1/inventory-batches:
  *   post:
  *     summary: Create a new inventory batch
- *     tags: [InventoryBatches]
+ *     tags: [Inventory Batches]
+ *     description: |
+ *       - Normal users: organization & branch come from token
+ *       - Super Admin: must provide organizationName & branchName
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required:
- *               - medicineName
- *               - batchNo
- *               - expiryDate
- *               - quantity
- *               - purchasePrice
- *             properties:
- *               medicineName:
- *                 type: string
- *               batchNo:
- *                 type: string
- *               expiryDate:
- *                 type: string
- *                 format: date
- *               quantity:
- *                 type: number
- *               purchasePrice:
- *                 type: number
+ *             oneOf:
+ *               - $ref: '#/components/schemas/CreateInventoryBatchUser'
+ *               - $ref: '#/components/schemas/CreateInventoryBatchSuperAdmin'
  *     responses:
  *       201:
  *         description: Inventory batch created successfully
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
- *                 id:
- *                   type: string
  *       400:
  *         description: Validation failed
  *       404:
- *         description: Invalid medicine name
+ *         description: Organization / Branch / Medicine / Warehouse not found
  *       409:
- *         description: Batch number already exists
+ *         description: Batch already exists
  *       500:
  *         description: Server error
  */
@@ -148,8 +215,8 @@
  * @swagger
  * /api/v1/inventory-batches:
  *   get:
- *     summary: List all inventory batches
- *     tags: [InventoryBatches]
+ *     summary: Get list of inventory batches
+ *     tags: [Inventory Batches]
  *     parameters:
  *       - $ref: '#/components/parameters/page'
  *       - $ref: '#/components/parameters/limit'
@@ -168,6 +235,12 @@
  *                   type: boolean
  *                 message:
  *                   type: string
+ *                 total:
+ *                   type: integer
+ *                 active:
+ *                   type: integer
+ *                 expired:
+ *                   type: integer
  *                 meta:
  *                   type: object
  *                   properties:
@@ -177,16 +250,12 @@
  *                       type: integer
  *                     count:
  *                       type: integer
- *                 total:
- *                   type: integer
- *                 active:
- *                   type: integer
- *                 expired:
- *                   type: integer
  *                 data:
  *                   type: array
  *                   items:
  *                     $ref: '#/components/schemas/InventoryBatch'
+ *       500:
+ *         description: Server error
  */
 
 /**
@@ -194,7 +263,7 @@
  * /api/v1/inventory-batches/{id}:
  *   get:
  *     summary: Get individual inventory batch info
- *     tags: [InventoryBatches]
+ *     tags: [Inventory Batches]
  *     parameters:
  *       - $ref: '#/components/parameters/inventoryBatchId'
  *     responses:
@@ -216,7 +285,7 @@
  *                       $ref: '#/components/schemas/InventoryBatch'
  *       404:
  *         description: Inventory batch not found
- *       409:
+ *       400:
  *         description: Invalid ID
  *       500:
  *         description: Server error
@@ -226,8 +295,11 @@
  * @swagger
  * /api/v1/inventory-batches/{id}:
  *   put:
- *     summary: Update inventory batch
- *     tags: [InventoryBatches]
+ *     summary: Update an inventory batch
+ *     tags: [Inventory Batches]
+ *     description: |
+ *       - Normal users: cannot change organization/branch
+ *       - Super Admin: can update organizationName & branchName
  *     parameters:
  *       - $ref: '#/components/parameters/inventoryBatchId'
  *     requestBody:
@@ -235,28 +307,18 @@
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             properties:
- *               medicineName:
- *                 type: string
- *               batchNo:
- *                 type: string
- *               expiryDate:
- *                 type: string
- *                 format: date
- *               quantity:
- *                 type: number
- *               purchasePrice:
- *                 type: number
+ *             oneOf:
+ *               - $ref: '#/components/schemas/UpdateInventoryBatchUser'
+ *               - $ref: '#/components/schemas/UpdateInventoryBatchSuperAdmin'
  *     responses:
  *       200:
  *         description: Inventory batch updated successfully
  *       400:
- *         description: Validation failed
+ *         description: Validation failed or invalid ID
  *       404:
- *         description: Inventory batch not found
+ *         description: Not found
  *       409:
- *         description: Batch number already exists
+ *         description: Batch already exists
  *       500:
  *         description: Server error
  */
@@ -265,16 +327,16 @@
  * @swagger
  * /api/v1/inventory-batches/{id}:
  *   delete:
- *     summary: Delete inventory batch
- *     tags: [InventoryBatches]
+ *     summary: Delete an inventory batch
+ *     tags: [Inventory Batches]
  *     parameters:
  *       - $ref: '#/components/parameters/inventoryBatchId'
  *     responses:
  *       200:
  *         description: Inventory batch deleted successfully
  *       404:
- *         description: Inventory batch not found
- *       409:
+ *         description: Not found
+ *       400:
  *         description: Invalid ID
  *       500:
  *         description: Server error

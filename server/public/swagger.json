@@ -154,7 +154,6 @@
       "InventoryBatch": {
         "type": "object",
         "required": [
-          "medicineName",
           "batchNo",
           "expiryDate",
           "quantity",
@@ -165,7 +164,13 @@
             "type": "string",
             "description": "MongoDB ObjectId"
           },
-          "medicineName": {
+          "organizationId": {
+            "type": "string"
+          },
+          "branchId": {
+            "type": "string"
+          },
+          "warehouseId": {
             "type": "string"
           },
           "medicineId": {
@@ -184,15 +189,6 @@
           "purchasePrice": {
             "type": "number"
           },
-          "warehouseId": {
-            "type": "string"
-          },
-          "branchId": {
-            "type": "string"
-          },
-          "organizationId": {
-            "type": "string"
-          },
           "status": {
             "type": "string",
             "enum": [
@@ -210,6 +206,134 @@
           "updatedAt": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "CreateInventoryBatchUser": {
+        "type": "object",
+        "required": [
+          "medicineName",
+          "batchNo",
+          "expiryDate",
+          "quantity",
+          "purchasePrice"
+        ],
+        "properties": {
+          "medicineName": {
+            "type": "string"
+          },
+          "batchNo": {
+            "type": "string"
+          },
+          "expiryDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "purchasePrice": {
+            "type": "number"
+          },
+          "warehouseName": {
+            "type": "string"
+          }
+        }
+      },
+      "CreateInventoryBatchSuperAdmin": {
+        "type": "object",
+        "required": [
+          "medicineName",
+          "batchNo",
+          "expiryDate",
+          "quantity",
+          "purchasePrice",
+          "organizationName",
+          "branchName"
+        ],
+        "properties": {
+          "medicineName": {
+            "type": "string"
+          },
+          "batchNo": {
+            "type": "string"
+          },
+          "expiryDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "purchasePrice": {
+            "type": "number"
+          },
+          "warehouseName": {
+            "type": "string"
+          },
+          "organizationName": {
+            "type": "string",
+            "description": "Required only for Super Admin"
+          },
+          "branchName": {
+            "type": "string",
+            "description": "Required only for Super Admin"
+          }
+        }
+      },
+      "UpdateInventoryBatchUser": {
+        "type": "object",
+        "properties": {
+          "medicineName": {
+            "type": "string"
+          },
+          "batchNo": {
+            "type": "string"
+          },
+          "expiryDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "purchasePrice": {
+            "type": "number"
+          },
+          "warehouseName": {
+            "type": "string"
+          }
+        }
+      },
+      "UpdateInventoryBatchSuperAdmin": {
+        "type": "object",
+        "properties": {
+          "medicineName": {
+            "type": "string"
+          },
+          "batchNo": {
+            "type": "string"
+          },
+          "expiryDate": {
+            "type": "string",
+            "format": "date"
+          },
+          "quantity": {
+            "type": "number"
+          },
+          "purchasePrice": {
+            "type": "number"
+          },
+          "warehouseName": {
+            "type": "string"
+          },
+          "organizationName": {
+            "type": "string",
+            "description": "Only for Super Admin"
+          },
+          "branchName": {
+            "type": "string",
+            "description": "Only for Super Admin"
           }
         }
       },
@@ -733,7 +857,7 @@
         "schema": {
           "type": "string"
         },
-        "description": "Inventory batch ID"
+        "description": "Inventory Batch ID"
       },
       "status": {
         "in": "query",
@@ -1741,73 +1865,38 @@
       "post": {
         "summary": "Create a new inventory batch",
         "tags": [
-          "InventoryBatches"
+          "Inventory Batches"
         ],
+        "description": "- Normal users: organization & branch come from token\n- Super Admin: must provide organizationName & branchName\n",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "required": [
-                  "medicineName",
-                  "batchNo",
-                  "expiryDate",
-                  "quantity",
-                  "purchasePrice"
-                ],
-                "properties": {
-                  "medicineName": {
-                    "type": "string"
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/CreateInventoryBatchUser"
                   },
-                  "batchNo": {
-                    "type": "string"
-                  },
-                  "expiryDate": {
-                    "type": "string",
-                    "format": "date"
-                  },
-                  "quantity": {
-                    "type": "number"
-                  },
-                  "purchasePrice": {
-                    "type": "number"
+                  {
+                    "$ref": "#/components/schemas/CreateInventoryBatchSuperAdmin"
                   }
-                }
+                ]
               }
             }
           }
         },
         "responses": {
           "201": {
-            "description": "Inventory batch created successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean"
-                    },
-                    "message": {
-                      "type": "string"
-                    },
-                    "id": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
+            "description": "Inventory batch created successfully"
           },
           "400": {
             "description": "Validation failed"
           },
           "404": {
-            "description": "Invalid medicine name"
+            "description": "Organization / Branch / Medicine / Warehouse not found"
           },
           "409": {
-            "description": "Batch number already exists"
+            "description": "Batch already exists"
           },
           "500": {
             "description": "Server error"
@@ -1815,9 +1904,9 @@
         }
       },
       "get": {
-        "summary": "List all inventory batches",
+        "summary": "Get list of inventory batches",
         "tags": [
-          "InventoryBatches"
+          "Inventory Batches"
         ],
         "parameters": [
           {
@@ -1850,6 +1939,15 @@
                     "message": {
                       "type": "string"
                     },
+                    "total": {
+                      "type": "integer"
+                    },
+                    "active": {
+                      "type": "integer"
+                    },
+                    "expired": {
+                      "type": "integer"
+                    },
                     "meta": {
                       "type": "object",
                       "properties": {
@@ -1864,15 +1962,6 @@
                         }
                       }
                     },
-                    "total": {
-                      "type": "integer"
-                    },
-                    "active": {
-                      "type": "integer"
-                    },
-                    "expired": {
-                      "type": "integer"
-                    },
                     "data": {
                       "type": "array",
                       "items": {
@@ -1883,6 +1972,9 @@
                 }
               }
             }
+          },
+          "500": {
+            "description": "Server error"
           }
         }
       }
@@ -1891,7 +1983,7 @@
       "get": {
         "summary": "Get individual inventory batch info",
         "tags": [
-          "InventoryBatches"
+          "Inventory Batches"
         ],
         "parameters": [
           {
@@ -1925,11 +2017,11 @@
               }
             }
           },
+          "400": {
+            "description": "Invalid ID"
+          },
           "404": {
             "description": "Inventory batch not found"
-          },
-          "409": {
-            "description": "Invalid ID"
           },
           "500": {
             "description": "Server error"
@@ -1937,10 +2029,11 @@
         }
       },
       "put": {
-        "summary": "Update inventory batch",
+        "summary": "Update an inventory batch",
         "tags": [
-          "InventoryBatches"
+          "Inventory Batches"
         ],
+        "description": "- Normal users: cannot change organization/branch\n- Super Admin: can update organizationName & branchName\n",
         "parameters": [
           {
             "$ref": "#/components/parameters/inventoryBatchId"
@@ -1951,25 +2044,14 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "medicineName": {
-                    "type": "string"
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/UpdateInventoryBatchUser"
                   },
-                  "batchNo": {
-                    "type": "string"
-                  },
-                  "expiryDate": {
-                    "type": "string",
-                    "format": "date"
-                  },
-                  "quantity": {
-                    "type": "number"
-                  },
-                  "purchasePrice": {
-                    "type": "number"
+                  {
+                    "$ref": "#/components/schemas/UpdateInventoryBatchSuperAdmin"
                   }
-                }
+                ]
               }
             }
           }
@@ -1979,13 +2061,13 @@
             "description": "Inventory batch updated successfully"
           },
           "400": {
-            "description": "Validation failed"
+            "description": "Validation failed or invalid ID"
           },
           "404": {
-            "description": "Inventory batch not found"
+            "description": "Not found"
           },
           "409": {
-            "description": "Batch number already exists"
+            "description": "Batch already exists"
           },
           "500": {
             "description": "Server error"
@@ -1993,9 +2075,9 @@
         }
       },
       "delete": {
-        "summary": "Delete inventory batch",
+        "summary": "Delete an inventory batch",
         "tags": [
-          "InventoryBatches"
+          "Inventory Batches"
         ],
         "parameters": [
           {
@@ -2006,11 +2088,11 @@
           "200": {
             "description": "Inventory batch deleted successfully"
           },
-          "404": {
-            "description": "Inventory batch not found"
-          },
-          "409": {
+          "400": {
             "description": "Invalid ID"
+          },
+          "404": {
+            "description": "Not found"
           },
           "500": {
             "description": "Server error"
@@ -4403,7 +4485,7 @@
       "description": "Category management APIs"
     },
     {
-      "name": "InventoryBatches",
+      "name": "Inventory Batches",
       "description": "Inventory batch management APIs"
     },
     {
