@@ -1,34 +1,36 @@
 import { Schema, model } from "mongoose";
 import { ISaleItem, ISale } from "../types";
 
-const saleItemSchema = new Schema<ISaleItem>({
-  medicineId: {
-    type: Schema.Types.ObjectId,
-    ref: "Medicine",
-    required: true,
+const saleItemSchema = new Schema<ISaleItem>(
+  {
+    medicineId: {
+      type: Schema.Types.ObjectId,
+      ref: "Medicine",
+      required: true,
+    },
+    medicineName: {
+      type: String,
+      required: true,
+    },
+    batchNo: {
+      type: String,
+      required: true,
+    },
+    quantity: {
+      type: Number,
+      required: true,
+    },
+    sellingPrice: {
+      type: Number,
+      default: 0,
+    },
+    purchasePrice: {
+      type: Number,
+      default: 0,
+    },
   },
-  medicineName: {
-    type: String,
-    required: true,
-  },
-  batchNo: {
-    type: String,
-    required: true,
-    unique: true,
-  },
-  quantity: {
-    type: Number,
-    required: true,
-  },
-  sellingPrice: {
-    type: Number,
-    default: 0,
-  },
-  purchasePrice: {
-    type: Number,
-    default: 0,
-  },
-});
+  { _id: false },
+);
 
 const saleSchema = new Schema<ISale>(
   {
