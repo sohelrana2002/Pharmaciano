@@ -13,12 +13,23 @@ import mongoose from "mongoose";
 import { parseMedicineInput } from "../helper/parseMedicineInput";
 import Counter from "../models/Counter.model";
 import { generateInvoicePDF } from "../shared/generateInvoice";
+import { isSuperAdmin } from "../middlewares/auth.middleware";
+import Organization from "../models/Organization.model";
+import Branch from "../models/Branch.model";
 
 const createSale = async (req: AuthRequest, res: Response) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
   try {
+    const superAdmin = isSuperAdmin(req.user);
+
     // Validate input
     const validationResult = saleSchemaValidator.safeParse(req.body);
     if (!validationResult.success) {
+      await session.abortTransaction();
+      session.endSession();
+
       return res.status(400).json({
         success: false,
         message: "Validation failed",
@@ -39,6 +50,83 @@ const createSale = async (req: AuthRequest, res: Response) => {
     } = validationResult.data;
     const saleItems: any[] = [];
 
+    // only for super admin
+    const { organizationName, branchName } = req.body;
+
+    // dynamic assign
+    let organizationId = req.user!.organizationId;
+    let branchId = req.user!.branchId;
+
+    if (superAdmin) {
+      // manage organizaton
+      if (!organizationName) {
+        await session.abortTransaction();
+        session.endSession();
+
+        return res.status(400).json({
+          success: false,
+          message: "Organization name is required",
+        });
+      } else {
+        const organization = await Organization.findOne({
+          name: organizationName,
+        }).session(session);
+
+        if (!organization) {
+          const activeOrganization = await Organization.find({
+            isActive: true,
+          })
+            .select("name")
+            .session(session);
+
+          await session.abortTransaction();
+          session.endSession();
+
+          return res.status(404).json({
+            success: false,
+            message: customMessage.notFound("Organization"),
+            hints: `Active organization names are: ${activeOrganization.map((org) => org.name).join(", ")}`,
+          });
+        }
+        organizationId = organization._id.toString();
+      }
+
+      // manage branch
+      if (!branchName) {
+        await session.abortTransaction();
+        session.endSession();
+
+        return res.status(400).json({
+          success: false,
+          message: "Branch name is required!",
+        });
+      } else {
+        const branch = await Branch.findOne({
+          name: branchName,
+          organizationId,
+        }).session(session);
+
+        if (!branch) {
+          const activeBranch = await Branch.find({
+            organizationId,
+            isActive: true,
+          })
+            .select("name")
+            .session(session);
+
+          await session.abortTransaction();
+          session.endSession();
+
+          return res.status(404).json({
+            success: false,
+            message: customMessage.notFound("Branch"),
+            hints: `Active branch names are: ${activeBranch.map((bra) => bra.name).join(", ")}`,
+          });
+        }
+        branchId = branch._id.toString();
+      }
+    }
+
     // Process each sale item
     for (const item of items) {
       const { name, strength, unit } = parseMedicineInput(item.medicineName);
@@ -47,16 +135,25 @@ const createSale = async (req: AuthRequest, res: Response) => {
       // Find medicine by name + strength + unit
       const medicineQuery: any = {
         isActive: true,
+        organizationId,
         name: { $regex: `^${name}$`, $options: "i" },
       };
       if (strength) medicineQuery.strength = strength;
       if (unit) medicineQuery.unit = unit;
 
-      const medicine = await Medicine.findOne(medicineQuery);
+      const medicine = await Medicine.findOne(medicineQuery).session(session);
+
       if (!medicine) {
-        const activeMedicine = await Medicine.find({ isActive: true }).select(
-          "name strength unit",
-        );
+        const activeMedicine = await Medicine.find({
+          isActive: true,
+          organizationId,
+        })
+          .select("name strength unit")
+          .session(session);
+
+        await session.abortTransaction();
+        session.endSession();
+
         return res.status(404).json({
           success: false,
           message: `Medicine '${item.medicineName}' not found`,
@@ -71,11 +168,10 @@ const createSale = async (req: AuthRequest, res: Response) => {
       const batch = await InventoryBatch.findOne({
         medicineId: medicine._id,
         batchNo: item.batchNo,
-        organizationId: req.user!.organizationId,
-        branchId: req.user!.branchId,
-        warehouseId: req.user!.warehouseId,
+        organizationId,
+        branchId,
         status: "active",
-      });
+      }).session(session);
       // console.log("batch: ", batch);
 
       let availableBatches;
@@ -84,23 +180,30 @@ const createSale = async (req: AuthRequest, res: Response) => {
       if (!batch) {
         availableBatches = await InventoryBatch.find({
           medicineId: medicine._id,
-          organizationId: req.user!.organizationId,
-          branchId: req.user!.branchId,
-          warehouseId: req.user!.warehouseId,
+          organizationId,
+          branchId,
           status: "active",
-        }).select("batchNo");
+        })
+          .select("batchNo")
+          .session(session);
+
+        await session.abortTransaction();
+        session.endSession();
 
         return res.status(404).json({
           success: false,
           message: `Batch ${item.batchNo} not found`,
           hint:
             availableBatches.length > 0
-              ? `Available branch name are ${availableBatches.map((b) => b.batchNo).join(", ")}`
+              ? `Available batchNo are: ${availableBatches.map((b) => b.batchNo).join(", ")}`
               : "No batches found!",
         });
       }
 
       if (batch.quantity < item.quantity) {
+        await session.abortTransaction();
+        session.endSession();
+
         return res.status(400).json({
           success: false,
           message: `Not enough stock for ${
@@ -113,6 +216,7 @@ const createSale = async (req: AuthRequest, res: Response) => {
       await InventoryBatch.updateOne(
         { _id: batch._id, quantity: { $gte: item.quantity } },
         { $inc: { quantity: -item.quantity } },
+        { session },
       );
 
       saleItems.push({
@@ -136,25 +240,20 @@ const createSale = async (req: AuthRequest, res: Response) => {
 
     const totalAmount = subtotal - discountAmount + taxAmount;
 
-    // generate invoice bumber unique
+    // generate invoice number unique
     const counter = await Counter.findOneAndUpdate(
-      {
-        organizationId: req.user!.organizationId,
-        branchId: req.user!.branchId,
-        warehouseId: req.user!.warehouseId,
-      },
+      {},
       { $inc: { seq: 1 } },
-      { new: true, upsert: true },
+      { new: true, upsert: true, session },
     );
 
     const invoiceNo = `INV-100${counter.seq}`;
 
     // Create sale
-    const sale = await Sale.create({
-      organizationId: req.user!.organizationId,
-      branchId: req.user!.branchId,
+    const sale = new Sale({
+      organizationId,
+      branchId,
       cashierId: req.user!.userId,
-      warehouseId: req.user!.warehouseId,
       invoiceNo,
       customerName,
       customerPhone,
@@ -166,6 +265,12 @@ const createSale = async (req: AuthRequest, res: Response) => {
       paymentMethod,
     });
 
+    await sale.save({ session });
+
+    // commit
+    await session.commitTransaction();
+    session.endSession();
+
     return res.status(201).json({
       success: true,
       message: customMessage.created("Sale"),
@@ -173,6 +278,9 @@ const createSale = async (req: AuthRequest, res: Response) => {
       invoiceNo,
     });
   } catch (error: any) {
+    await session.abortTransaction();
+    session.endSession();
+
     if (error.code === 11000) {
       const field = Object.keys(error.keyValue)[0];
       const value = error.keyValue[field];
