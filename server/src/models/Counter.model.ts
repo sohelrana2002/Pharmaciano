@@ -2,21 +2,6 @@ import { Schema, model } from "mongoose";
 
 const counterSchema = new Schema(
   {
-    organizationId: {
-      type: Schema.Types.ObjectId,
-      ref: "Organization",
-      required: true,
-    },
-    branchId: {
-      type: Schema.Types.ObjectId,
-      ref: "Branch",
-      required: true,
-    },
-    warehouseId: {
-      type: Schema.Types.ObjectId,
-      ref: "Warehouse",
-      required: true,
-    },
     seq: {
       type: Number,
       default: 0,
@@ -26,5 +11,7 @@ const counterSchema = new Schema(
     timestamps: true,
   },
 );
+
+counterSchema.index({ seq: 1 }, { unique: true });
 
 export default model("Counter", counterSchema);
