@@ -65,7 +65,9 @@ const createInventoryBatch = async (req: AuthRequest, res: Response) => {
         });
 
         if (!organization) {
-          const activeOrganization = await Organization.find();
+          const activeOrganization = await Organization.find({
+            isActive: true,
+          }).select("name");
 
           return res.status(404).json({
             success: false,
@@ -89,9 +91,10 @@ const createInventoryBatch = async (req: AuthRequest, res: Response) => {
         });
 
         if (!branch) {
-          const activeBranch = await Branch.find({ organizationId }).select(
-            "name",
-          );
+          const activeBranch = await Branch.find({
+            organizationId,
+            isActive: true,
+          }).select("name");
 
           return res.status(404).json({
             success: false,
