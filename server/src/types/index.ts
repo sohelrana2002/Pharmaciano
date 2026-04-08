@@ -205,7 +205,6 @@ export interface ISale extends Document {
   organizationId: Types.ObjectId;
   branchId: Types.ObjectId;
   cashierId: Types.ObjectId;
-  warehouseId: Types.ObjectId;
   invoiceNo: string;
   customerName: string;
   customerPhone: string;

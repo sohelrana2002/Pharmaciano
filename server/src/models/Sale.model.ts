@@ -42,11 +42,6 @@ const saleSchema = new Schema<ISale>(
       ref: "Branch",
       required: true,
     },
-    warehouseId: {
-      type: Schema.Types.ObjectId,
-      ref: "Warehouse",
-      required: true,
-    },
     invoiceNo: {
       type: String,
       required: true,
