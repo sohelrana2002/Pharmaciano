@@ -306,23 +306,29 @@ const createSale = async (req: AuthRequest, res: Response) => {
 // list of sales
 const saleList = async (req: AuthRequest, res: Response) => {
   try {
-    const { medicine } = req.query;
+    const { search, page, limit } = req.query;
 
-    let match: any = {};
+    const superAdmin = isSuperAdmin(req.user);
 
-    if (medicine) {
-      // use your parse function
-      const { name, strength, unit } = parseMedicineInput(medicine as string);
+    const filter: any = {};
 
-      match = {
-        name: { $regex: name, $options: "i" },
-      };
-
-      if (strength) match.strength = strength;
-      if (unit) match.unit = unit;
+    if (!superAdmin) {
+      filter.organizationId = req.user!.organizationId;
+      filter.branchId = req.user!.branchId;
     }
 
-    const sales = await Sale.find({})
+    if (search) {
+      filter.$or = [
+        { invoiceNo: { $regex: search, $options: "i" } },
+        { customerName: { $regex: search, $options: "i" } },
+      ];
+    }
+
+    const pageNumber = parseInt(page as string) || 1;
+    const limitNumber = parseInt(limit as string) || 10;
+    const skip = (pageNumber - 1) * limitNumber;
+
+    const sales = await Sale.find(filter)
       .populate([
         {
           path: "cashierId",
@@ -330,28 +336,47 @@ const saleList = async (req: AuthRequest, res: Response) => {
         },
         {
           path: "items.medicineId",
-          match: match,
           select: "name strength unit unitPrice -_id",
         },
+        {
+          path: "organizationId",
+          select: "name -_id",
+        },
+        {
+          path: "branchId",
+          select: "name -_id",
+        },
       ])
-      .select("-organizationId -branchId");
+      .skip(skip)
+      .limit(limitNumber)
+      .sort({ createdAt: -1 });
 
-    // remove sales where no item matched
-    const filteredSales = sales.filter((sale: any) =>
-      sale.items.some((item: any) => item.medicineId !== null),
-    );
+    // counts
+    const total = await Sale.countDocuments({ ...filter });
 
-    if (filteredSales.length === 0) {
-      res.status(404).json({
-        success: false,
-        message: customMessage.notFound("Sale"),
-      });
-    }
+    const activeCount = await Sale.countDocuments({
+      ...filter,
+      status: "active",
+    });
+
+    const expiredCount = await Sale.countDocuments({
+      ...filter,
+      status: "expired",
+    });
 
     return res.status(200).json({
       success: true,
-      length: filteredSales.length,
-      data: { filteredSales },
+      message:
+        sales.length > 0 ? customMessage.found("Sales") : "No sale found!",
+      meta: {
+        page: pageNumber,
+        limit: limitNumber,
+        count: sales.length,
+      },
+      total,
+      active: activeCount,
+      expired: expiredCount,
+      data: { sales },
     });
   } catch (error) {
     console.error("list of sale error:", error);
