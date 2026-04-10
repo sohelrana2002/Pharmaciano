@@ -20,28 +20,43 @@ const router = Router();
 router.post(
   "/",
   authenticate,
-  authorize(["cashier:manage"]),
+  authorize(["cashier:manage", "superAdmin:manage"]),
   validate(saleSchemaValidator),
   createSale,
 );
 
 // list of sales
-router.get("/", authenticate, authorize(["cashier:manage"]), saleList);
+router.get(
+  "/",
+  authenticate,
+  authorize(["cashier:manage", "superAdmin:manage"]),
+  saleList,
+);
 
 // individual sale info
-router.get("/:id", authenticate, authorize(["cashier:manage"]), saleInfo);
+router.get(
+  "/:id",
+  authenticate,
+  authorize(["cashier:manage", "superAdmin:manage"]),
+  saleInfo,
+);
 
 // update sale
 router.put(
   "/:id",
   authenticate,
-  authorize(["cashier:manage"]),
+  authorize(["cashier:manage", "superAdmin:manage"]),
   validate(updateSaleValidator),
   updateSale,
 );
 
 // delete sale
-router.delete("/:id", authenticate, authorize(["cashier:manage"]), deleteSale);
+router.delete(
+  "/:id",
+  authenticate,
+  authorize(["cashier:manage", "superAdmin:manage"]),
+  deleteSale,
+);
 
 // generate invoice
 router.get(
