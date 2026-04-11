@@ -400,7 +400,16 @@ const saleInfo = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const sale = await Sale.findById(id).populate([
+    const superAdmin = isSuperAdmin(req.user);
+
+    const filter: any = { _id: id };
+
+    if (!superAdmin) {
+      filter.organizationId = req.user!.organizationId;
+      filter.branchId = req.user!.branchId;
+    }
+
+    const sale = await Sale.findOne(filter).populate([
       {
         path: "organizationId",
         select: "name contact address -_id",
@@ -412,10 +421,6 @@ const saleInfo = async (req: AuthRequest, res: Response) => {
       {
         path: "cashierId",
         select: "name email phone -_id",
-      },
-      {
-        path: "warehouseId",
-        select: "name location -_id",
       },
       {
         path: "items.medicineId",
