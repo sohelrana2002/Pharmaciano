@@ -776,7 +776,16 @@ const deleteSale = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const sale = await Sale.findByIdAndDelete(id);
+    const superAdmin = isSuperAdmin(req.user);
+
+    const filter: any = { _id: id };
+
+    if (!superAdmin) {
+      filter.organizationId = req.user!.organizationId;
+      filter.branchId = req.user!.branchId;
+    }
+
+    const sale = await Sale.findByIdAndDelete(filter);
 
     if (!sale) {
       return res.status(404).json({
