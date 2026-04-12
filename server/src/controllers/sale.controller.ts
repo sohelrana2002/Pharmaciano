@@ -458,9 +458,20 @@ const updateSale = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
 
+    const superAdmin = isSuperAdmin(req.user);
+
+    const filter: any = { _id: id };
+
+    if (!superAdmin) {
+      filter.organizationId = req.user!.organizationId;
+      filter.branchId = req.user!.branchId;
+    }
+
     // Validate Mongo ID
     if (!mongoose.Types.ObjectId.isValid(id)) {
       await session.abortTransaction();
+      session.endSession();
+
       return res.status(409).json({
         success: false,
         message: customMessage.invalidId("Mongoose", id),
@@ -471,6 +482,8 @@ const updateSale = async (req: AuthRequest, res: Response) => {
     const validationResult = updateSaleValidator.safeParse(req.body);
     if (!validationResult.success) {
       await session.abortTransaction();
+      session.endSession();
+
       return res.status(400).json({
         success: false,
         message: "Validation failed",
@@ -490,24 +503,90 @@ const updateSale = async (req: AuthRequest, res: Response) => {
       paymentMethod,
     } = validationResult.data;
 
+    const { organizationName, branchName } = req.body;
+
     // Find existing sale
-    const existingSale = await Sale.findById(id).session(session);
+    const existingSale = await Sale.findOne(filter).session(session);
 
     if (!existingSale) {
       await session.abortTransaction();
+      session.endSession();
+
       return res.status(404).json({
         success: false,
         message: customMessage.notFound("Sale", id),
       });
     }
 
-    //rollback old stock
-    for (const oldItem of existingSale.items) {
-      await InventoryBatch.updateOne(
-        { batchNo: oldItem.batchNo }, // UNIQUE
-        { $inc: { quantity: oldItem.quantity } },
-        { session },
-      );
+    //   build update object dynamically
+    const updateData: any = {};
+
+    // update for super admin
+    if (superAdmin) {
+      // manage organizaton
+      if (organizationName) {
+        const organization = await Organization.findOne({
+          name: organizationName,
+        }).session(session);
+
+        if (!organization) {
+          const activeOrganization = await Organization.find()
+            .select("name")
+            .session(session);
+
+          await session.abortTransaction();
+          session.endSession();
+
+          return res.status(404).json({
+            success: false,
+            message: customMessage.notFound("Organization"),
+            hints: `Active organization names are: ${activeOrganization.map((org) => org.name).join(", ")}`,
+          });
+        }
+        updateData.organizationId = organization._id.toString();
+      }
+
+      // manage branch
+      if (branchName) {
+        const branch = await Branch.findOne({
+          name: branchName,
+          organizationId: updateData.organizationId,
+        }).session(session);
+
+        if (!branch) {
+          const activeBranch = await Branch.find({
+            organizationId: updateData.organizationId,
+          })
+            .select("name")
+            .session(session);
+
+          await session.abortTransaction();
+          session.endSession();
+
+          return res.status(404).json({
+            success: false,
+            message: customMessage.notFound("Branch"),
+            hints: `Active branch names are: ${activeBranch.map((bra) => bra.name).join(", ")}`,
+          });
+        }
+        updateData.branchId = branch._id.toString();
+      }
+    }
+
+    const finalOrganizationId =
+      updateData.organizationId || existingSale.organizationId;
+
+    const finalBranchId = updateData.branchId || existingSale.branchId;
+
+    if (items) {
+      //rollback old stock
+      for (const oldItem of existingSale.items) {
+        await InventoryBatch.updateOne(
+          { batchNo: oldItem.batchNo }, // UNIQUE
+          { $inc: { quantity: oldItem.quantity } },
+          { session },
+        );
+      }
     }
 
     // process new items
@@ -516,6 +595,8 @@ const updateSale = async (req: AuthRequest, res: Response) => {
 
     if (!items || items.length === 0) {
       await session.abortTransaction();
+      session.endSession();
+
       return res.status(400).json({
         success: false,
         message: "Items are required",
@@ -530,15 +611,24 @@ const updateSale = async (req: AuthRequest, res: Response) => {
       const medicineQuery: any = {
         isActive: true,
         name: { $regex: `^${name}$`, $options: "i" },
+        organizationId: finalOrganizationId,
       };
       if (strength) medicineQuery.strength = strength;
       if (unit) medicineQuery.unit = unit;
 
-      const medicine = await Medicine.findOne(medicineQuery);
+      const medicine = await Medicine.findOne(medicineQuery).session(session);
+
       if (!medicine) {
-        const activeMedicine = await Medicine.find({ isActive: true }).select(
-          "name strength unit",
-        );
+        const activeMedicine = await Medicine.find({
+          isActive: true,
+          organizationId: finalOrganizationId,
+        })
+          .select("name strength unit")
+          .session(session);
+
+        await session.abortTransaction();
+        session.endSession();
+
         return res.status(404).json({
           success: false,
           message: `Medicine '${item.medicineName}' not found`,
@@ -555,22 +645,26 @@ const updateSale = async (req: AuthRequest, res: Response) => {
       const batch = await InventoryBatch.findOne({
         medicineId: medicine._id,
         batchNo: item.batchNo,
-        organizationId: req.user!.organizationId,
-        branchId: req.user!.branchId,
-        warehouseId: req.user!.warehouseId,
+        organizationId: finalOrganizationId,
+        branchId: finalBranchId,
         status: "active",
       }).session(session);
 
       let availableBatches;
+
       // If batch not found, provide available batches
       if (!batch) {
         availableBatches = await InventoryBatch.find({
           medicineId: medicine._id,
-          organizationId: req.user!.organizationId,
-          branchId: req.user!.branchId,
-          warehouseId: req.user!.warehouseId,
+          organizationId: finalOrganizationId,
+          branchId: finalBranchId,
           status: "active",
-        }).select("batchNo");
+        })
+          .select("batchNo")
+          .session(session);
+
+        await session.abortTransaction();
+        session.endSession();
 
         return res.status(404).json({
           success: false,
@@ -585,6 +679,8 @@ const updateSale = async (req: AuthRequest, res: Response) => {
       //Stock check
       if (batch.quantity < quantity) {
         await session.abortTransaction();
+        session.endSession();
+
         return res.status(400).json({
           success: false,
           message: `Not enough stock for ${medicine.name}. Available: ${batch.quantity}`,
@@ -595,8 +691,8 @@ const updateSale = async (req: AuthRequest, res: Response) => {
       batch.quantity -= quantity;
       await batch.save({ session });
 
-      // Subtotal
-      subtotal += quantity * medicine.unitPrice;
+      // // Subtotal
+      // subtotal += quantity * medicine.unitPrice;
 
       // Save item
       processedItems.push({
@@ -609,27 +705,30 @@ const updateSale = async (req: AuthRequest, res: Response) => {
       });
     }
 
+    // Calculate subtotal
+    subtotal = processedItems.reduce(
+      (sum, i) => sum + i.quantity * i.sellingPrice,
+      0,
+    );
+
     // calculation
     const discountAmount = (subtotal * discount) / 100;
     const taxAmount = (subtotal * tax) / 100;
 
     const totalAmount = subtotal - discountAmount + taxAmount;
 
+    updateData.items = processedItems;
+    updateData.subtotal = subtotal;
+    updateData.discount = discount;
+    updateData.tax = tax;
+    updateData.totalAmount = totalAmount;
+
+    if (customerName) updateData.customerName = customerName;
+    if (customerPhone) updateData.customerPhone = customerPhone;
+    if (paymentMethod) updateData.paymentMethod = paymentMethod;
+
     // update sale
-    await Sale.findByIdAndUpdate(
-      id,
-      {
-        customerName,
-        customerPhone,
-        items: processedItems,
-        subtotal,
-        discount,
-        tax,
-        totalAmount,
-        paymentMethod,
-      },
-      { new: true, session },
-    );
+    await Sale.findByIdAndUpdate(filter, updateData, { new: true, session });
 
     // Commit transaction
     await session.commitTransaction();
