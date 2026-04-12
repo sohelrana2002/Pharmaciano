@@ -62,6 +62,7 @@ const createInventoryBatch = async (req: AuthRequest, res: Response) => {
       } else {
         const organization = await Organization.findOne({
           name: organizationName,
+          isActive: true,
         });
 
         if (!organization) {
@@ -88,6 +89,7 @@ const createInventoryBatch = async (req: AuthRequest, res: Response) => {
         const branch = await Branch.findOne({
           name: branchName,
           organizationId,
+          isActive: true,
         });
 
         if (!branch) {
@@ -115,6 +117,7 @@ const createInventoryBatch = async (req: AuthRequest, res: Response) => {
     const medicine = await Medicine.findOne({
       name: medicineName,
       organizationId,
+      isActive: true,
     });
 
     if (!medicine) {
@@ -130,12 +133,14 @@ const createInventoryBatch = async (req: AuthRequest, res: Response) => {
         name: warehouseName,
         organizationId,
         branchId,
+        isActive: true,
       });
 
       if (!warehouse) {
         const activeWarehouse = await Warehouse.find({
           organizationId,
           branchId,
+          isActive: true,
         }).select("name");
 
         return res.status(404).json({
@@ -434,10 +439,13 @@ const updateInventoryBatch = async (req: AuthRequest, res: Response) => {
       if (organizationName) {
         const organization = await Organization.findOne({
           name: organizationName,
+          isActive: true,
         });
 
         if (!organization) {
-          const activeOrganization = await Organization.find().select("name");
+          const activeOrganization = await Organization.find({
+            isActive: true,
+          }).select("name");
 
           return res.status(404).json({
             success: false,
@@ -453,11 +461,13 @@ const updateInventoryBatch = async (req: AuthRequest, res: Response) => {
         const branch = await Branch.findOne({
           name: branchName,
           organizationId: updateData.organizationId,
+          isActive: true,
         });
 
         if (!branch) {
           const activeBranch = await Branch.find({
             organizationId: updateData.organizationId,
+            isActive: true,
           }).select("name");
 
           return res.status(404).json({
@@ -505,12 +515,14 @@ const updateInventoryBatch = async (req: AuthRequest, res: Response) => {
         name: warehouseName,
         organizationId: finalOrganizationId,
         branchId: finalBranchId,
+        isActive: true,
       });
 
       if (!warehouse) {
         const activeWarehouse = await Warehouse.find({
           organizationId: finalOrganizationId,
           branchId: finalBranchId,
+          isActive: true,
         }).select("name");
 
         return res.status(404).json({
