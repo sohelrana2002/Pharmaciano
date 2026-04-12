@@ -233,7 +233,7 @@ const inventoryBatchList = async (req: AuthRequest, res: Response) => {
     }
 
     if (status) {
-      baseFilter.status = status;
+      baseFilter.status = { $regex: status, $options: "i" };
     }
     if (batchNo) {
       baseFilter.batchNo = { $regex: batchNo, $options: "i" };
@@ -486,12 +486,6 @@ const updateInventoryBatch = async (req: AuthRequest, res: Response) => {
     const finalBranchId = updateData.branchId || inventoryBatch.branchId;
 
     if (medicineName) {
-      //   check valid medicine name
-      const activeMedicine = await Medicine.find({
-        organizationId: finalOrganizationId,
-        isActive: true,
-      }).select("name");
-
       const medicine = await Medicine.findOne({
         name: medicineName,
         organizationId: finalOrganizationId,
@@ -499,10 +493,16 @@ const updateInventoryBatch = async (req: AuthRequest, res: Response) => {
       });
 
       if (!medicine) {
+        //   check valid medicine name
+        const activeMedicine = await Medicine.find({
+          organizationId: finalOrganizationId,
+          isActive: true,
+        }).select("name");
+
         return res.status(404).json({
           success: false,
           message: "Invalid medicine name.",
-          hints: `Active medicine names are ${activeMedicine.map((m) => m.name).join(", ")}`,
+          hints: `Active medicine names are: ${activeMedicine.map((m) => m.name).join(", ")}`,
         });
       }
       //   update medicineId
