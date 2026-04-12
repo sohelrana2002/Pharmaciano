@@ -70,6 +70,7 @@ const createSale = async (req: AuthRequest, res: Response) => {
       } else {
         const organization = await Organization.findOne({
           name: organizationName,
+          isActive: true,
         }).session(session);
 
         if (!organization) {
@@ -104,6 +105,7 @@ const createSale = async (req: AuthRequest, res: Response) => {
         const branch = await Branch.findOne({
           name: branchName,
           organizationId,
+          isActive: true,
         }).session(session);
 
         if (!branch) {
@@ -480,6 +482,7 @@ const updateSale = async (req: AuthRequest, res: Response) => {
 
     // Validate request body
     const validationResult = updateSaleValidator.safeParse(req.body);
+
     if (!validationResult.success) {
       await session.abortTransaction();
       session.endSession();
@@ -527,10 +530,11 @@ const updateSale = async (req: AuthRequest, res: Response) => {
       if (organizationName) {
         const organization = await Organization.findOne({
           name: organizationName,
+          isActive: true,
         }).session(session);
 
         if (!organization) {
-          const activeOrganization = await Organization.find()
+          const activeOrganization = await Organization.find({ isActive: true })
             .select("name")
             .session(session);
 
@@ -551,11 +555,13 @@ const updateSale = async (req: AuthRequest, res: Response) => {
         const branch = await Branch.findOne({
           name: branchName,
           organizationId: updateData.organizationId,
+          isActive: true,
         }).session(session);
 
         if (!branch) {
           const activeBranch = await Branch.find({
             organizationId: updateData.organizationId,
+            isActive: true,
           })
             .select("name")
             .session(session);
@@ -690,9 +696,6 @@ const updateSale = async (req: AuthRequest, res: Response) => {
       // Deduct stock
       batch.quantity -= quantity;
       await batch.save({ session });
-
-      // // Subtotal
-      // subtotal += quantity * medicine.unitPrice;
 
       // Save item
       processedItems.push({
