@@ -835,10 +835,6 @@ const createPDF = async (req: AuthRequest, res: Response) => {
         select: "name email phone -_id",
       },
       {
-        path: "warehouseId",
-        select: "name location -_id",
-      },
-      {
         path: "items.medicineId",
         select: "-taxRate -categoryId -brandId -createdBy -isActive -_id",
       },
