@@ -3,13 +3,12 @@ import { Request, Response, NextFunction } from "express";
 import { z } from "zod";
 
 export const validate =
-  (schema: z.ZodType<any>) =>
-  (req: Request, res: Response, next: NextFunction) => {
+  (schema: z.ZodTypeAny) =>
+  async (req: Request, res: Response, next: NextFunction) => {
     try {
-      // Use parse() instead of safeParse() - it will throw an error
-      const validatedData = schema.parse(req.body);
-      (req as any).validatedData = validatedData;
-      next();
+      req.validatedData = await schema.parseAsync(req.body);
+
+      return next();
     } catch (error: any) {
       // Handle ZodError specifically
       if (error instanceof z.ZodError) {
