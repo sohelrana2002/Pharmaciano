@@ -1,12 +1,17 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { Request, Response, NextFunction } from "express";
+import { Response, NextFunction } from "express";
 import { z } from "zod";
+import { AuthRequest } from "../types";
+
+type SchemaInput = z.ZodTypeAny | ((req: AuthRequest) => z.ZodTypeAny);
 
 export const validate =
-  (schema: z.ZodTypeAny) =>
-  async (req: Request, res: Response, next: NextFunction) => {
+  (schema: SchemaInput) =>
+  async (req: AuthRequest, res: Response, next: NextFunction) => {
     try {
-      req.validatedData = await schema.parseAsync(req.body);
+      const activeSchema = typeof schema === "function" ? schema(req) : schema;
+
+      req.validatedData = await activeSchema.parseAsync(req.body);
 
       return next();
     } catch (error: any) {
