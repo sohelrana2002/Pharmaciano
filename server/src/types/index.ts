@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { Document, Types } from "mongoose";
 import { Request } from "express";
 // import mongoose from 'mongoose';
@@ -54,6 +55,7 @@ export interface AuthRequest extends Request {
     warehouseId: string;
     phone: string | null;
   };
+  validatedData?: any;
 }
 
 // brand interface
@@ -214,6 +216,38 @@ export interface ISale extends Document {
   tax: number;
   totalAmount: number;
   paymentMethod: "cash" | "card" | "mobile";
+  createdAt?: Date;
+  updatedAt?: Date;
+}
+
+// purchase interface
+export interface IPurchaseItem extends Document {
+  medicineId: Types.ObjectId;
+  batchNo: string;
+  expiryDate: Date;
+  quantity: number;
+  purchasePrice: number;
+  totalCost: number;
+}
+
+export type purchaseStatus = "pending" | "approved" | "received";
+
+// Purchase interface
+export interface IPurchase extends Document {
+  _id: Types.ObjectId;
+  organizationId: Types.ObjectId;
+  branchId: Types.ObjectId;
+  supplierId: Types.ObjectId;
+  purchaseNo: string;
+  status: purchaseStatus;
+  subtotal: number;
+  discount: number;
+  tax: number;
+  totalAmount: number;
+  approvedBy: Types.ObjectId;
+  paymentStatus: "unpaid" | "partial" | "paid";
+  paidAmount: number;
+  dueAmount: number;
   createdAt?: Date;
   updatedAt?: Date;
 }
