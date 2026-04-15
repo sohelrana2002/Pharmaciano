@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Document, Types } from "mongoose";
 import { Request } from "express";
-// import mongoose from 'mongoose';
 
 export interface IUser extends Document {
   _id: Types.ObjectId;
@@ -238,6 +237,7 @@ export interface IPurchase extends Document {
   organizationId: Types.ObjectId;
   branchId: Types.ObjectId;
   supplierId: Types.ObjectId;
+  items: IPurchaseItem[];
   purchaseNo: string;
   status: purchaseStatus;
   subtotal: number;
