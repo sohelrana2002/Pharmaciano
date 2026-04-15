@@ -222,6 +222,7 @@ export interface ISale extends Document {
 // purchase interface
 export interface IPurchaseItem extends Document {
   medicineId: Types.ObjectId;
+  medicineName: string;
   batchNo: string;
   expiryDate: Date;
   quantity: number;
