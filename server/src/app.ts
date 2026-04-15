@@ -27,12 +27,14 @@ import supplierRouter from "./routes/supplier.route";
 import inventoryBatchRouter from "./routes/inventoryBatch.route";
 import saleRouter from "./routes/sale.route";
 import uniqueNameRouter from "./routes/unique-name.route";
+import purchaseRouter from "./routes/purchase.route";
 
 const allowedOrigins = [
   "http://localhost:3000",
   "http://localhost:5000",
   "https://pharmaciano.vercel.app",
   "https://pharmaciano-backend.vercel.app",
+  "https://rafiz001.github.io/pharmaciano-flutter",
 ];
 
 const corsOptions = {
@@ -70,6 +72,7 @@ apiRouter.use("/warehouses", warehouseRouter);
 apiRouter.use("/suppliers", supplierRouter);
 apiRouter.use("/inventory-batches", inventoryBatchRouter);
 apiRouter.use("/sales", saleRouter);
+apiRouter.use("/purchases", purchaseRouter);
 
 // all necessary unique name
 apiRouter.use("/unique-names", uniqueNameRouter);
