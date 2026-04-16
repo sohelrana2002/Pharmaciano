@@ -1,4 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import mongoose from "mongoose";
 import { customMessage } from "../constants/customMessage";
 import { parseMedicineInput } from "../helper/parseMedicineInput";
 import { isSuperAdmin } from "../middlewares/auth.middleware";
@@ -167,7 +168,7 @@ const createPurchase = async (req: AuthRequest, res: Response) => {
         },
       });
     }
-    console.error("create sale error:", error);
+    console.error("create purchase error:", error);
 
     res.status(500).json({
       success: false,
@@ -176,4 +177,61 @@ const createPurchase = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export { createPurchase };
+// approve purchase
+const approvePurchase = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const superAdmin = isSuperAdmin(req.user);
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(409).json({
+        success: false,
+        message: customMessage.invalidId("Mongoose", id),
+      });
+    }
+
+    const filter: any = { _id: id };
+
+    if (!superAdmin) {
+      filter.organizationId = req.user!.organizationId;
+      filter.branchId = req.user!.branchId;
+    }
+
+    const purchase = await Purchase.findOne(filter);
+
+    if (!purchase) {
+      return res.status(404).json({
+        success: false,
+        message: customMessage.notFound("Purchase", id),
+      });
+    }
+
+    if (purchase.status !== "pending") {
+      return res.status(400).json({
+        success: false,
+        message: "Only pending status can be approved!",
+      });
+    }
+
+    purchase.status = "approved";
+    purchase.approvedBy = new mongoose.Types.ObjectId(req.user!.userId);
+
+    await purchase.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Purchase approved successfully!",
+      id,
+    });
+  } catch (error) {
+    console.error("approve purchase error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: customMessage.serverError(),
+    });
+  }
+};
+
+export { createPurchase, approvePurchase };
