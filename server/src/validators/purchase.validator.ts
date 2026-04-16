@@ -7,12 +7,15 @@ const purchaseItem = z.object({
     .string({ error: "medicine name is required!" })
     .min(1, "Medicine name at least 1 character!"),
   batchNo: z.string().optional(),
-  expiryDate: z.date().optional(),
+  expiryDate: z.coerce.date().optional(),
   quantity: z
     .number({ error: "Quantity is required!" })
     .min(1, "At least 1 quantity is required!"),
-  purchasePrice: z.number().optional().default(0),
+  purchasePrice: z.number().optional(),
 });
+
+// UPDATE ITEM (FULL OPTIONAL)
+export const purchaseItemUpdate = purchaseItem.partial();
 
 const basePurchaseSchemaValidator = z.object({
   items: z.array(purchaseItem).min(1, "At least 1 item is required"),
@@ -25,7 +28,10 @@ const basePurchaseSchemaValidator = z.object({
   paymentStatus: z.enum(["unpaid", "partial", "paid"]).default("unpaid"),
   paidAmount: z.number().nonnegative().optional().default(0),
   approvedBy: z.any().optional(),
-  warehouseName: z.string().optional(),
+  warehouseName: z
+    .string({ error: "Warehouse name is required!" })
+    .min(1, "Warehouse name at least 1 character long")
+    .lowercase(),
 });
 
 export const createPurchaseSchemaValidator = (req: AuthRequest) => {
@@ -46,93 +52,56 @@ export const createPurchaseSchemaValidator = (req: AuthRequest) => {
   });
 };
 
-export const updatePurchaseSchemaValidator = (req: AuthRequest) => {
-  const superAdmin = isSuperAdmin(req.user);
+export const updatePurchaseSchemaValidator = z
+  .object({
+    items: z.array(purchaseItemUpdate).optional(),
+    discount: z.number({ error: "Discount is required!" }).nonnegative(),
+    tax: z.number({ error: "Tax is required!" }).nonnegative(),
+    paymentStatus: z.enum(["unpaid", "partial", "paid"]),
+    paidAmount: z.number({ error: "Paid amount is required!" }).nonnegative(),
+    warehouseName: z
+      .string({ error: "Warehouse name is required!" })
+      .min(1, "Warehouse name at least 1 character long")
+      .lowercase(),
+  })
+  .superRefine((data, ctx) => {
+    // optional validation only if items exist
+    if (data.items) {
+      data.items.forEach((item, index) => {
+        if (item.medicineName === undefined) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["items", index, "medicineName"],
+            message: "medicine name is required when updating item",
+          });
+        }
 
-  return basePurchaseSchemaValidator
-    .partial()
-    .extend({
-      organizationName: superAdmin
-        ? z
-            .string({ error: "Organization name is required for super admin" })
-            .min(1, "Organization name is at least 1 character")
-            .optional()
-        : z.string().optional(),
+        if (item.batchNo === undefined) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["items", index, "batchNo"],
+            message: "batchNo is required when updating item",
+          });
+        }
 
-      branchName: superAdmin
-        ? z
-            .string({ error: "Branch name is required for superadmin" })
-            .min(1, "Branch name is at least 1 character")
-            .optional()
-        : z.string().optional(),
-    })
-    .superRefine((data, ctx) => {
-      if (data.items) {
-        data.items.forEach((item, index) => {
-          if (!item.batchNo) {
-            ctx.addIssue({
-              code: "custom",
-              path: ["items", index, "batchNo"],
-              message: "batchNo is required when updating item",
-            });
-          }
+        if (item.expiryDate === undefined) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["items", index, "expiryDate"],
+            message: "expiryDate is required when updating item",
+          });
+        }
 
-          if (!item.expiryDate) {
-            ctx.addIssue({
-              code: "custom",
-              path: ["items", index, "expiryDate"],
-              message: "expiryDate is required when updating item",
-            });
-          }
-
-          if (item.purchasePrice === undefined || item.purchasePrice === null) {
-            ctx.addIssue({
-              code: "custom",
-              path: ["items", index, "purchasePrice"],
-              message: "purchasePrice is required when updating item",
-            });
-          }
-        });
-      }
-
-      if (data.status === undefined) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["status"],
-          message: "status is required when updating purchase",
-        });
-      }
-
-      if (data.paymentStatus === undefined) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["paymentStatus"],
-          message: "payment status is required when updating purchase",
-        });
-      }
-
-      if (data.paidAmount === undefined) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["paidAmount"],
-          message: "paidAmount is required when updating purchase",
-        });
-      }
-
-      if (data.approvedBy === undefined) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["approvedBy"],
-          message: "approvedBy is required when updating purchase",
-        });
-      }
-
-      if (data.warehouseName === undefined) {
-        ctx.addIssue({
-          code: "custom",
-          path: ["warehouseName"],
-          message: "warehouse name is required when updating purchase",
-        });
-      }
-    });
-};
+        if (
+          item.purchasePrice == null ||
+          typeof item.purchasePrice !== "number"
+        ) {
+          ctx.addIssue({
+            code: "custom",
+            path: ["items", index, "purchasePrice"],
+            message: "purchasePrice is required when updating item",
+          });
+        }
+      });
+    }
+  });
