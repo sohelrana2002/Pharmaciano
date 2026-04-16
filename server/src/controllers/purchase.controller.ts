@@ -15,7 +15,14 @@ const createPurchase = async (req: AuthRequest, res: Response) => {
   try {
     const superAdmin = isSuperAdmin(req.user);
 
-    const { items, supplier, organizationName, branchName } = req.validatedData;
+    const {
+      items,
+      supplier,
+      organizationName,
+      branchName,
+      paymentStatus,
+      paidAmount,
+    } = req.validatedData;
 
     let organizationId = req.user!.organizationId;
     let branchId = req.user!.branchId;
@@ -127,12 +134,17 @@ const createPurchase = async (req: AuthRequest, res: Response) => {
       branchId,
       supplierId: supplierCompany._id,
       items: purchaseItems,
+      warehouseId: null,
       purchaseNo,
       status: "pending",
+      subtotal: 0,
       discount: 0,
       tax: 0,
+      totalAmount: 0,
       approvedBy: null,
-      paymentStatus: "unpaid",
+      paymentStatus,
+      paidAmount,
+      dueAmount: 0,
     });
 
     return res.status(201).json({
