@@ -49,6 +49,10 @@ const purchaseSchema = new Schema<IPurchase>(
       ref: "Supplier",
       required: true,
     },
+    warehouseId: {
+      type: Schema.Types.ObjectId,
+      ref: "Warehouse",
+    },
     items: {
       type: [purchaseItemSchema],
       required: true,

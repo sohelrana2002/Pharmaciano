@@ -238,6 +238,7 @@ export interface IPurchase extends Document {
   organizationId: Types.ObjectId;
   branchId: Types.ObjectId;
   supplierId: Types.ObjectId;
+  warehouseId: Types.ObjectId;
   items: IPurchaseItem[];
   purchaseNo: string;
   status: purchaseStatus;

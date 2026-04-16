@@ -25,6 +25,7 @@ const basePurchaseSchemaValidator = z.object({
   paymentStatus: z.enum(["unpaid", "partial", "paid"]).default("unpaid"),
   paidAmount: z.number().nonnegative().optional().default(0),
   approvedBy: z.any().optional(),
+  warehouseName: z.string().optional(),
 });
 
 export const createPurchaseSchemaValidator = (req: AuthRequest) => {
@@ -123,6 +124,14 @@ export const updatePurchaseSchemaValidator = (req: AuthRequest) => {
           code: "custom",
           path: ["approvedBy"],
           message: "approvedBy is required when updating purchase",
+        });
+      }
+
+      if (data.warehouseName === undefined) {
+        ctx.addIssue({
+          code: "custom",
+          path: ["warehouseName"],
+          message: "warehouse name is required when updating purchase",
         });
       }
     });
