@@ -246,7 +246,7 @@ export interface IPurchase extends Document {
   discount: number;
   tax: number;
   totalAmount: number;
-  approvedBy: Types.ObjectId;
+  approvedBy?: Types.ObjectId;
   paymentStatus: "unpaid" | "partial" | "paid";
   paidAmount: number;
   dueAmount: number;
