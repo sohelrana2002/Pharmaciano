@@ -1,10 +1,14 @@
 import { Router } from "express";
 import { authenticate, authorize } from "../middlewares/auth.middleware";
 import { validate } from "../middlewares/validate.middleware";
-import { createPurchaseSchemaValidator } from "../validators/purchase.validator";
+import {
+  createPurchaseSchemaValidator,
+  updatePurchaseSchemaValidator,
+} from "../validators/purchase.validator";
 import {
   approvePurchase,
   createPurchase,
+  receivePurchase,
 } from "../controllers/purchase.controller";
 
 const router = Router();
@@ -13,7 +17,7 @@ const router = Router();
 router.post(
   "/",
   authenticate,
-  authorize(["purchase:manage, superAdmin:manage"]),
+  authorize(["purchase:manage", "superAdmin:manage"]),
   validate(createPurchaseSchemaValidator),
   createPurchase,
 );
@@ -24,6 +28,15 @@ router.patch(
   authenticate,
   authorize(["superAdmin:manage"]),
   approvePurchase,
+);
+
+// receive Purchase inventory batch update here
+router.patch(
+  "/:id/receive",
+  authenticate,
+  authorize(["superAdmin:manage"]),
+  validate(updatePurchaseSchemaValidator),
+  receivePurchase,
 );
 
 export default router;
