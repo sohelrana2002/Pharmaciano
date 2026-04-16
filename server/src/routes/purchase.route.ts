@@ -2,7 +2,10 @@ import { Router } from "express";
 import { authenticate, authorize } from "../middlewares/auth.middleware";
 import { validate } from "../middlewares/validate.middleware";
 import { createPurchaseSchemaValidator } from "../validators/purchase.validator";
-import { createPurchase } from "../controllers/purchase.controller";
+import {
+  approvePurchase,
+  createPurchase,
+} from "../controllers/purchase.controller";
 
 const router = Router();
 
@@ -10,9 +13,17 @@ const router = Router();
 router.post(
   "/",
   authenticate,
-  authorize(["purchase:manage"]),
+  authorize(["purchase:manage, superAdmin:manage"]),
   validate(createPurchaseSchemaValidator),
   createPurchase,
+);
+
+// approve purchase
+router.patch(
+  "/:id/approve",
+  authenticate,
+  authorize(["superAdmin:manage"]),
+  approvePurchase,
 );
 
 export default router;
