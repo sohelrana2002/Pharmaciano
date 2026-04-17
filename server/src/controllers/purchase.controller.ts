@@ -489,4 +489,121 @@ const receivePurchase = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export { createPurchase, approvePurchase, receivePurchase };
+// list of purchase
+const purchaseList = async (req: AuthRequest, res: Response) => {
+  try {
+    const { search, status, paymentStatus, fromDate, toDate, page, limit } =
+      req.query;
+
+    const superAdmin = isSuperAdmin(req.user);
+
+    const filter: any = {};
+
+    if (!superAdmin) {
+      filter.organizationId = req.user!.organizationId;
+      filter.branchId = req.user!.branchId;
+    }
+
+    // status filter
+    if (status) filter.status = status;
+
+    // payment status filter
+    if (paymentStatus) filter.paymentStatus = paymentStatus;
+
+    // date range filter
+    if (fromDate && toDate) {
+      filter.createdAt = {
+        $gte: new Date(fromDate as string),
+        $lte: new Date(toDate as string),
+      };
+    }
+
+    // search filter
+    if (search) {
+      filter.$or = [{ purchaseNo: { $regex: search, $options: "i" } }];
+    }
+
+    // pagination
+    const pageNumber = parseInt(page as string) || 1;
+    const limitNumber = parseInt(limit as string) || 10;
+    const skip = (pageNumber - 1) * limitNumber;
+
+    const purchase = await Purchase.find(filter)
+      .populate([
+        {
+          path: "supplierId",
+          select: "name contactPerson -_id",
+        },
+        {
+          path: "items.medicineId",
+          select: "name strength unit unitPrice -_id",
+        },
+        {
+          path: "organizationId",
+          select: "name -_id",
+        },
+        {
+          path: "branchId",
+          select: "name -_id",
+        },
+        {
+          path: "warehouseId",
+          select: "name -_id",
+        },
+        {
+          path: "approvedBy",
+          select: "name email -_id",
+        },
+      ])
+      .skip(skip)
+      .limit(limitNumber)
+      .sort({ createdAt: -1 });
+
+    // counts
+    const total = await Purchase.countDocuments({ ...filter });
+
+    const pendingStatus = await Purchase.countDocuments({
+      ...filter,
+      status: "pending",
+    });
+
+    const approvedStatus = await Purchase.countDocuments({
+      ...filter,
+      status: "approved",
+    });
+
+    const receivedStatus = await Purchase.countDocuments({
+      ...filter,
+      status: "received",
+    });
+
+    return res.status(200).json({
+      success: true,
+      message:
+        purchase.length > 0
+          ? customMessage.found("Purchase")
+          : "No purchase found",
+
+      meta: {
+        page: pageNumber,
+        limit: limitNumber,
+        count: purchase.length,
+      },
+
+      total,
+      pending: pendingStatus,
+      approved: approvedStatus,
+      received: receivedStatus,
+      data: { purchase },
+    });
+  } catch (error) {
+    console.error("list of purchase error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: customMessage.serverError(),
+    });
+  }
+};
+
+export { createPurchase, approvePurchase, receivePurchase, purchaseList };
