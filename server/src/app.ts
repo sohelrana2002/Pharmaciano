@@ -34,7 +34,7 @@ const allowedOrigins = [
   "http://localhost:5000",
   "https://pharmaciano.vercel.app",
   "https://pharmaciano-backend.vercel.app",
-  "https://rafiz001.github.io/pharmaciano-flutter",
+  "https://rafiz001.github.io",
 ];
 
 const corsOptions = {
