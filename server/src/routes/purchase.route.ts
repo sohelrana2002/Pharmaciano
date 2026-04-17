@@ -8,6 +8,7 @@ import {
 import {
   approvePurchase,
   createPurchase,
+  purchaseInfo,
   purchaseList,
   receivePurchase,
 } from "../controllers/purchase.controller";
@@ -46,6 +47,14 @@ router.get(
   authenticate,
   authorize(["purchase:manage", "superAdmin:manage"]),
   purchaseList,
+);
+
+// individual purchase info
+router.get(
+  "/:id",
+  authenticate,
+  authorize(["purchase:manage", "superAdmin:manage"]),
+  purchaseInfo,
 );
 
 export default router;
