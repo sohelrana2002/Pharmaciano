@@ -59,10 +59,6 @@ export const updatePurchaseSchemaValidator = z
     tax: z.number({ error: "Tax is required!" }).nonnegative(),
     paymentStatus: z.enum(["unpaid", "partial", "paid"]),
     paidAmount: z.number({ error: "Paid amount is required!" }).nonnegative(),
-    warehouseName: z
-      .string({ error: "Warehouse name is required!" })
-      .min(1, "Warehouse name at least 1 character long")
-      .lowercase(),
   })
   .superRefine((data, ctx) => {
     // optional validation only if items exist
