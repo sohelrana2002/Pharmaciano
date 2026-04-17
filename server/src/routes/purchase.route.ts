@@ -8,6 +8,7 @@ import {
 import {
   approvePurchase,
   createPurchase,
+  deletePurchase,
   purchaseInfo,
   purchaseList,
   receivePurchase,
@@ -55,6 +56,14 @@ router.get(
   authenticate,
   authorize(["purchase:manage", "superAdmin:manage"]),
   purchaseInfo,
+);
+
+// delete purchase
+router.delete(
+  "/:id",
+  authenticate,
+  authorize(["purchase:manage", "superAdmin:manage"]),
+  deletePurchase,
 );
 
 export default router;
