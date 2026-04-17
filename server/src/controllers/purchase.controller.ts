@@ -677,10 +677,56 @@ const purchaseInfo = async (req: AuthRequest, res: Response) => {
   }
 };
 
+// delete purchase
+const deletePurchase = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(409).json({
+        success: false,
+        message: customMessage.invalidId("Mongoose", id),
+      });
+    }
+
+    const superAdmin = isSuperAdmin(req.user);
+
+    const filter: any = { _id: id };
+
+    if (!superAdmin) {
+      filter.organizationId = req.user!.organizationId;
+      filter.branchId = req.user!.branchId;
+    }
+
+    const purchase = await Purchase.findByIdAndDelete(filter);
+
+    if (!purchase) {
+      return res.status(404).json({
+        success: false,
+        message: customMessage.notFound("Purchase", id),
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: customMessage.deleted("Purchase", id),
+      id,
+    });
+  } catch (error) {
+    console.error("delete purchase error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: customMessage.serverError(),
+    });
+  }
+};
+
 export {
   createPurchase,
   approvePurchase,
   receivePurchase,
   purchaseList,
   purchaseInfo,
+  deletePurchase,
 };
