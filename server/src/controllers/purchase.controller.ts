@@ -10,6 +10,8 @@ import { Purchase } from "../models/purchase.model";
 import Supplier from "../models/Supplier.model";
 import { AuthRequest } from "../types";
 import { Response } from "express";
+import InventoryBatch from "../models/InventoryBatch.model";
+import Warehouse from "../models/Warehouse.model";
 
 // create purchase
 const createPurchase = async (req: AuthRequest, res: Response) => {
@@ -23,10 +25,12 @@ const createPurchase = async (req: AuthRequest, res: Response) => {
       branchName,
       paymentStatus,
       paidAmount,
+      warehouseName,
     } = req.validatedData;
 
     let organizationId = req.user!.organizationId;
     let branchId = req.user!.branchId;
+    let warehouseId;
 
     if (superAdmin) {
       // manage organizaton
@@ -72,6 +76,31 @@ const createPurchase = async (req: AuthRequest, res: Response) => {
         }
         branchId = branch._id.toString();
       }
+    }
+
+    // update warehouse
+    if (warehouseName) {
+      const warehouse = await Warehouse.findOne({
+        name: warehouseName,
+        organizationId,
+        branchId,
+        isActive: true,
+      });
+
+      if (!warehouse) {
+        const activeWarehouse = await Warehouse.find({
+          organizationId,
+          branchId,
+          isActive: true,
+        }).select("name");
+
+        return res.status(404).json({
+          success: false,
+          message: customMessage.notFound("Warehuse"),
+          hints: `Active warehouse are: ${activeWarehouse.map((ware) => ware.name).join(", ")}`,
+        });
+      }
+      warehouseId = warehouse._id;
     }
 
     const purchaseItems: any[] = [];
@@ -135,7 +164,7 @@ const createPurchase = async (req: AuthRequest, res: Response) => {
       branchId,
       supplierId: supplierCompany._id,
       items: purchaseItems,
-      warehouseId: null,
+      warehouseId,
       purchaseNo,
       status: "pending",
       subtotal: 0,
@@ -234,4 +263,230 @@ const approvePurchase = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export { createPurchase, approvePurchase };
+// receive Purchase inventory batch update here
+const receivePurchase = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const superAdmin = isSuperAdmin(req.user);
+
+    const { items, paymentStatus, paidAmount, discount, tax } =
+      req.validatedData;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(409).json({
+        success: false,
+        message: customMessage.invalidId("Mongoose", id),
+      });
+    }
+
+    const filter: any = { _id: id };
+
+    if (!superAdmin) {
+      filter.organizationId = req.user!.organizationId;
+      filter.branchId = req.user!.branchId;
+    }
+
+    const purchase = await Purchase.findOne(filter);
+
+    if (!purchase) {
+      return res.status(404).json({
+        success: false,
+        message: customMessage.notFound("Purchase", id),
+      });
+    }
+
+    if (purchase.status !== "approved") {
+      return res.status(400).json({
+        success: false,
+        message: "Only approved status can be received!",
+      });
+    }
+
+    //CREATE MAP FROM EXISTING PURCHASE (medicineId → item)
+    const purchaseItemMap = new Map<string, any>();
+
+    for (const item of purchase.items) {
+      purchaseItemMap.set(item.medicineId.toString(), item);
+    }
+
+    const updatedItems: any[] = [];
+
+    // VALIDATE + MAP ITEMS
+    for (const incomingItem of items) {
+      const { name, strength, unit } = parseMedicineInput(
+        incomingItem.medicineName,
+      );
+
+      //convert name to medicineId
+      const medicineQuery: any = {
+        isActive: true,
+        organizationId: purchase.organizationId,
+        name: { $regex: `^${name}$`, $options: "i" },
+      };
+
+      if (strength) medicineQuery.strength = strength;
+      if (unit) medicineQuery.unit = unit;
+
+      const medicine = await Medicine.findOne(medicineQuery);
+
+      if (!medicine) {
+        return res.status(404).json({
+          success: false,
+          message: `Medicine not found: ${incomingItem.medicineName}`,
+        });
+      }
+
+      const medicineId = medicine._id.toString();
+
+      // MUST EXIST IN ORIGINAL PURCHASE
+      const existingItem = purchaseItemMap.get(medicineId);
+
+      if (!existingItem) {
+        return res.status(400).json({
+          success: false,
+          message: `Medicine not in original purchase: ${incomingItem.medicineName}`,
+        });
+      }
+
+      // STRICT DUPLICATE CHECK (UPDATE SIDE)
+      const duplicate = updatedItems.find(
+        (i) => i.medicineId.toString() === medicineId,
+      );
+
+      if (duplicate) {
+        return res.status(400).json({
+          success: false,
+          message: `Duplicate medicine in request: ${incomingItem.medicineName}`,
+        });
+      }
+
+      const quantity = existingItem.quantity;
+
+      const purchasePrice =
+        incomingItem.purchasePrice ?? existingItem.purchasePrice ?? 0;
+
+      if (purchasePrice == null || isNaN(purchasePrice)) {
+        return res.status(400).json({
+          success: false,
+          message: `Invalid purchase price: ${incomingItem.medicineName}`,
+        });
+      }
+
+      updatedItems.push({
+        ...existingItem.toObject(),
+
+        medicineId: medicine._id,
+
+        batchNo: incomingItem.batchNo ?? existingItem.batchNo,
+        expiryDate: incomingItem.expiryDate ?? existingItem.expiryDate,
+        quantity,
+        purchasePrice,
+
+        totalCost: quantity * purchasePrice,
+      });
+    }
+
+    // LENGTH MUST MATCH EXACTLY
+    if (updatedItems.length !== purchase.items.length) {
+      return res.status(400).json({
+        success: false,
+        message: `You must update exactly ${purchase.items.length} items`,
+      });
+    }
+
+    purchase.items = updatedItems;
+
+    purchase.paymentStatus = paymentStatus;
+    purchase.paidAmount = paidAmount;
+    purchase.approvedBy = new mongoose.Types.ObjectId(req.user!.userId);
+    purchase.discount = discount;
+    purchase.tax = tax;
+
+    // calculate amounts
+    const subtotal = purchase.items.reduce(
+      (sum, item) => sum + item.totalCost,
+      0,
+    );
+
+    const discountAmount = (subtotal * discount) / 100;
+    const taxAmount = (subtotal * tax) / 100;
+
+    const totalAmount = subtotal - discountAmount + taxAmount;
+    const dueAmount = totalAmount - purchase.paidAmount;
+
+    purchase.subtotal = subtotal;
+    purchase.totalAmount = totalAmount;
+    purchase.dueAmount = dueAmount;
+
+    // console.log("after purchse: ", purchase);
+
+    // now inventory batch update
+    for (const item of purchase.items) {
+      const existingBatch = await InventoryBatch.findOne({
+        medicineId: item.medicineId,
+        batchNo: item.batchNo,
+        organizationId: purchase.organizationId,
+        branchId: purchase.branchId,
+      });
+
+      if (existingBatch) {
+        await InventoryBatch.updateOne(
+          { _id: existingBatch._id },
+          {
+            $inc: { quantity: item.quantity },
+            $set: {
+              expiryDate: item.expiryDate,
+              purchasePrice: item.purchasePrice,
+            },
+          },
+        );
+      } else {
+        await InventoryBatch.create({
+          medicineId: item.medicineId,
+          medicineName: item.medicineName,
+          batchNo: item.batchNo,
+          expiryDate: item.expiryDate,
+          quantity: item.quantity,
+          purchasePrice: item.purchasePrice,
+          organizationId: purchase.organizationId,
+          branchId: purchase.branchId,
+          warehouseId: purchase.warehouseId,
+          createdBy: purchase.approvedBy,
+        });
+      }
+    }
+
+    purchase.status = "received";
+
+    await purchase.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Purchase receive successfully & update inventory batch!",
+      id,
+    });
+  } catch (error: any) {
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyValue)[0];
+      const value = error.keyValue[field];
+      return res.status(409).json({
+        success: false,
+        message: customMessage.alreadyExists(value),
+        error: {
+          field,
+          value,
+          reason: customMessage.alreadyExists(field),
+        },
+      });
+    }
+    console.error("receive purchase error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: customMessage.serverError(),
+    });
+  }
+};
+
+export { createPurchase, approvePurchase, receivePurchase };
