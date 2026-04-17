@@ -8,6 +8,7 @@ import {
 import {
   approvePurchase,
   createPurchase,
+  purchaseList,
   receivePurchase,
 } from "../controllers/purchase.controller";
 
@@ -26,7 +27,7 @@ router.post(
 router.patch(
   "/:id/approve",
   authenticate,
-  authorize(["superAdmin:manage"]),
+  authorize(["purchase:manage", "superAdmin:manage"]),
   approvePurchase,
 );
 
@@ -34,9 +35,17 @@ router.patch(
 router.patch(
   "/:id/receive",
   authenticate,
-  authorize(["superAdmin:manage"]),
+  authorize(["purchase:manage", "superAdmin:manage"]),
   validate(updatePurchaseSchemaValidator),
   receivePurchase,
+);
+
+// list of purchase
+router.get(
+  "/",
+  authenticate,
+  authorize(["purchase:manage", "superAdmin:manage"]),
+  purchaseList,
 );
 
 export default router;
