@@ -606,4 +606,81 @@ const purchaseList = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export { createPurchase, approvePurchase, receivePurchase, purchaseList };
+// purchase info
+const purchaseInfo = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(409).json({
+        success: false,
+        message: customMessage.invalidId("Mongoose", id),
+      });
+    }
+
+    const superAdmin = isSuperAdmin(req.user);
+
+    const filter: any = { _id: id };
+
+    if (!superAdmin) {
+      filter.organizationId = req.user!.organizationId;
+      filter.branchId = req.user!.branchId;
+    }
+
+    const purchase = await Purchase.findOne(filter).populate([
+      {
+        path: "supplierId",
+        select: "name contactPerson phone email address -_id",
+      },
+      {
+        path: "items.medicineId",
+        select:
+          "-organizationId -createdAt -updatedAt -__v -taxRate -categoryId -brandId -createdBy -isActive -_id",
+      },
+      {
+        path: "organizationId",
+        select: "name contact address -_id",
+      },
+      {
+        path: "branchId",
+        select: "name contact address -_id",
+      },
+      {
+        path: "warehouseId",
+        select: "name location -_id",
+      },
+      {
+        path: "approvedBy",
+        select: "name email phone -_id",
+      },
+    ]);
+
+    if (!purchase) {
+      return res.status(404).json({
+        success: false,
+        message: customMessage.notFound("Purchase", id),
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: customMessage.found("Purchase", id),
+      data: { purchase },
+    });
+  } catch (error) {
+    console.error("purchase info error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: customMessage.serverError(),
+    });
+  }
+};
+
+export {
+  createPurchase,
+  approvePurchase,
+  receivePurchase,
+  purchaseList,
+  purchaseInfo,
+};
