@@ -6,7 +6,7 @@ import {
   inventoryBatchSchemaValidator,
   updateInventoryBatchValidator,
 } from "../validators/inventoryBatch.validator";
-import Medicine from "../models/Medicine.model";
+import { Medicine } from "../models/Medicine.model";
 import InventoryBatch from "../models/InventoryBatch.model";
 import mongoose from "mongoose";
 import { parseMedicineInput } from "../helper/parseMedicineInput";

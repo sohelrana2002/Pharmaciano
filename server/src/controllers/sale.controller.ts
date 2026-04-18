@@ -6,7 +6,7 @@ import {
   updateSaleValidator,
 } from "../validators/sale.validator";
 import InventoryBatch from "../models/InventoryBatch.model";
-import Medicine from "../models/Medicine.model";
+import { Medicine } from "../models/Medicine.model";
 import Sale from "../models/Sale.model";
 import { customMessage } from "../constants/customMessage";
 import mongoose from "mongoose";

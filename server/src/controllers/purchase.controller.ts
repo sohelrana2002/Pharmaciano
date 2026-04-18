@@ -4,7 +4,7 @@ import { customMessage } from "../constants/customMessage";
 import { parseMedicineInput } from "../helper/parseMedicineInput";
 import { isSuperAdmin } from "../middlewares/auth.middleware";
 import Branch from "../models/Branch.model";
-import Medicine from "../models/Medicine.model";
+import { Medicine } from "../models/Medicine.model";
 import Organization from "../models/Organization.model";
 import { Purchase } from "../models/purchase.model";
 import Supplier from "../models/Supplier.model";
