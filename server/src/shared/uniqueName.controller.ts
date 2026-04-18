@@ -4,7 +4,7 @@ import { customMessage } from "../constants/customMessage";
 import Organization from "../models/Organization.model";
 import Branch from "../models/Branch.model";
 import Role from "../models/Role.model";
-import Medicine from "../models/Medicine.model";
+import { Medicine } from "../models/Medicine.model";
 import Category from "../models/Category.model";
 import Brand from "../models/Brand.model";
 import InventoryBatch from "../models/InventoryBatch.model";
