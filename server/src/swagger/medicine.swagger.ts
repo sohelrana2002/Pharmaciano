@@ -92,7 +92,7 @@
  *       name: isActive
  *       schema:
  *         type: boolean
- *     search:
+ *     medicineSearch:
  *       in: query
  *       name: search
  *       schema:
@@ -173,7 +173,7 @@
  *       - $ref: '#/components/parameters/page'
  *       - $ref: '#/components/parameters/limit'
  *       - $ref: '#/components/parameters/isActive'
- *       - $ref: '#/components/parameters/search'
+ *       - $ref: '#/components/parameters/medicineSearch'
  *     responses:
  *       200:
  *         description: List of medicines
