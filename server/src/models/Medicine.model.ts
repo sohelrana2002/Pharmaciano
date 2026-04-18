@@ -57,6 +57,9 @@ const medicineSchema = new Schema<IMedicine>(
       type: Number,
       default: 0,
     },
+    barcode: {
+      type: String,
+    },
     isPrescriptionRequired: {
       type: Boolean,
       default: false,
@@ -103,4 +106,12 @@ medicineSchema.index(
   { unique: true },
 );
 
-export default model<IMedicine>("Medicine", medicineSchema);
+medicineSchema.index(
+  {
+    barcode: 1,
+    organizationId: 1,
+  },
+  { unique: true },
+);
+
+export const Medicine = model<IMedicine>("Medicine", medicineSchema);

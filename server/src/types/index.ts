@@ -132,6 +132,7 @@ export interface IMedicine extends Document {
   unitPrice: number;
   unitsPerStrip: number;
   stripPrice: number;
+  barcode: string;
   isPrescriptionRequired: boolean;
   taxRate: number;
   categoryId: Types.ObjectId;
