@@ -1,11 +1,8 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { AuthRequest } from "../types";
 import { Response } from "express";
-import {
-  medicineSchemaValidator,
-  updateMedicineValidator,
-} from "../validators/medicine.validator";
-import Medicine from "../models/Medicine.model";
+import { v4 as uuidv4 } from "uuid";
+import { Medicine } from "../models/Medicine.model";
 import Category from "../models/Category.model";
 import Brand from "../models/Brand.model";
 import mongoose from "mongoose";
@@ -15,22 +12,6 @@ import { parseMedicineInput } from "../helper/parseMedicineInput";
 // create medicine
 const createMedicine = async (req: AuthRequest, res: Response) => {
   try {
-    // Validate request body using Zod
-    const validationResult = medicineSchemaValidator.safeParse(req.body);
-
-    if (!validationResult.success) {
-      return res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors: validationResult.error.issues.map(
-          (err: { path: any[]; message: any }) => ({
-            field: err.path.join("."),
-            message: err.message,
-          }),
-        ),
-      });
-    }
-
     const {
       name,
       genericName,
@@ -44,7 +25,7 @@ const createMedicine = async (req: AuthRequest, res: Response) => {
       isPrescriptionRequired,
       taxRate,
       isActive,
-    } = validationResult.data;
+    } = req.validatedData;
 
     //   check valid category
     const activeCategory = await Category.find({
@@ -101,6 +82,9 @@ const createMedicine = async (req: AuthRequest, res: Response) => {
       });
     }
 
+    // create barcode
+    const barcode = `MED-${uuidv4().slice(0, 8).toUpperCase()}`;
+
     const medicine = await Medicine.create({
       name,
       genericName,
@@ -117,6 +101,7 @@ const createMedicine = async (req: AuthRequest, res: Response) => {
       stripPrice: unitPrice * unitsPerStrip,
       isActive,
       organizationId: req.user!.organizationId,
+      barcode,
     });
 
     //   success response
@@ -164,17 +149,37 @@ const medicineList = async (req: AuthRequest, res: Response) => {
       organizationId: req.user!.organizationId,
     };
 
-    const filter: any = { ...baseFilter };
+    // Build an array of conditions for $or
+    const orConditions: any[] = [];
 
-    // name search
-    if (name) {
-      filter.name = { $regex: name, $options: "i" };
+    // Barcode search exact match
+    if (searchString) {
+      orConditions.push({ barcode: searchString });
     }
 
-    // strength + unit match
-    if (strength && unit) {
-      filter.strength = strength;
-      filter.unit = new RegExp(`^${unit}$`, "i");
+    // 2. Medicine name + strength + unit search
+    if (name) {
+      const nameFilter = { name: { $regex: name, $options: "i" } };
+
+      if (strength && unit) {
+        // When strength and unit are provided, combine them
+        orConditions.push({
+          $and: [
+            nameFilter,
+            { strength: strength },
+            { unit: new RegExp(`^${unit}$`, "i") },
+          ],
+        });
+      } else if (name) {
+        // search by name only
+        orConditions.push(nameFilter);
+      }
+    }
+
+    const filter: any = { ...baseFilter };
+
+    if (orConditions.length > 0) {
+      filter.$or = orConditions;
     }
 
     if (isActive !== undefined) {
@@ -189,19 +194,19 @@ const medicineList = async (req: AuthRequest, res: Response) => {
       .populate([
         {
           path: "organizationId",
-          select: "name",
+          select: "name -_id",
         },
         {
           path: "categoryId",
-          select: "name",
+          select: "name -_id",
         },
         {
           path: "brandId",
-          select: "name",
+          select: "name -_id",
         },
         {
           path: "createdBy",
-          select: "name",
+          select: "name -_id",
         },
       ])
       .skip(skip)
@@ -271,19 +276,19 @@ const medicineInfo = async (req: AuthRequest, res: Response) => {
     }).populate([
       {
         path: "categoryId",
-        select: "name description",
+        select: "name description - _id",
       },
       {
         path: "brandId",
-        select: "name manufacturer country",
+        select: "name manufacturer country - _id",
       },
       {
         path: "createdBy",
-        select: "name email",
+        select: "name email -_id",
       },
       {
         path: "organizationId",
-        select: "name contact address",
+        select: "name contact address -_id",
       },
     ]);
 
@@ -321,22 +326,6 @@ const updateMedicine = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    // Validate request body using Zod
-    const validationResult = updateMedicineValidator.safeParse(req.body);
-
-    if (!validationResult.success) {
-      return res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors: validationResult.error.issues.map(
-          (err: { path: any[]; message: any }) => ({
-            field: err.path.join("."),
-            message: err.message,
-          }),
-        ),
-      });
-    }
-
     const {
       name,
       genericName,
@@ -350,7 +339,7 @@ const updateMedicine = async (req: AuthRequest, res: Response) => {
       isPrescriptionRequired,
       taxRate,
       isActive,
-    } = validationResult.data;
+    } = req.validatedData;
 
     const medicine = await Medicine.findOne({
       _id: id,
