@@ -8,6 +8,7 @@ import Brand from "../models/Brand.model";
 import mongoose from "mongoose";
 import { customMessage } from "../constants/customMessage";
 import { parseMedicineInput } from "../helper/parseMedicineInput";
+import { isSuperAdmin } from "../middlewares/auth.middleware";
 
 // create medicine
 const createMedicine = async (req: AuthRequest, res: Response) => {
@@ -263,6 +264,8 @@ const medicineInfo = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
 
+    const superAdmin = isSuperAdmin(req.user);
+
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(409).json({
         success: false,
@@ -270,17 +273,21 @@ const medicineInfo = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const medicine = await Medicine.findOne({
-      _id: id,
-      organizationId: req.user!.organizationId,
-    }).populate([
+    const filter: any = { _id: id };
+
+    if (!superAdmin) {
+      filter.organizationId = req.user!.organizationId;
+      filter.branchId = req.user!.branchId;
+    }
+
+    const medicine = await Medicine.findOne(filter).populate([
       {
         path: "categoryId",
-        select: "name description - _id",
+        select: "name description -_id",
       },
       {
         path: "brandId",
-        select: "name manufacturer country - _id",
+        select: "name manufacturer country -_id",
       },
       {
         path: "createdBy",
