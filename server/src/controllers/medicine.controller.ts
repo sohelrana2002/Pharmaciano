@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { AuthRequest } from "../types";
 import { Response } from "express";
-import { v4 as uuidv4 } from "uuid";
+import { randomUUID } from "crypto";
 import { Medicine } from "../models/Medicine.model";
 import Category from "../models/Category.model";
 import Brand from "../models/Brand.model";
@@ -83,7 +83,7 @@ const createMedicine = async (req: AuthRequest, res: Response) => {
     }
 
     // create barcode
-    const barcode = `MED-${uuidv4().slice(0, 8).toUpperCase()}`;
+    const barcode = `MED-${randomUUID().slice(0, 8).toUpperCase()}`;
 
     const medicine = await Medicine.create({
       name,
