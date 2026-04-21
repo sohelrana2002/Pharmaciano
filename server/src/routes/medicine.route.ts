@@ -19,22 +19,32 @@ const router = Router();
 router.post(
   "/",
   authenticate,
-  authorize(["inventory:manage"]),
+  authorize(["inventory:manage", "superAdmin:manage"]),
   validate(medicineSchemaValidator),
   createMedicine,
 );
 
 // list of medicine
-router.get("/", authenticate, authorize(["inventory:manage"]), medicineList);
+router.get(
+  "/",
+  authenticate,
+  authorize(["inventory:manage", "superAdmin:manage"]),
+  medicineList,
+);
 
 // individual medicine info
-router.get("/:id", authenticate, authorize(["inventory:manage"]), medicineInfo);
+router.get(
+  "/:id",
+  authenticate,
+  authorize(["inventory:manage", "superAdmin:manage"]),
+  medicineInfo,
+);
 
 // update medicine
 router.put(
   "/:id",
   authenticate,
-  authorize(["inventory:manage"]),
+  authorize(["inventory:manage", "superAdmin:manage"]),
   validate(updateMedicineValidator),
   updateMedicine,
 );
@@ -43,7 +53,7 @@ router.put(
 router.delete(
   "/:id",
   authenticate,
-  authorize(["inventory:manage"]),
+  authorize(["inventory:manage", "superAdmin:manage"]),
   deleteMedicine,
 );
 
