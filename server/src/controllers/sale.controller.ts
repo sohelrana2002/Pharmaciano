@@ -1,16 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { Response } from "express";
 import { AuthRequest } from "../types";
-import {
-  saleSchemaValidator,
-  updateSaleValidator,
-} from "../validators/sale.validator";
 import InventoryBatch from "../models/InventoryBatch.model";
 import { Medicine } from "../models/Medicine.model";
 import Sale from "../models/Sale.model";
 import { customMessage } from "../constants/customMessage";
 import mongoose from "mongoose";
-import { parseMedicineInput } from "../helper/parseMedicineInput";
 import Counter from "../models/Counter.model";
 import { generateInvoicePDF } from "../shared/generateInvoice";
 import { isSuperAdmin } from "../middlewares/auth.middleware";
@@ -24,22 +19,6 @@ const createSale = async (req: AuthRequest, res: Response) => {
   try {
     const superAdmin = isSuperAdmin(req.user);
 
-    // Validate input
-    const validationResult = saleSchemaValidator.safeParse(req.body);
-    if (!validationResult.success) {
-      await session.abortTransaction();
-      session.endSession();
-
-      return res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors: validationResult.error.issues.map((err: any) => ({
-          field: err.path.join("."),
-          message: err.message,
-        })),
-      });
-    }
-
     const {
       customerName,
       customerPhone,
@@ -47,11 +26,11 @@ const createSale = async (req: AuthRequest, res: Response) => {
       discount = 0,
       tax = 0,
       paymentMethod,
-    } = validationResult.data;
-    const saleItems: any[] = [];
+      organizationName,
+      branchName,
+    } = req.validatedData;
 
-    // only for super admin
-    const { organizationName, branchName } = req.body;
+    const saleItems: any[] = [];
 
     // dynamic assign
     let organizationId = req.user!.organizationId;
@@ -59,49 +38,31 @@ const createSale = async (req: AuthRequest, res: Response) => {
 
     if (superAdmin) {
       // manage organizaton
-      if (!organizationName) {
+      const organization = await Organization.findOne({
+        name: organizationName,
+        isActive: true,
+      }).session(session);
+
+      if (!organization) {
+        const activeOrganization = await Organization.find({
+          isActive: true,
+        })
+          .select("name")
+          .session(session);
+
         await session.abortTransaction();
         session.endSession();
 
-        return res.status(400).json({
+        return res.status(404).json({
           success: false,
-          message: "Organization name is required",
+          message: customMessage.notFound("Organization"),
+          hints: `Active organization names are: ${activeOrganization.map((org) => org.name).join(", ")}`,
         });
-      } else {
-        const organization = await Organization.findOne({
-          name: organizationName,
-          isActive: true,
-        }).session(session);
-
-        if (!organization) {
-          const activeOrganization = await Organization.find({
-            isActive: true,
-          })
-            .select("name")
-            .session(session);
-
-          await session.abortTransaction();
-          session.endSession();
-
-          return res.status(404).json({
-            success: false,
-            message: customMessage.notFound("Organization"),
-            hints: `Active organization names are: ${activeOrganization.map((org) => org.name).join(", ")}`,
-          });
-        }
-        organizationId = organization._id.toString();
       }
+      organizationId = organization._id.toString();
 
       // manage branch
-      if (!branchName) {
-        await session.abortTransaction();
-        session.endSession();
-
-        return res.status(400).json({
-          success: false,
-          message: "Branch name is required!",
-        });
-      } else {
+      if (branchName) {
         const branch = await Branch.findOne({
           name: branchName,
           organizationId,
@@ -131,19 +92,22 @@ const createSale = async (req: AuthRequest, res: Response) => {
 
     // Process each sale item
     for (const item of items) {
-      const { name, strength, unit } = parseMedicineInput(item.medicineName);
-      // console.log("item:", item);
-
-      // Find medicine by name + strength + unit
-      const medicineQuery: any = {
-        isActive: true,
+      const filter: any = {
         organizationId,
-        name: { $regex: `^${name}$`, $options: "i" },
+        isActive: true,
       };
-      if (strength) medicineQuery.strength = strength;
-      if (unit) medicineQuery.unit = unit;
 
-      const medicine = await Medicine.findOne(medicineQuery).session(session);
+      const search = item.medicineName;
+
+      if (search) {
+        filter.$or = [
+          { searchText: { $regex: search, $options: "i" } },
+          { name: { $regex: search, $options: "i" } },
+          { barcode: { $regex: search } },
+        ];
+      }
+
+      const medicine = await Medicine.findOne(filter).session(session);
 
       if (!medicine) {
         const activeMedicine = await Medicine.find({
@@ -321,7 +285,7 @@ const saleList = async (req: AuthRequest, res: Response) => {
 
     if (search) {
       filter.$or = [
-        { invoiceNo: { $regex: search, $options: "i" } },
+        { invoiceNo: { $regex: search } },
         { customerName: { $regex: search, $options: "i" } },
       ];
     }
@@ -395,14 +359,14 @@ const saleInfo = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
 
+    const superAdmin = isSuperAdmin(req.user);
+
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(409).json({
         success: false,
         message: customMessage.invalidId("Mongoose", id),
       });
     }
-
-    const superAdmin = isSuperAdmin(req.user);
 
     const filter: any = { _id: id };
 
@@ -480,23 +444,6 @@ const updateSale = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    // Validate request body
-    const validationResult = updateSaleValidator.safeParse(req.body);
-
-    if (!validationResult.success) {
-      await session.abortTransaction();
-      session.endSession();
-
-      return res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors: validationResult.error.issues.map((err: any) => ({
-          field: err.path.join("."),
-          message: err.message,
-        })),
-      });
-    }
-
     const {
       customerName,
       customerPhone,
@@ -504,9 +451,11 @@ const updateSale = async (req: AuthRequest, res: Response) => {
       discount = 0,
       tax = 0,
       paymentMethod,
-    } = validationResult.data;
+      organizationName,
+      branchName,
+    } = req.validatedData;
 
-    const { organizationName, branchName } = req.body;
+    // const { organizationName, branchName } = req.body;
 
     // Find existing sale
     const existingSale = await Sale.findOne(filter).session(session);
@@ -610,19 +559,22 @@ const updateSale = async (req: AuthRequest, res: Response) => {
     }
 
     for (const item of items) {
-      const { name, strength, unit } = parseMedicineInput(item.medicineName);
-      // console.log("item:", item);
-
-      // Find medicine by name + strength + unit
-      const medicineQuery: any = {
-        isActive: true,
-        name: { $regex: `^${name}$`, $options: "i" },
+      const filter: any = {
         organizationId: finalOrganizationId,
+        isActive: true,
       };
-      if (strength) medicineQuery.strength = strength;
-      if (unit) medicineQuery.unit = unit;
 
-      const medicine = await Medicine.findOne(medicineQuery).session(session);
+      const search = item.medicineName;
+
+      if (search) {
+        filter.$or = [
+          { searchText: { $regex: search, $options: "i" } },
+          { name: { $regex: search, $options: "i" } },
+          { barcode: { $regex: search } },
+        ];
+      }
+
+      const medicine = await Medicine.findOne(filter).session(session);
 
       if (!medicine) {
         const activeMedicine = await Medicine.find({
@@ -769,14 +721,14 @@ const deleteSale = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
 
+    const superAdmin = isSuperAdmin(req.user);
+
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(409).json({
         success: false,
         message: customMessage.invalidId("Mongoose", id),
       });
     }
-
-    const superAdmin = isSuperAdmin(req.user);
 
     const filter: any = { _id: id };
 
