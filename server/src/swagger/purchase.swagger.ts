@@ -189,7 +189,7 @@
  *         type: integer
  *         default: 10
 
- *     search:
+ *     purchaseSearch:
  *       in: query
  *       name: search
  *       schema:
@@ -315,7 +315,7 @@
  *     parameters:
  *       - $ref: '#/components/parameters/page'
  *       - $ref: '#/components/parameters/limit'
- *       - $ref: '#/components/parameters/search'
+ *       - $ref: '#/components/parameters/purchaseSearch'
  *       - $ref: '#/components/parameters/status'
  *       - $ref: '#/components/parameters/paymentStatus'
  *       - $ref: '#/components/parameters/fromDate'
