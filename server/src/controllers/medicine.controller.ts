@@ -7,7 +7,6 @@ import Category from "../models/Category.model";
 import Brand from "../models/Brand.model";
 import mongoose from "mongoose";
 import { customMessage } from "../constants/customMessage";
-import { parseMedicineInput } from "../helper/parseMedicineInput";
 import { isSuperAdmin } from "../middlewares/auth.middleware";
 
 // create medicine
@@ -87,7 +86,7 @@ const createMedicine = async (req: AuthRequest, res: Response) => {
     const barcode = `MED-${randomUUID().slice(0, 8).toUpperCase()}`;
 
     // create search text
-    const searchText = `${name} ${strength}${unit}`;
+    const searchText = `${name} ${strength}${unit}`.trim().toLowerCase();
 
     const medicine = await Medicine.create({
       name,
@@ -146,45 +145,19 @@ const medicineList = async (req: AuthRequest, res: Response) => {
   try {
     const { search, isActive, page, limit } = req.query;
 
-    const searchString = typeof search === "string" ? search : "";
-
-    const { name, strength, unit } = parseMedicineInput(searchString);
-
     const baseFilter: any = {
       organizationId: req.user!.organizationId,
     };
 
-    // Build an array of conditions for $or
-    const orConditions: any[] = [];
-
-    // Barcode search exact match
-    if (searchString) {
-      orConditions.push({ barcode: searchString });
-    }
-
-    // 2. Medicine name + strength + unit search
-    if (name) {
-      const nameFilter = { name: { $regex: name, $options: "i" } };
-
-      if (strength && unit) {
-        // When strength and unit are provided, combine them
-        orConditions.push({
-          $and: [
-            nameFilter,
-            { strength: strength },
-            { unit: new RegExp(`^${unit}$`, "i") },
-          ],
-        });
-      } else if (name) {
-        // search by name only
-        orConditions.push(nameFilter);
-      }
-    }
-
     const filter: any = { ...baseFilter };
 
-    if (orConditions.length > 0) {
-      filter.$or = orConditions;
+    if (search) {
+      filter.$or = [
+        { searchText: { $regex: search, $options: "i" } },
+        { name: { $regex: search, $options: "i" } },
+        { genericName: { $regex: search, $options: "i" } },
+        { barcode: { $regex: search } },
+      ];
     }
 
     if (isActive !== undefined) {
@@ -403,7 +376,9 @@ const updateMedicine = async (req: AuthRequest, res: Response) => {
     const finalStrength = updateData.strength || medicine.strength;
     const finalUnit = updateData.unit || medicine.unit;
 
-    updateData.searchText = `${finalName} ${finalStrength}${finalUnit}`;
+    updateData.searchText = `${finalName} ${finalStrength}${finalUnit}`
+      .trim()
+      .toLowerCase();
 
     //   check valid category
     const activeCategory = await Category.find({
