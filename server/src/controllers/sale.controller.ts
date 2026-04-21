@@ -151,6 +151,7 @@ const createSale = async (req: AuthRequest, res: Response) => {
           status: "active",
         })
           .select("batchNo")
+          .sort({ expiryDate: 1 })
           .session(session);
 
         await session.abortTransaction();
@@ -617,6 +618,7 @@ const updateSale = async (req: AuthRequest, res: Response) => {
           status: "active",
         })
           .select("batchNo")
+          .sort({ expiryDate: 1 })
           .session(session);
 
         await session.abortTransaction();
