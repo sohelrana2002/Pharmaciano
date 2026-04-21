@@ -86,6 +86,9 @@ const createMedicine = async (req: AuthRequest, res: Response) => {
     // create barcode
     const barcode = `MED-${randomUUID().slice(0, 8).toUpperCase()}`;
 
+    // create search text
+    const searchText = `${name} ${strength}${unit}`;
+
     const medicine = await Medicine.create({
       name,
       genericName,
@@ -103,6 +106,7 @@ const createMedicine = async (req: AuthRequest, res: Response) => {
       isActive,
       organizationId: req.user!.organizationId,
       barcode,
+      searchText,
     });
 
     //   success response
@@ -394,6 +398,12 @@ const updateMedicine = async (req: AuthRequest, res: Response) => {
     if (unitPrice && unitsPerStrip) {
       updateData.stripPrice = unitPrice * unitsPerStrip;
     }
+
+    const finalName = updateData.name || medicine.name;
+    const finalStrength = updateData.strength || medicine.strength;
+    const finalUnit = updateData.unit || medicine.unit;
+
+    updateData.searchText = `${finalName} ${finalStrength}${finalUnit}`;
 
     //   check valid category
     const activeCategory = await Category.find({
