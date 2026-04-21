@@ -1,6 +1,8 @@
 import { z } from "zod";
+import { AuthRequest } from "../types";
+import { isSuperAdmin } from "../middlewares/auth.middleware";
 
-export const medicineSchemaValidator = z.object({
+const baseMedicineValidator = z.object({
   name: z
     .string({ error: "Medicine name is required!" })
     .min(1, "Medicine name is at least 1 character!")
@@ -60,5 +62,29 @@ export const medicineSchemaValidator = z.object({
   isActive: z.boolean().optional().default(true),
 });
 
+export const medicineSchemaValidator = (req: AuthRequest) => {
+  const superAdmin = isSuperAdmin(req.user);
+
+  return baseMedicineValidator.extend({
+    organizationName: superAdmin
+      ? z
+          .string({ error: "Organization name is required for super admin" })
+          .min(1, "Organization name is at least 1 character")
+      : z.string().optional(),
+  });
+};
+
 // Validator for updating a brand (all fields optional)
-export const updateMedicineValidator = medicineSchemaValidator.partial();
+// export const updateMedicineValidator = medicineSchemaValidator.partial();
+
+export const updateMedicineValidator = (req: AuthRequest) => {
+  const superAdmin = isSuperAdmin(req.user);
+
+  return baseMedicineValidator.partial().extend({
+    organizationName: superAdmin
+      ? z
+          .string({ error: "Organization name is required for super admin" })
+          .min(1, "Organization name is at least 1 character")
+      : z.string().optional(),
+  });
+};
