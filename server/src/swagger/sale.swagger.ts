@@ -11,11 +11,16 @@
  *   schemas:
  *     SaleItem:
  *       type: object
+ *       required:
+ *         - medicineName
+ *         - batchNo
+ *         - quantity
  *       properties:
  *         medicineId:
  *           type: string
  *         medicineName:
  *           type: string
+ *           example: medicine name(napa 500mg) or barcode(MED-349A2BDP)
  *         batchNo:
  *           type: string
  *         quantity:
@@ -38,6 +43,7 @@
  *           type: string
  *         invoiceNo:
  *           type: string
+ *           example: INV-1001
  *         customerName:
  *           type: string
  *         customerPhone:
@@ -74,67 +80,36 @@
  *       properties:
  *         customerName:
  *           type: string
+ *           example: Rahim
  *         customerPhone:
  *           type: string
+ *           example: 017XXXXXXXX
  *         items:
  *           type: array
  *           items:
- *             type: object
- *             required:
- *               - medicineName
- *               - batchNo
- *               - quantity
- *             properties:
- *               medicineName:
- *                 type: string
- *               batchNo:
- *                 type: string
- *               quantity:
- *                 type: number
+ *             $ref: '#/components/schemas/SaleItem'
  *         discount:
  *           type: number
+ *           example: 5
  *         tax:
  *           type: number
+ *           example: 10
  *         paymentMethod:
  *           type: string
  *           enum: [cash, card, mobile]
 
  *     CreateSaleSuperAdmin:
- *       type: object
- *       required:
- *         - customerName
- *         - customerPhone
- *         - items
- *         - paymentMethod
- *         - organizationName
- *         - branchName
- *       properties:
- *         customerName:
- *           type: string
- *         customerPhone:
- *           type: string
- *         items:
- *           type: array
- *           items:
- *             type: object
- *             properties:
- *               medicineName:
- *                 type: string
- *               batchNo:
- *                 type: string
- *               quantity:
- *                 type: number
- *         discount:
- *           type: number
- *         tax:
- *           type: number
- *         paymentMethod:
- *           type: string
- *           enum: [cash, card, mobile]
- *         organizationName:
- *           type: string
- *         branchName:
- *           type: string
+ *       allOf:
+ *         - $ref: '#/components/schemas/CreateSaleUser'
+ *         - type: object
+ *           required:
+ *             - organizationName
+ *             - branchName
+ *           properties:
+ *             organizationName:
+ *               type: string
+ *             branchName:
+ *               type: string
 
  *     UpdateSale:
  *       type: object
@@ -146,14 +121,7 @@
  *         items:
  *           type: array
  *           items:
- *             type: object
- *             properties:
- *               medicineName:
- *                 type: string
- *               batchNo:
- *                 type: string
- *               quantity:
- *                 type: number
+ *             $ref: '#/components/schemas/SaleItem'
  *         discount:
  *           type: number
  *         tax:
@@ -174,24 +142,27 @@
  *       schema:
  *         type: string
  *       description: Sale ID
+
  *     page:
  *       in: query
  *       name: page
  *       schema:
  *         type: integer
  *         default: 1
+
  *     limit:
  *       in: query
  *       name: limit
  *       schema:
  *         type: integer
  *         default: 10
- *     search:
+
+ *     searchSale:
  *       in: query
  *       name: search
  *       schema:
  *         type: string
- *       description: Search sales by invoice number or customer name
+ *       description: Search sales by invoice number or customer name (e.g. INV-1001, rahim)
  */
 
 /**
@@ -233,7 +204,7 @@
  *     parameters:
  *       - $ref: '#/components/parameters/page'
  *       - $ref: '#/components/parameters/limit'
- *       - $ref: '#/components/parameters/search'
+ *       - $ref: '#/components/parameters/searchSale'
  *     responses:
  *       200:
  *         description: List of sales
@@ -344,20 +315,14 @@
  * @swagger
  * /api/v1/sales/{id}/invoice:
  *   get:
- *     summary: Generate PDF invoice for a specific sale
- *     description: Generates a PDF invoice for a sale by its ID, including organization, branch, cashier, warehouse, and medicine details.
+ *     summary: Generate PDF invoice
  *     tags: [Sales]
+ *     description: Generate PDF invoice for a sale
  *     parameters:
- *       - in: path
- *         name: id
- *         required: true
- *         description: The ID of the sale to generate the PDF for
- *         schema:
- *           type: string
- *           example: 64f1c9b1c2a1e3a4b5c6d999
+ *       - $ref: '#/components/parameters/saleId'
  *     responses:
  *       200:
- *         description: PDF invoice generated successfully
+ *         description: PDF generated successfully
  *         content:
  *           application/pdf:
  *             schema:
@@ -365,41 +330,8 @@
  *               format: binary
  *       404:
  *         description: Sale not found
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: Sale with ID 64f1c9b1c2a1e3a4b5c6d999 not found
  *       409:
- *         description: Invalid sale ID format
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: "Invalid Mongoose ID: abc123"
+ *         description: Invalid ID
  *       500:
- *         description: Server error while generating PDF
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                   example: false
- *                 message:
- *                   type: string
- *                   example: Internal server error
+ *         description: Server error
  */
