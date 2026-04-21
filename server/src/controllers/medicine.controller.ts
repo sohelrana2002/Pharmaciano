@@ -8,10 +8,13 @@ import Brand from "../models/Brand.model";
 import mongoose from "mongoose";
 import { customMessage } from "../constants/customMessage";
 import { isSuperAdmin } from "../middlewares/auth.middleware";
+import Organization from "../models/Organization.model";
 
 // create medicine
 const createMedicine = async (req: AuthRequest, res: Response) => {
   try {
+    const superAdmin = isSuperAdmin(req.user);
+
     const {
       name,
       genericName,
@@ -25,17 +28,43 @@ const createMedicine = async (req: AuthRequest, res: Response) => {
       isPrescriptionRequired,
       taxRate,
       isActive,
+      organizationName,
     } = req.validatedData;
+
+    let organizationId = req.user!.organizationId;
+
+    if (superAdmin) {
+      // manage organizaton
+      if (organizationName) {
+        const organization = await Organization.findOne({
+          name: organizationName,
+          isActive: true,
+        });
+
+        if (!organization) {
+          const activeOrganization = await Organization.find({
+            isActive: true,
+          }).select("name");
+
+          return res.status(404).json({
+            success: false,
+            message: customMessage.notFound("Organization"),
+            hints: `Active organization names are: ${activeOrganization.map((org) => org.name).join(", ")}`,
+          });
+        }
+        organizationId = organization._id.toString();
+      }
+    }
 
     //   check valid category
     const activeCategory = await Category.find({
-      organizationId: req.user!.organizationId,
+      organizationId,
       isActive: true,
     }).select("name");
 
     const category = await Category.findOne({
       name: categoryName,
-      organizationId: req.user!.organizationId,
+      organizationId,
     });
 
     if (!category) {
@@ -48,13 +77,13 @@ const createMedicine = async (req: AuthRequest, res: Response) => {
 
     //   check valid brand
     const activeBrand = await Brand.find({
-      organizationId: req.user!.organizationId,
+      organizationId,
       isActive: true,
     }).select("name");
 
     const brand = await Brand.findOne({
       name: brandName,
-      organizationId: req.user!.organizationId,
+      organizationId,
     });
 
     if (!brand) {
@@ -71,7 +100,7 @@ const createMedicine = async (req: AuthRequest, res: Response) => {
       strength,
       dosageForm,
       brandId: brand._id,
-      organizationId: req.user!.organizationId,
+      organizationId,
     });
 
     if (existingMedicine) {
@@ -103,7 +132,7 @@ const createMedicine = async (req: AuthRequest, res: Response) => {
       unitsPerStrip,
       stripPrice: unitPrice * unitsPerStrip,
       isActive,
-      organizationId: req.user!.organizationId,
+      organizationId,
       barcode,
       searchText,
     });
@@ -145,11 +174,13 @@ const medicineList = async (req: AuthRequest, res: Response) => {
   try {
     const { search, isActive, page, limit } = req.query;
 
-    const baseFilter: any = {
-      organizationId: req.user!.organizationId,
-    };
+    const superAdmin = isSuperAdmin(req.user);
 
-    const filter: any = { ...baseFilter };
+    const filter: any = {};
+
+    if (!superAdmin) {
+      filter.organizationId = req.user!.organizationId;
+    }
 
     if (search) {
       filter.$or = [
@@ -198,15 +229,15 @@ const medicineList = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const total = await Medicine.countDocuments({ ...baseFilter });
+    const total = await Medicine.countDocuments({ ...filter });
 
     const activeCount = await Medicine.countDocuments({
-      ...baseFilter,
+      ...filter,
       isActive: true,
     });
 
     const inActiveCount = await Medicine.countDocuments({
-      ...baseFilter,
+      ...filter,
       isActive: false,
     });
 
@@ -303,11 +334,19 @@ const updateMedicine = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
 
+    const superAdmin = isSuperAdmin(req.user);
+
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(409).json({
         success: false,
         message: customMessage.invalidId("Mongoose", id),
       });
+    }
+
+    const filter: any = { _id: id };
+
+    if (!superAdmin) {
+      filter.organizationId = req.user!.organizationId;
     }
 
     const {
@@ -323,12 +362,10 @@ const updateMedicine = async (req: AuthRequest, res: Response) => {
       isPrescriptionRequired,
       taxRate,
       isActive,
+      organizationName,
     } = req.validatedData;
 
-    const medicine = await Medicine.findOne({
-      _id: id,
-      organizationId: req.user!.organizationId,
-    });
+    const medicine = await Medicine.findOne(filter);
 
     if (!medicine) {
       return res.status(404).json({
@@ -337,11 +374,41 @@ const updateMedicine = async (req: AuthRequest, res: Response) => {
       });
     }
 
+    //Build update object dynamically
+    const updateData: any = {};
+
+    // manage organization if it is super admin
+    if (superAdmin) {
+      // manage organizaton
+      if (organizationName) {
+        const organization = await Organization.findOne({
+          name: organizationName,
+          isActive: true,
+        });
+
+        if (!organization) {
+          const activeOrganization = await Organization.find({
+            isActive: true,
+          }).select("name");
+
+          return res.status(404).json({
+            success: false,
+            message: customMessage.notFound("Organization"),
+            hints: `Active organization names are: ${activeOrganization.map((org) => org.name).join(", ")}`,
+          });
+        }
+        updateData.organizationId = organization._id.toString();
+      }
+    }
+
+    const finalOrganizationId =
+      updateData.organizationId || medicine.organizationId;
+
     // prevent duplicate medicine name (industry practice)
     if (name && name !== medicine.name) {
       const existingMedicine = await Medicine.findOne({
         name,
-        organizationId: req.user!.organizationId,
+        organizationId: finalOrganizationId,
         _id: { $ne: id }, // exclude current medicine
       });
 
@@ -352,9 +419,6 @@ const updateMedicine = async (req: AuthRequest, res: Response) => {
         });
       }
     }
-
-    //Build update object dynamically
-    const updateData: any = {};
 
     if (name) updateData.name = name;
     if (genericName) updateData.genericName = genericName;
@@ -382,13 +446,13 @@ const updateMedicine = async (req: AuthRequest, res: Response) => {
 
     //   check valid category
     const activeCategory = await Category.find({
-      organizationId: req.user!.organizationId,
+      organizationId: finalOrganizationId,
       isActive: true,
     }).select("name");
 
     const category = await Category.findOne({
       name: categoryName,
-      organizationId: req.user!.organizationId,
+      organizationId: finalOrganizationId,
       isActive: true,
     });
 
@@ -405,13 +469,13 @@ const updateMedicine = async (req: AuthRequest, res: Response) => {
 
     //   check valid brand
     const activeBrand = await Brand.find({
-      organizationId: req.user!.organizationId,
+      organizationId: finalOrganizationId,
       isActive: true,
     }).select("name");
 
     const brand = await Brand.findOne({
       name: brandName,
-      organizationId: req.user!.organizationId,
+      organizationId: finalOrganizationId,
       isActive: true,
     });
 
@@ -428,10 +492,7 @@ const updateMedicine = async (req: AuthRequest, res: Response) => {
 
     // Update medicine
     const updatedMedicine = await Medicine.findByIdAndUpdate(
-      {
-        _id: id,
-        organizationId: req.user!.organizationId,
-      },
+      filter,
       updateData,
       {
         new: true,
@@ -474,6 +535,8 @@ const deleteMedicine = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
 
+    const superAdmin = isSuperAdmin(req.user);
+
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(409).json({
         success: false,
@@ -481,10 +544,13 @@ const deleteMedicine = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const medicine = await Medicine.findByIdAndDelete({
-      _id: id,
-      organizationId: req.user!.organizationId,
-    });
+    const filter: any = { _id: id };
+
+    if (!superAdmin) {
+      filter.organizationId = req.user!.organizationId;
+    }
+
+    const medicine = await Medicine.findByIdAndDelete(filter);
 
     if (!medicine) {
       return res.status(404).json({
