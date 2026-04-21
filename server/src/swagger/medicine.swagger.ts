@@ -11,35 +11,17 @@
  *   schemas:
  *     Medicine:
  *       type: object
- *       required:
- *         - name
- *         - genericName
- *         - categoryName
- *         - brandName
- *         - dosageForm
- *         - strength
- *         - unit
- *         - unitPrice
- *         - unitsPerStrip
- *         - isPrescriptionRequired
- *         - taxRate
- *         - isActive
  *       properties:
  *         _id:
  *           type: string
- *           description: MongoDB ObjectId
  *         name:
  *           type: string
  *         genericName:
  *           type: string
- *         categoryName:
- *           type: string
- *         brandName:
- *           type: string
  *         dosageForm:
  *           type: string
  *         strength:
- *           type: string
+ *           type: number
  *         unit:
  *           type: string
  *         unitPrice:
@@ -52,21 +34,113 @@
  *           type: boolean
  *         taxRate:
  *           type: number
+ *         isActive:
+ *           type: boolean
+ *         barcode:
+ *           type: string
+ *         searchText:
+ *           type: string
  *         categoryId:
  *           type: string
  *         brandId:
  *           type: string
+ *         organizationId:
+ *           type: string
  *         createdBy:
  *           type: string
- *         isActive:
- *           type: boolean
  *         createdAt:
  *           type: string
  *           format: date-time
  *         updatedAt:
  *           type: string
  *           format: date-time
- *
+
+ *     CreateMedicineUser:
+ *       type: object
+ *       required:
+ *         - name
+ *         - genericName
+ *         - categoryName
+ *         - brandName
+ *         - dosageForm
+ *         - strength
+ *         - unit
+ *         - unitPrice
+ *         - unitsPerStrip
+ *       properties:
+ *         name:
+ *           type: string
+ *         genericName:
+ *           type: string
+ *         categoryName:
+ *           type: string
+ *         brandName:
+ *           type: string
+ *         dosageForm:
+ *           type: string
+ *         strength:
+ *           type: number
+ *         unit:
+ *           type: string
+ *         unitPrice:
+ *           type: number
+ *         unitsPerStrip:
+ *           type: number
+ *         isPrescriptionRequired:
+ *           type: boolean
+ *         taxRate:
+ *           type: number
+ *         isActive:
+ *           type: boolean
+
+ *     CreateMedicineSuperAdmin:
+ *       allOf:
+ *         - $ref: '#/components/schemas/CreateMedicineUser'
+ *         - type: object
+ *           required:
+ *             - organizationName
+ *           properties:
+ *             organizationName:
+ *               type: string
+ *               description: Required for Super Admin
+
+ *     UpdateMedicineUser:
+ *       type: object
+ *       properties:
+ *         name:
+ *           type: string
+ *         genericName:
+ *           type: string
+ *         categoryName:
+ *           type: string
+ *         brandName:
+ *           type: string
+ *         dosageForm:
+ *           type: string
+ *         strength:
+ *           type: number
+ *         unit:
+ *           type: string
+ *         unitPrice:
+ *           type: number
+ *         unitsPerStrip:
+ *           type: number
+ *         isPrescriptionRequired:
+ *           type: boolean
+ *         taxRate:
+ *           type: number
+ *         isActive:
+ *           type: boolean
+
+ *     UpdateMedicineSuperAdmin:
+ *       allOf:
+ *         - $ref: '#/components/schemas/UpdateMedicineUser'
+ *         - type: object
+ *           properties:
+ *             organizationName:
+ *               type: string
+ *               description: Only for Super Admin
+
  *   parameters:
  *     medicineId:
  *       in: path
@@ -75,29 +149,33 @@
  *       schema:
  *         type: string
  *       description: Medicine ID
+
  *     page:
  *       in: query
  *       name: page
  *       schema:
  *         type: integer
  *         default: 1
- *     limit:
+
+ *     medicineLimit:
  *       in: query
  *       name: limit
  *       schema:
  *         type: integer
  *         default: 20
+
+ *     medicineSearch:
+ *       in: query
+ *       name: search
+ *       schema:
+ *         type: string
+ *       description: Search medicine by name, generic name or barcode (e.g. napa, paracetamol, MED-XXXX)
+
  *     isActive:
  *       in: query
  *       name: isActive
  *       schema:
  *         type: boolean
- *     search:
- *       in: query
- *       name: search
- *       schema:
- *         type: string
- *       description: Search by name, strength, or unit
  */
 
 /**
@@ -106,57 +184,22 @@
  *   post:
  *     summary: Create a new medicine
  *     tags: [Medicines]
+ *     description: |
+ *       - Normal users: organization comes from token
+ *       - Super Admin: must provide organizationName
  *     requestBody:
  *       required: true
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             required:
- *               - name
- *               - genericName
- *               - categoryName
- *               - brandName
- *               - dosageForm
- *               - strength
- *               - unit
- *               - unitPrice
- *               - unitsPerStrip
- *               - isPrescriptionRequired
- *               - taxRate
- *               - isActive
- *             properties:
- *               name:
- *                 type: string
- *               genericName:
- *                 type: string
- *               categoryName:
- *                 type: string
- *               brandName:
- *                 type: string
- *               dosageForm:
- *                 type: string
- *               strength:
- *                 type: string
- *               unit:
- *                 type: string
- *               unitPrice:
- *                 type: number
- *               unitsPerStrip:
- *                 type: number
- *               isPrescriptionRequired:
- *                 type: boolean
- *               taxRate:
- *                 type: number
- *               isActive:
- *                 type: boolean
+ *             oneOf:
+ *               - $ref: '#/components/schemas/CreateMedicineUser'
+ *               - $ref: '#/components/schemas/CreateMedicineSuperAdmin'
  *     responses:
  *       201:
  *         description: Medicine created successfully
- *       400:
- *         description: Validation failed
  *       404:
- *         description: Invalid category or brand
+ *         description: Organization / Category / Brand not found
  *       409:
  *         description: Medicine already exists
  *       500:
@@ -171,9 +214,9 @@
  *     tags: [Medicines]
  *     parameters:
  *       - $ref: '#/components/parameters/page'
- *       - $ref: '#/components/parameters/limit'
+ *       - $ref: '#/components/parameters/medicineLimit'
+ *       - $ref: '#/components/parameters/medicineSearch'
  *       - $ref: '#/components/parameters/isActive'
- *       - $ref: '#/components/parameters/search'
  *     responses:
  *       200:
  *         description: List of medicines
@@ -223,20 +266,6 @@
  *     responses:
  *       200:
  *         description: Medicine found
- *         content:
- *           application/json:
- *             schema:
- *               type: object
- *               properties:
- *                 success:
- *                   type: boolean
- *                 message:
- *                   type: string
- *                 data:
- *                   type: object
- *                   properties:
- *                     medicine:
- *                       $ref: '#/components/schemas/Medicine'
  *       404:
  *         description: Medicine not found
  *       400:
@@ -251,6 +280,9 @@
  *   put:
  *     summary: Update a medicine
  *     tags: [Medicines]
+ *     description: |
+ *       - Normal users: cannot change organization
+ *       - Super Admin: can update organizationName
  *     parameters:
  *       - $ref: '#/components/parameters/medicineId'
  *     requestBody:
@@ -258,41 +290,16 @@
  *       content:
  *         application/json:
  *           schema:
- *             type: object
- *             properties:
- *               name:
- *                 type: string
- *               genericName:
- *                 type: string
- *               categoryName:
- *                 type: string
- *               brandName:
- *                 type: string
- *               dosageForm:
- *                 type: string
- *               strength:
- *                 type: string
- *               unit:
- *                 type: string
- *               unitPrice:
- *                 type: number
- *               unitsPerStrip:
- *                 type: number
- *               isPrescriptionRequired:
- *                 type: boolean
- *               taxRate:
- *                 type: number
- *               isActive:
- *                 type: boolean
+ *             oneOf:
+ *               - $ref: '#/components/schemas/UpdateMedicineUser'
+ *               - $ref: '#/components/schemas/UpdateMedicineSuperAdmin'
  *     responses:
  *       200:
  *         description: Medicine updated successfully
- *       400:
- *         description: Validation failed or invalid ID
  *       404:
- *         description: Medicine, category, or brand not found
+ *         description: Not found
  *       409:
- *         description: Duplicate medicine name
+ *         description: Duplicate medicine
  *       500:
  *         description: Server error
  */
@@ -309,7 +316,7 @@
  *       200:
  *         description: Medicine deleted successfully
  *       404:
- *         description: Medicine not found
+ *         description: Not found
  *       400:
  *         description: Invalid ID
  *       500:
