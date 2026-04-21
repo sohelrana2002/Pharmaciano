@@ -60,6 +60,9 @@ const medicineSchema = new Schema<IMedicine>(
     barcode: {
       type: String,
     },
+    searchText: {
+      type: String,
+    },
     isPrescriptionRequired: {
       type: Boolean,
       default: false,
