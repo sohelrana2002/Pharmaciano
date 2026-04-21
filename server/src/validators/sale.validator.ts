@@ -1,6 +1,8 @@
 import { z } from "zod";
+import { AuthRequest } from "../types";
+import { isSuperAdmin } from "../middlewares/auth.middleware";
 
-export const salesItemSchema = z.object({
+const salesItemSchema = z.object({
   medicineName: z
     .string({ error: "medicine name is required!" })
     .min(1, "Medicine name at least 1 character!"),
@@ -19,7 +21,7 @@ export const salesItemSchema = z.object({
     .default(0),
 });
 
-export const saleSchemaValidator = z.object({
+const baseSaleValidator = z.object({
   customerName: z
     .string({ error: "Customer name is required" })
     .min(1, "Customer name at least 1 character long")
@@ -37,5 +39,41 @@ export const saleSchemaValidator = z.object({
   paymentMethod: z.enum(["cash", "card", "mobile"]),
 });
 
+export const saleSchemaValidator = (req: AuthRequest) => {
+  const superAdmin = isSuperAdmin(req.user);
+
+  return baseSaleValidator.extend({
+    organizationName: superAdmin
+      ? z
+          .string({ error: "Organization name is required for super admin" })
+          .min(1, "Organization name is at least 1 character")
+      : z.string().optional(),
+
+    branchName: superAdmin
+      ? z
+          .string({ error: "Branch name is required for superadmin" })
+          .min(1, "Branch name is at least 1 character")
+      : z.string().optional(),
+  });
+};
+
 //  Validator for updating a supplier (all fields optional)
-export const updateSaleValidator = saleSchemaValidator.partial();
+// export const updateSaleValidator = saleSchemaValidator.partial();
+
+export const updateSaleValidator = (req: AuthRequest) => {
+  const superAdmin = isSuperAdmin(req.user);
+
+  return baseSaleValidator.partial().extend({
+    organizationName: superAdmin
+      ? z
+          .string({ error: "Organization name is required for super admin" })
+          .min(1, "Organization name is at least 1 character")
+      : z.string().optional(),
+
+    branchName: superAdmin
+      ? z
+          .string({ error: "Branch name is required for superadmin" })
+          .min(1, "Branch name is at least 1 character")
+      : z.string().optional(),
+  });
+};
