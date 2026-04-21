@@ -58,7 +58,6 @@ export const saleSchemaValidator = (req: AuthRequest) => {
 };
 
 //  Validator for updating a supplier (all fields optional)
-// export const updateSaleValidator = saleSchemaValidator.partial();
 
 export const updateSaleValidator = (req: AuthRequest) => {
   const superAdmin = isSuperAdmin(req.user);
