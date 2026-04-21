@@ -75,7 +75,6 @@ export const medicineSchemaValidator = (req: AuthRequest) => {
 };
 
 // Validator for updating a brand (all fields optional)
-// export const updateMedicineValidator = medicineSchemaValidator.partial();
 
 export const updateMedicineValidator = (req: AuthRequest) => {
   const superAdmin = isSuperAdmin(req.user);
