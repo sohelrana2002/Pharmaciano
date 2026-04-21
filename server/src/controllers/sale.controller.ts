@@ -455,8 +455,6 @@ const updateSale = async (req: AuthRequest, res: Response) => {
       branchName,
     } = req.validatedData;
 
-    // const { organizationName, branchName } = req.body;
-
     // Find existing sale
     const existingSale = await Sale.findOne(filter).session(session);
 
