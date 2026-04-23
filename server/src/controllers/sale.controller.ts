@@ -273,7 +273,7 @@ const createSale = async (req: AuthRequest, res: Response) => {
 // list of sales
 const saleList = async (req: AuthRequest, res: Response) => {
   try {
-    const { search, page, limit } = req.query;
+    const { search, fromDate, toDate, page, limit } = req.query;
 
     const superAdmin = isSuperAdmin(req.user);
 
@@ -289,6 +289,14 @@ const saleList = async (req: AuthRequest, res: Response) => {
         { invoiceNo: { $regex: search } },
         { customerName: { $regex: search, $options: "i" } },
       ];
+    }
+
+    // date range filter
+    if (fromDate && toDate) {
+      filter.createdAt = {
+        $gte: new Date(fromDate as string),
+        $lte: new Date(toDate as string),
+      };
     }
 
     const pageNumber = parseInt(page as string) || 1;
