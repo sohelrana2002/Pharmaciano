@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import mongoose from "mongoose";
 import { customMessage } from "../constants/customMessage";
-import { parseMedicineInput } from "../helper/parseMedicineInput";
 import { isSuperAdmin } from "../middlewares/auth.middleware";
 import Branch from "../models/Branch.model";
 import { Medicine } from "../models/Medicine.model";
@@ -107,18 +106,22 @@ const createPurchase = async (req: AuthRequest, res: Response) => {
 
     // Process each purchase item
     for (const item of items) {
-      const { name, strength, unit } = parseMedicineInput(item.medicineName);
-
-      // Find medicine by name + strength + unit
-      const medicineQuery: any = {
-        isActive: true,
+      const filter: any = {
         organizationId,
-        name: { $regex: `^${name}$`, $options: "i" },
+        isActive: true,
       };
-      if (strength) medicineQuery.strength = strength;
-      if (unit) medicineQuery.unit = unit;
 
-      const medicine = await Medicine.findOne(medicineQuery);
+      const search = item.medicineName;
+
+      if (search) {
+        filter.$or = [
+          { searchText: { $regex: search, $options: "i" } },
+          { name: { $regex: search, $options: "i" } },
+          { barcode: { $regex: search } },
+        ];
+      }
+
+      const medicine = await Medicine.findOne(filter);
 
       if (!medicine) {
         const activeMedicine = await Medicine.find({
@@ -314,21 +317,22 @@ const receivePurchase = async (req: AuthRequest, res: Response) => {
 
     // VALIDATE + MAP ITEMS
     for (const incomingItem of items) {
-      const { name, strength, unit } = parseMedicineInput(
-        incomingItem.medicineName,
-      );
-
-      //convert name to medicineId
-      const medicineQuery: any = {
-        isActive: true,
+      const filter: any = {
         organizationId: purchase.organizationId,
-        name: { $regex: `^${name}$`, $options: "i" },
+        isActive: true,
       };
 
-      if (strength) medicineQuery.strength = strength;
-      if (unit) medicineQuery.unit = unit;
+      const search = incomingItem.medicineName;
 
-      const medicine = await Medicine.findOne(medicineQuery);
+      if (search) {
+        filter.$or = [
+          { searchText: { $regex: search, $options: "i" } },
+          { name: { $regex: search, $options: "i" } },
+          { barcode: { $regex: search } },
+        ];
+      }
+
+      const medicine = await Medicine.findOne(filter);
 
       if (!medicine) {
         return res.status(404).json({
