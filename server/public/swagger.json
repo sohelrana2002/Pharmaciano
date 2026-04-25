@@ -75,16 +75,9 @@
       },
       "Brand": {
         "type": "object",
-        "required": [
-          "name",
-          "manufacturer",
-          "country",
-          "isActive"
-        ],
         "properties": {
           "_id": {
-            "type": "string",
-            "description": "MongoDB ObjectId"
+            "type": "string"
           },
           "name": {
             "type": "string"
@@ -111,6 +104,74 @@
           "updatedAt": {
             "type": "string",
             "format": "date-time"
+          }
+        }
+      },
+      "CreateBrandUser": {
+        "type": "object",
+        "required": [
+          "name",
+          "manufacturer",
+          "country"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "manufacturer": {
+            "type": "string"
+          },
+          "country": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        }
+      },
+      "CreateBrandSuperAdmin": {
+        "type": "object",
+        "required": [
+          "name",
+          "manufacturer",
+          "country",
+          "organizationName"
+        ],
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "manufacturer": {
+            "type": "string"
+          },
+          "country": {
+            "type": "string"
+          },
+          "organizationName": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          }
+        }
+      },
+      "UpdateBrand": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "manufacturer": {
+            "type": "string"
+          },
+          "country": {
+            "type": "string"
+          },
+          "isActive": {
+            "type": "boolean"
+          },
+          "organizationName": {
+            "type": "string"
           }
         }
       },
@@ -1283,7 +1344,8 @@
         "name": "isActive",
         "schema": {
           "type": "boolean"
-        }
+        },
+        "description": "Filter active/inactive brands"
       },
       "brandId": {
         "in": "path",
@@ -1293,6 +1355,14 @@
           "type": "string"
         },
         "description": "Brand ID"
+      },
+      "brandSearch": {
+        "in": "query",
+        "name": "search",
+        "schema": {
+          "type": "string"
+        },
+        "description": "Search by brand name or manufacturer"
       },
       "categoryId": {
         "in": "path",
@@ -1882,60 +1952,33 @@
         "tags": [
           "Brands"
         ],
+        "description": "- Normal user: organization from token\n- Super Admin: must provide organizationName\n",
         "requestBody": {
           "required": true,
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "required": [
-                  "name",
-                  "manufacturer",
-                  "country",
-                  "isActive"
-                ],
-                "properties": {
-                  "name": {
-                    "type": "string"
+                "oneOf": [
+                  {
+                    "$ref": "#/components/schemas/CreateBrandUser"
                   },
-                  "manufacturer": {
-                    "type": "string"
-                  },
-                  "country": {
-                    "type": "string"
-                  },
-                  "isActive": {
-                    "type": "boolean"
+                  {
+                    "$ref": "#/components/schemas/CreateBrandSuperAdmin"
                   }
-                }
+                ]
               }
             }
           }
         },
         "responses": {
           "201": {
-            "description": "Brand created successfully",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean"
-                    },
-                    "message": {
-                      "type": "string"
-                    },
-                    "id": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            }
+            "description": "Brand created successfully"
           },
           "400": {
-            "description": "Validation failed"
+            "description": "Validation error"
+          },
+          "404": {
+            "description": "Organization not found"
           },
           "409": {
             "description": "Brand already exists"
@@ -1958,10 +2001,10 @@
             "$ref": "#/components/parameters/limit"
           },
           {
-            "$ref": "#/components/parameters/isActive"
+            "$ref": "#/components/parameters/brandSearch"
           },
           {
-            "$ref": "#/components/parameters/name"
+            "$ref": "#/components/parameters/isActive"
           }
         ],
         "responses": {
@@ -1979,13 +2022,27 @@
                       "type": "string"
                     },
                     "total": {
-                      "type": "integer"
+                      "type": "number"
                     },
                     "active": {
-                      "type": "integer"
+                      "type": "number"
                     },
                     "inActive": {
-                      "type": "integer"
+                      "type": "number"
+                    },
+                    "meta": {
+                      "type": "object",
+                      "properties": {
+                        "page": {
+                          "type": "number"
+                        },
+                        "limit": {
+                          "type": "number"
+                        },
+                        "count": {
+                          "type": "number"
+                        }
+                      }
                     },
                     "data": {
                       "type": "object",
@@ -2011,7 +2068,7 @@
     },
     "/api/v1/brands/{id}": {
       "get": {
-        "summary": "Get individual brand info",
+        "summary": "Get single brand info",
         "tags": [
           "Brands"
         ],
@@ -2022,30 +2079,7 @@
         ],
         "responses": {
           "200": {
-            "description": "Brand found",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "success": {
-                      "type": "boolean"
-                    },
-                    "message": {
-                      "type": "string"
-                    },
-                    "data": {
-                      "type": "object",
-                      "properties": {
-                        "brand": {
-                          "$ref": "#/components/schemas/Brand"
-                        }
-                      }
-                    }
-                  }
-                }
-              }
-            }
+            "description": "Brand found"
           },
           "400": {
             "description": "Invalid ID"
@@ -2058,11 +2092,12 @@
           }
         }
       },
-      "put": {
-        "summary": "Update a brand",
+      "patch": {
+        "summary": "Update brand",
         "tags": [
           "Brands"
         ],
+        "description": "- Normal user: organization from token\n- Super Admin: must provide organizationName\n",
         "parameters": [
           {
             "$ref": "#/components/parameters/brandId"
@@ -2073,21 +2108,7 @@
           "content": {
             "application/json": {
               "schema": {
-                "type": "object",
-                "properties": {
-                  "name": {
-                    "type": "string"
-                  },
-                  "manufacturer": {
-                    "type": "string"
-                  },
-                  "country": {
-                    "type": "string"
-                  },
-                  "isActive": {
-                    "type": "boolean"
-                  }
-                }
+                "$ref": "#/components/schemas/UpdateBrand"
               }
             }
           }
@@ -2097,13 +2118,13 @@
             "description": "Brand updated successfully"
           },
           "400": {
-            "description": "Validation failed or invalid ID"
+            "description": "Invalid ID"
           },
           "404": {
             "description": "Brand not found"
           },
           "409": {
-            "description": "Brand name already exists"
+            "description": "Duplicate brand name"
           },
           "500": {
             "description": "Server error"
@@ -2111,7 +2132,7 @@
         }
       },
       "delete": {
-        "summary": "Delete a brand",
+        "summary": "Delete brand",
         "tags": [
           "Brands"
         ],
