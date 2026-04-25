@@ -2,37 +2,45 @@
 import { AuthRequest } from "../types";
 import { Response } from "express";
 import Brand from "../models/Brand.model";
-import {
-  brandSchemaValidator,
-  updateBrandValidator,
-} from "../validators/brand.validator";
 import mongoose from "mongoose";
 import { customMessage } from "../constants/customMessage";
+import { isSuperAdmin } from "../middlewares/auth.middleware";
+import Organization from "../models/Organization.model";
 
 // create brand
 const createBrand = async (req: AuthRequest, res: Response) => {
   try {
-    // Validate request body using Zod
-    const validationResult = brandSchemaValidator.safeParse(req.body);
+    const superAdmin = isSuperAdmin(req.user);
 
-    if (!validationResult.success) {
-      return res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors: validationResult.error.issues.map(
-          (err: { path: any[]; message: any }) => ({
-            field: err.path.join("."),
-            message: err.message,
-          }),
-        ),
+    const { name, manufacturer, country, isActive, organizationName } =
+      req.validatedData;
+
+    let organizationId = req.user?.organizationId;
+
+    if (superAdmin) {
+      // manage organizaton
+      const organization = await Organization.findOne({
+        name: organizationName,
+        isActive: true,
       });
-    }
 
-    const { name, manufacturer, country, isActive } = validationResult.data;
+      if (!organization) {
+        const activeOrganization = await Organization.find({
+          isActive: true,
+        }).select("name");
+
+        return res.status(404).json({
+          success: false,
+          message: customMessage.notFound("Organization"),
+          hints: `Active organization names are: ${activeOrganization.map((org) => org.name).join(", ")}`,
+        });
+      }
+      organizationId = organization._id.toString();
+    }
 
     const existingBrand = await Brand.findOne({
       name,
-      organizationId: req.user!.organizationId,
+      organizationId,
     });
 
     if (existingBrand) {
@@ -47,7 +55,7 @@ const createBrand = async (req: AuthRequest, res: Response) => {
       manufacturer,
       country,
       createdBy: req.user!.userId,
-      organizationId: req.user!.organizationId,
+      organizationId,
       isActive,
     });
 
@@ -84,16 +92,21 @@ const createBrand = async (req: AuthRequest, res: Response) => {
 // list of brand
 const brandList = async (req: AuthRequest, res: Response) => {
   try {
-    const { isActive, name, page, limit } = req.query;
+    const { isActive, search, page, limit } = req.query;
 
-    const baseFilter: any = {
-      organizationId: req.user!.organizationId,
-    };
+    const superAdmin = isSuperAdmin(req.user);
 
-    const filter: any = { ...baseFilter };
+    const filter: any = {};
 
-    if (name) {
-      filter.name = { $regex: name, $options: "i" };
+    if (!superAdmin) {
+      filter.organizationId = req.user!.organizationId;
+    }
+
+    if (search) {
+      filter.$or = [
+        { name: { $regex: search, $options: "i" } },
+        { manufacturer: { $regex: search, $options: "i" } },
+      ];
     }
 
     if (isActive !== undefined) {
@@ -126,15 +139,15 @@ const brandList = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const total = await Brand.countDocuments({ ...baseFilter });
+    const total = await Brand.countDocuments({ ...filter });
 
     const activeCount = await Brand.countDocuments({
-      ...baseFilter,
+      ...filter,
       isActive: true,
     });
 
     const inActiveCount = await Brand.countDocuments({
-      ...baseFilter,
+      ...filter,
       isActive: false,
     });
 
@@ -169,6 +182,8 @@ const brandInfo = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
 
+    const superAdmin = isSuperAdmin(req.user);
+
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
         success: false,
@@ -176,17 +191,20 @@ const brandInfo = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const brand = await Brand.findOne({
-      _id: id,
-      organizationId: req.user!.organizationId,
-    }).populate([
+    const filter: any = { _id: id };
+
+    if (!superAdmin) {
+      filter.organizationId = req.user!.organizationId;
+    }
+
+    const brand = await Brand.findOne(filter).populate([
       {
         path: "organizationId",
-        select: "name contact address",
+        select: "name contact address -_id",
       },
       {
         path: "createdBy",
-        select: "name email",
+        select: "name email -_id",
       },
     ]);
 
@@ -217,34 +235,25 @@ const updateBrand = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
 
+    const superAdmin = isSuperAdmin(req.user);
+
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
         success: false,
         message: customMessage.invalidId("Mongoose", id),
       });
     }
-    // Validate request body using Zod
-    const validationResult = updateBrandValidator.safeParse(req.body);
 
-    if (!validationResult.success) {
-      return res.status(400).json({
-        success: false,
-        message: "Validation failed",
-        errors: validationResult.error.issues.map(
-          (err: { path: any[]; message: any }) => ({
-            field: err.path.join("."),
-            message: err.message,
-          }),
-        ),
-      });
+    const filter: any = { _id: id };
+
+    if (!superAdmin) {
+      filter.organizationId = req.user!.organizationId;
     }
 
-    const { name, manufacturer, country, isActive } = validationResult.data;
+    const { name, manufacturer, country, isActive, organizationName } =
+      req.validatedData;
 
-    const brand = await Brand.findOne({
-      _id: id,
-      organizationId: req.user!.organizationId,
-    });
+    const brand = await Brand.findOne(filter);
 
     if (!brand) {
       return res.status(404).json({
@@ -253,11 +262,38 @@ const updateBrand = async (req: AuthRequest, res: Response) => {
       });
     }
 
+    //   build update object dynamically
+    const updateData: any = {};
+
+    if (superAdmin) {
+      // manage organizaton
+      const organization = await Organization.findOne({
+        name: organizationName,
+        isActive: true,
+      });
+
+      if (!organization) {
+        const activeOrganization = await Organization.find({
+          isActive: true,
+        }).select("name");
+
+        return res.status(404).json({
+          success: false,
+          message: customMessage.notFound("Organization"),
+          hints: `Active organization names are: ${activeOrganization.map((org) => org.name).join(", ")}`,
+        });
+      }
+      updateData.organizationId = organization._id.toString();
+    }
+
+    const finalOrganizationId =
+      updateData.organizationId || brand.organizationId;
+
     // prevent duplicate brand name
     if (name && name !== brand.name) {
       const existingBrand = await Brand.findOne({
         name,
-        organizationId: req.user!.organizationId,
+        organizationId: finalOrganizationId,
       });
 
       if (existingBrand) {
@@ -268,24 +304,15 @@ const updateBrand = async (req: AuthRequest, res: Response) => {
       }
     }
 
-    const updateData: any = {};
-
     if (name) updateData.name = name;
     if (manufacturer) updateData.manufacturer = manufacturer;
     if (country) updateData.country = country;
     if (isActive) updateData.isActive = isActive;
 
     // update brand
-    const updateResult = await Brand.findByIdAndUpdate(
-      {
-        _id: id,
-        organizationId: req.user!.organizationId,
-      },
-      updateData,
-      {
-        new: true,
-      },
-    );
+    const updateResult = await Brand.findByIdAndUpdate(filter, updateData, {
+      new: true,
+    });
 
     return res.status(200).json({
       success: true,
@@ -322,6 +349,8 @@ const deleteBrand = async (req: AuthRequest, res: Response) => {
   try {
     const { id } = req.params;
 
+    const superAdmin = isSuperAdmin(req.user);
+
     if (!mongoose.Types.ObjectId.isValid(id)) {
       return res.status(400).json({
         success: false,
@@ -329,10 +358,13 @@ const deleteBrand = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const deletedBrand = await Brand.findByIdAndDelete({
-      _id: id,
-      organizationId: req.user!.organizationId,
-    });
+    const filter: any = { _id: id };
+
+    if (!superAdmin) {
+      filter.organizationId = req.user!.organizationId;
+    }
+
+    const deletedBrand = await Brand.findByIdAndDelete(filter);
 
     if (!deletedBrand) {
       return res.status(404).json({
