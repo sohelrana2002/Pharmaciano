@@ -259,6 +259,7 @@ export interface IPurchase extends Document {
 // account interface
 export interface IAccount extends Document {
   _id: Types.ObjectId;
+  name: string;
   type: "asset" | "liability" | "income" | "expense" | "equity";
   code: string;
   parentId?: Types.ObjectId;
