@@ -18,6 +18,11 @@ const accountSchema = new Schema<IAccount>(
       type: String,
       required: true,
     },
+    parentId: {
+      type: Schema.Types.ObjectId,
+      ref: "Account",
+      default: null,
+    },
     organizationId: {
       type: Schema.Types.ObjectId,
       ref: "Organization",
