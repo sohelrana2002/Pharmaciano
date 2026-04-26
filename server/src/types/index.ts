@@ -255,3 +255,16 @@ export interface IPurchase extends Document {
   createdAt?: Date;
   updatedAt?: Date;
 }
+
+// account interface
+export interface IAccount extends Document {
+  _id: Types.ObjectId;
+  type: "asset" | "liability" | "income" | "expense" | "equity";
+  code: string;
+  parentId?: Types.ObjectId;
+  organizationId: Types.ObjectId;
+  branchId?: Types.ObjectId;
+  isActive: boolean;
+  createdAt?: Date;
+  updatedAt?: Date;
+}
