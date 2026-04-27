@@ -35,6 +35,14 @@ const seedAccounts = async (organizationId: string) => {
       parentId: null,
     });
 
+    const equity = await Account.create({
+      name: "Equity",
+      type: "equity",
+      code: "300",
+      organizationId,
+      parentId: null,
+    });
+
     const income = await Account.create({
       name: "Income",
       type: "income",
@@ -85,6 +93,19 @@ const seedAccounts = async (organizationId: string) => {
         type: "liability",
         code: "201",
         parentId: liabilities._id,
+      },
+
+      {
+        name: "Owner Capital",
+        type: "equity",
+        code: "301",
+        parentId: equity._id,
+      },
+      {
+        name: "Owner Drawings",
+        type: "equity",
+        code: "302",
+        parentId: equity._id,
       },
 
       {
