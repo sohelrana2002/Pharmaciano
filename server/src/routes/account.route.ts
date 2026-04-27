@@ -1,11 +1,15 @@
 import { Router } from "express";
 import { authenticate, authorize } from "../middlewares/auth.middleware";
 import { validate } from "../middlewares/validate.middleware";
-import { createAccountValidator } from "../validators/account.validator";
+import {
+  createAccountValidator,
+  updateAccountValidator,
+} from "../validators/account.validator";
 import {
   accountInfo,
   accountList,
   createAccount,
+  updateAccount,
 } from "../controllers/account.controller";
 
 const router = Router();
@@ -33,6 +37,15 @@ router.get(
   authenticate,
   authorize(["account:manage", "superAdmin:manage"]),
   accountInfo,
+);
+
+// update account info
+router.put(
+  "/:id",
+  authenticate,
+  authorize(["account:manage", "superAdmin:manage"]),
+  validate(updateAccountValidator),
+  updateAccount,
 );
 
 export default router;
