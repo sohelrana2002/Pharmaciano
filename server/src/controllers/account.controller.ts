@@ -6,6 +6,7 @@ import { isSuperAdmin } from "../middlewares/auth.middleware";
 import Organization from "../models/Organization.model";
 import { Account } from "../models/Account.model";
 import { getParentAccount } from "../helper/getParentAccount";
+import mongoose from "mongoose";
 
 // create account
 const createAccount = async (req: AuthRequest, res: Response) => {
@@ -169,4 +170,57 @@ const accountList = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export { createAccount, accountList };
+// individual account info
+const accountInfo = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const superAdmin = isSuperAdmin(req.user);
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(409).json({
+        success: false,
+        message: customMessage.invalidId("Mongoose", id),
+      });
+    }
+
+    const filter: any = { _id: id };
+
+    if (!superAdmin) {
+      filter.organizationId = req.user!.organizationId;
+    }
+
+    const account = await Account.findOne(filter).populate([
+      {
+        path: "organizationId",
+        select: "name contact address -_id",
+      },
+      {
+        path: "parentId",
+        select: "name type code -_id",
+      },
+    ]);
+
+    if (!account) {
+      return res.status(404).json({
+        success: false,
+        message: customMessage.notFound("Account"),
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: customMessage.found("Account"),
+      data: { account },
+    });
+  } catch (error) {
+    console.error("account info error: ", error);
+
+    res.status(500).json({
+      success: false,
+      message: customMessage.serverError(),
+    });
+  }
+};
+
+export { createAccount, accountList, accountInfo };
