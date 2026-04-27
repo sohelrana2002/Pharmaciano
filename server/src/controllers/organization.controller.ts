@@ -9,6 +9,7 @@ import {
 import Organization from "../models/Organization.model";
 import mongoose from "mongoose";
 import { customMessage } from "../constants/customMessage";
+import seedAccounts from "../utils/seedAccounts.utils";
 
 // create organization
 const createOrganization = async (req: AuthRequest, res: Response) => {
@@ -63,6 +64,9 @@ const createOrganization = async (req: AuthRequest, res: Response) => {
       createdBy: req.user?.userId,
       isActive: true,
     });
+
+    // call seedAccounts for create seed accounts
+    await seedAccounts(organization!._id.toString());
 
     // success response
     return res.status(201).json({
