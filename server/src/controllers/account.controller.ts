@@ -347,4 +347,54 @@ const updateAccount = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export { createAccount, accountList, accountInfo, updateAccount };
+// delete account
+const deleteAccount = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const superAdmin = isSuperAdmin(req.user);
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(409).json({
+        success: false,
+        message: customMessage.invalidId("Mongoose", id),
+      });
+    }
+
+    const filter: any = { _id: id };
+
+    if (!superAdmin) {
+      filter.organizationId = req.user!.organizationId;
+    }
+
+    const account = await Account.findByIdAndDelete(filter);
+
+    if (!account) {
+      return res.status(404).json({
+        success: false,
+        message: customMessage.notFound("Account"),
+      });
+    }
+
+    return res.status(200).json({
+      success: true,
+      message: customMessage.deleted("Account", id),
+      id,
+    });
+  } catch (error) {
+    console.error("delete account error: ", error);
+
+    res.status(500).json({
+      success: false,
+      message: customMessage.serverError(),
+    });
+  }
+};
+
+export {
+  createAccount,
+  accountList,
+  accountInfo,
+  updateAccount,
+  deleteAccount,
+};
