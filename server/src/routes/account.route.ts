@@ -9,6 +9,7 @@ import {
   accountInfo,
   accountList,
   createAccount,
+  deleteAccount,
   updateAccount,
 } from "../controllers/account.controller";
 
@@ -46,6 +47,14 @@ router.put(
   authorize(["account:manage", "superAdmin:manage"]),
   validate(updateAccountValidator),
   updateAccount,
+);
+
+// delete account
+router.delete(
+  "/:id",
+  authenticate,
+  authorize(["account:manage", "superAdmin:manage"]),
+  deleteAccount,
 );
 
 export default router;
