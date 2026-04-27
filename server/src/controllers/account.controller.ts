@@ -59,7 +59,7 @@ const createAccount = async (req: AuthRequest, res: Response) => {
       isActive,
     });
 
-    res.status(201).json({
+    return res.status(201).json({
       success: true,
       message: customMessage.created("Account"),
       id: account._id,
@@ -90,4 +90,83 @@ const createAccount = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export { createAccount };
+// list of account
+const accountList = async (req: AuthRequest, res: Response) => {
+  try {
+    const { search, type, isActive, page, limit } = req.query;
+
+    const superAdmin = isSuperAdmin(req.user);
+
+    const filter: any = {};
+
+    if (!superAdmin) {
+      filter.organizationId = req.user!.organizationId;
+    }
+
+    if (search) {
+      filter.name = { $regex: search, $options: "i" };
+    }
+
+    if (type) filter.type = type;
+    if (isActive) filter.isActive = isActive;
+
+    // pagination
+    const pageNumber = parseInt(page as string) || 1;
+    const limitNumber = parseInt(limit as string) || 10;
+    const skip = (pageNumber - 1) * limitNumber;
+
+    const accounts = await Account.find(filter)
+      .populate([
+        {
+          path: "organizationId",
+          select: "name -_id",
+        },
+        {
+          path: "parentId",
+          select: "name type code -_id",
+        },
+      ])
+      .skip(skip)
+      .limit(limitNumber)
+      .sort({ code: 1 });
+
+    // counts
+    const total = await Account.countDocuments({ ...filter });
+
+    const activeCount = await Account.countDocuments({
+      ...filter,
+      isActive: true,
+    });
+
+    const inActiveCount = await Account.countDocuments({
+      ...filter,
+      isActive: false,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message:
+        accounts.length > 0
+          ? customMessage.found("List of account")
+          : "No account found!",
+      meta: {
+        page: pageNumber,
+        limit: limitNumber,
+        count: accounts.length,
+      },
+      total,
+      active: activeCount,
+      inActive: inActiveCount,
+      data: { accounts },
+    });
+  } catch (error) {
+    console.error("list of account error: ", error);
+
+    res.status(500).json({
+      success: false,
+      message: customMessage.serverError(),
+    });
+  }
+};
+
+export { createAccount, accountList };
