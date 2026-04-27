@@ -7,7 +7,6 @@ const accountSchema = new Schema<IAccount>(
       type: String,
       required: true,
       trim: true,
-      lowercase: true,
     },
     type: {
       type: String,

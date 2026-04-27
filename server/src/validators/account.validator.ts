@@ -14,7 +14,6 @@ const baseAccountSchema = z.object({
   name: z
     .string({ error: "Account name is required!" })
     .min(1, "Account name at least 1 character")
-    .lowercase()
     .trim(),
   type: z.enum(ACCOUNT_TYPES, {
     error:
