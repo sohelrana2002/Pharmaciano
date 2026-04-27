@@ -223,4 +223,128 @@ const accountInfo = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export { createAccount, accountList, accountInfo };
+// update account
+const updateAccount = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const superAdmin = isSuperAdmin(req.user);
+
+    const { name, type, code, organizationName, isActive } = req.validatedData;
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(409).json({
+        success: false,
+        message: customMessage.invalidId("Mongoose", id),
+      });
+    }
+
+    const filter: any = { _id: id };
+
+    if (!superAdmin) {
+      filter.organizationId = req.user!.organizationId;
+    }
+
+    const account = await Account.findOne(filter);
+
+    if (!account) {
+      return res.status(404).json({
+        success: false,
+        message: customMessage.notFound("Account"),
+      });
+    }
+
+    // Build update object dynamically
+    const updateData: any = {};
+
+    if (superAdmin) {
+      // manage organization
+      if (organizationName) {
+        const organization = await Organization.findOne({
+          name: organizationName,
+          isActive: true,
+        });
+
+        if (!organization) {
+          const activeOrganization = await Organization.find({
+            isActive: true,
+          }).select("name");
+
+          return res.status(404).json({
+            success: false,
+            message: customMessage.notFound("Organization"),
+            hints: `Active organization names are: ${activeOrganization.map((org) => org.name).join(", ")}`,
+          });
+        }
+
+        updateData.organizationId = organization._id.toString();
+      }
+    }
+
+    const finalOrganizationId =
+      updateData.organizationId || account.organizationId;
+
+    // prevent duplicate name
+    if (name && name !== account.name) {
+      const existingAcoount = await Account.findOne({
+        name,
+        organizationId: finalOrganizationId,
+        _id: { $ne: id },
+      });
+
+      if (existingAcoount) {
+        return res.status(409).json({
+          success: false,
+          message: customMessage.alreadyExists("Account name"),
+        });
+      }
+    }
+
+    if (name) updateData.name = name;
+    if (type) updateData.type = type;
+    if (code) updateData.code = code;
+    if (isActive) updateData.isActive = isActive;
+
+    const finalType = updateData.type || account.type;
+
+    // auto parent find
+    const parent = await getParentAccount(finalType, finalOrganizationId);
+
+    updateData.parentId = parent!._id;
+
+    const updateResult = await Account.findByIdAndUpdate(filter, updateData, {
+      new: true,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message: customMessage.updated("Account", id),
+      id: updateResult!._id,
+    });
+  } catch (error: any) {
+    //MongoDB Duplicate Key Error
+    if (error.code === 11000) {
+      const field = Object.keys(error.keyValue)[0];
+      const value = error.keyValue[field];
+
+      return res.status(409).json({
+        success: false,
+        message: customMessage.alreadyExists(value),
+        error: {
+          field,
+          value,
+          reason: customMessage.alreadyExists(field),
+        },
+      });
+    }
+
+    console.error("update account error: ", error);
+
+    res.status(500).json({
+      success: false,
+      message: customMessage.serverError(),
+    });
+  }
+};
+
+export { createAccount, accountList, accountInfo, updateAccount };
