@@ -2,7 +2,7 @@ import { Router } from "express";
 import { authenticate, authorize } from "../middlewares/auth.middleware";
 import { validate } from "../middlewares/validate.middleware";
 import { createAccountValidator } from "../validators/account.validator";
-import { createAccount } from "../controllers/account.controller";
+import { accountList, createAccount } from "../controllers/account.controller";
 
 const router = Router();
 
@@ -13,6 +13,14 @@ router.post(
   authorize(["account:manage", "superAdmin:manage"]),
   validate(createAccountValidator),
   createAccount,
+);
+
+// list of accounts
+router.get(
+  "/",
+  authenticate,
+  authorize(["account:manage", "superAdmin:manage"]),
+  accountList,
 );
 
 export default router;
