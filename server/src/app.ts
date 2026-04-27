@@ -28,6 +28,7 @@ import inventoryBatchRouter from "./routes/inventoryBatch.route";
 import saleRouter from "./routes/sale.route";
 import uniqueNameRouter from "./routes/unique-name.route";
 import purchaseRouter from "./routes/purchase.route";
+import accountRouter from "./routes/account.route";
 
 const allowedOrigins = [
   "http://localhost:3000",
@@ -73,6 +74,7 @@ apiRouter.use("/suppliers", supplierRouter);
 apiRouter.use("/inventory-batches", inventoryBatchRouter);
 apiRouter.use("/sales", saleRouter);
 apiRouter.use("/purchases", purchaseRouter);
+apiRouter.use("/accounts", accountRouter);
 
 // all necessary unique name
 apiRouter.use("/unique-names", uniqueNameRouter);
