@@ -28,11 +28,6 @@ const accountSchema = new Schema<IAccount>(
       ref: "Organization",
       required: true,
     },
-    branchId: {
-      type: Schema.Types.ObjectId,
-      ref: "Branch",
-      default: null,
-    },
     isActive: {
       type: Boolean,
       default: true,

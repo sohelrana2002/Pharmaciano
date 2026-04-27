@@ -264,7 +264,6 @@ export interface IAccount extends Document {
   code: string;
   parentId?: Types.ObjectId;
   organizationId: Types.ObjectId;
-  branchId?: Types.ObjectId;
   isActive: boolean;
   createdAt?: Date;
   updatedAt?: Date;
