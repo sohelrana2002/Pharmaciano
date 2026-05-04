@@ -2,7 +2,11 @@ import { Router } from "express";
 import { authenticate, authorize } from "../middlewares/auth.middleware";
 import { validate } from "../middlewares/validate.middleware";
 import { journalEntrySchemaValidator } from "../validators/journalEntry.validator";
-import { createJournalEntry } from "../controllers/journalEntry.controller";
+import {
+  createJournalEntry,
+  journalEntryInfo,
+  journalEntryList,
+} from "../controllers/journalEntry.controller";
 
 const router = Router();
 
@@ -13,6 +17,14 @@ router.post(
   authorize(["superAdmin:manage"]),
   validate(journalEntrySchemaValidator),
   createJournalEntry,
+);
+
+// list of journal entry
+router.get(
+  "/",
+  authenticate,
+  authorize(["journal-entry:manage", "superAdmin:manage"]),
+  journalEntryList,
 );
 
 export default router;
