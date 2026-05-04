@@ -216,7 +216,10 @@ export interface ISale extends Document {
   discount: number;
   tax: number;
   totalAmount: number;
-  paymentMethod: "cash" | "card" | "mobile";
+  paymentMethod: {
+    type: "cash" | "card" | "mobile";
+    provider?: "bkash" | "nagad" | "rocket";
+  };
   createdAt?: Date;
   updatedAt?: Date;
 }
@@ -277,7 +280,14 @@ export interface IJournalEntry extends Document {
   debitAccountId: Types.ObjectId;
   creditAccountId: Types.ObjectId;
   amount: number;
-  referenceType: "sale" | "purchase" | "expense";
-  referenceId: Types.ObjectId;
+  referenceType:
+    | "sale"
+    | "purchase"
+    | "expense"
+    | "drawing"
+    | "capital"
+    | "manual";
+  referenceId?: Types.ObjectId;
   note?: string;
+  isReversed: boolean;
 }
