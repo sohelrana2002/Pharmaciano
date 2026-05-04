@@ -76,15 +76,21 @@ const seedAccounts = async (organizationId: string) => {
         parentId: currentAssets._id,
       },
       {
-        name: "Inventory",
+        name: "Rocket",
         type: "asset",
         code: "105",
         parentId: currentAssets._id,
       },
       {
-        name: "Account Receivable",
+        name: "Inventory",
         type: "asset",
         code: "106",
+        parentId: currentAssets._id,
+      },
+      {
+        name: "Account Receivable",
+        type: "asset",
+        code: "107",
         parentId: currentAssets._id,
       },
 
