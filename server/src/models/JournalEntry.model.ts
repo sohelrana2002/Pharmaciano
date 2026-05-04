@@ -30,7 +30,7 @@ const journalEntrySchema = new Schema<IJournalEntry>(
     },
     referenceType: {
       type: String,
-      enum: ["sale", "purchase", "expense"],
+      enum: ["sale", "purchase", "expense", "drawing", "capital", "manual"],
       required: true,
     },
     referenceId: {
@@ -39,6 +39,10 @@ const journalEntrySchema = new Schema<IJournalEntry>(
     },
     note: {
       type: String,
+    },
+    isReversed: {
+      type: Boolean,
+      default: false,
     },
   },
   { timestamps: true },
