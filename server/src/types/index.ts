@@ -268,3 +268,16 @@ export interface IAccount extends Document {
   createdAt?: Date;
   updatedAt?: Date;
 }
+
+// journalEntry interface
+export interface IJournalEntry extends Document {
+  _id: Types.ObjectId;
+  organizationId: Types.ObjectId;
+  branchId: Types.ObjectId;
+  debitAccountId: Types.ObjectId;
+  creditAccountId: Types.ObjectId;
+  amount: number;
+  referenceType: "sale" | "purchase" | "expense";
+  referenceId: Types.ObjectId;
+  note?: string;
+}
