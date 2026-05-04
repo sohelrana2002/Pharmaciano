@@ -83,9 +83,18 @@ const saleSchema = new Schema<ISale>(
       required: true,
     },
     paymentMethod: {
-      type: String,
-      enum: ["cash", "card", "mobile"],
-      required: true,
+      type: {
+        type: String,
+        enum: ["cash", "card", "mobile"],
+        required: true,
+      },
+      provider: {
+        type: String,
+        enum: ["bkash", "nagad", "rocket"],
+        required: function () {
+          return this.paymentMethod?.type === "mobile";
+        },
+      },
     },
   },
   {
