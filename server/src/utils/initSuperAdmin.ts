@@ -85,6 +85,11 @@ export const initializeSuperAdmin = async () => {
         description: "Manage all about super admin",
         category: "Super admin",
       },
+      {
+        name: "journal-entry:manage",
+        description: "Journal entry only for view",
+        category: "Journal Entry",
+      },
     ];
 
     for (const featureData of defaultFeatures) {
