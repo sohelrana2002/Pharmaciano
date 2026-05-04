@@ -102,7 +102,7 @@ const createJournalEntry = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const journal = await JournalEntry.create({
+    const journal = new JournalEntry({
       organizationId,
       branchId,
       debitAccountId,
@@ -121,7 +121,7 @@ const createJournalEntry = async (req: AuthRequest, res: Response) => {
 
     return res.status(201).json({
       success: true,
-      message: customMessage.created("Journal"),
+      message: customMessage.created("Journal entry"),
       id: journal!._id,
     });
   } catch (error: any) {
@@ -150,4 +150,107 @@ const createJournalEntry = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export { createJournalEntry };
+// list of journal entry
+const journalEntryList = async (req: AuthRequest, res: Response) => {
+  try {
+    const { referenceType, isReversed, fromDate, toDate, page, limit } =
+      req.query;
+
+    const superAdmin = isSuperAdmin(req.user);
+
+    const filter: any = {};
+
+    if (!superAdmin) {
+      filter.organizationId = req.user!.organizationId;
+      filter.branchId = req.user!.branchId;
+    }
+
+    if (referenceType) {
+      filter.referenceType = referenceType;
+    }
+
+    if (isReversed) {
+      filter.isReversed = isReversed;
+    }
+
+    // date range filter
+    if (fromDate && toDate) {
+      filter.createdAt = {
+        $gte: new Date(fromDate as string),
+        $lte: new Date(toDate as string),
+      };
+    }
+
+    const pageNumber = parseInt(page as string) || 1;
+    const limitNumber = parseInt(limit as string) || 10;
+    const skip = (pageNumber - 1) * limitNumber;
+
+    const journal = await JournalEntry.find(filter)
+      .populate([
+        {
+          path: "organizationId",
+          select: "name -_id",
+        },
+        {
+          path: "branchId",
+          select: "name -_id",
+        },
+        {
+          path: "debitAccountId",
+          select: "name type code -_id",
+        },
+        {
+          path: "creditAccountId",
+          select: "name type code -_id",
+        },
+        {
+          path: "referenceId",
+          //   select: "name -_id",
+        },
+      ])
+      .skip(skip)
+      .limit(limitNumber)
+      .sort({ createdAt: -1 });
+
+    // counts
+    const total = await JournalEntry.countDocuments({ ...filter });
+
+    const reversalCount = await JournalEntry.countDocuments({
+      ...filter,
+      isReversed: true,
+    });
+
+    const unreversalCount = await JournalEntry.countDocuments({
+      ...filter,
+      isReversed: false,
+    });
+
+    return res.status(200).json({
+      success: true,
+      message:
+        journal.length > 0
+          ? customMessage.found("Journal entry")
+          : "Journal entry not found.",
+
+      meta: {
+        page: pageNumber,
+        limit: limitNumber,
+        count: journal.length,
+      },
+
+      total,
+      totalReversals: reversalCount,
+      totalUnreversals: unreversalCount,
+      data: { journal },
+    });
+  } catch (error) {
+    console.error("list of journalEntry error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: customMessage.serverError(),
+    });
+  }
+};
+
+export { createJournalEntry, journalEntryList, journalEntryInfo };
