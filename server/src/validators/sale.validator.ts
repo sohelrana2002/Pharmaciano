@@ -21,6 +21,26 @@ const salesItemSchema = z.object({
     .default(0),
 });
 
+// paymentMethod validator
+const paymentSchema = z
+  .object({
+    type: z.enum(["cash", "card", "mobile"], {
+      error: "Payment type must be 'cash', 'card' or 'mobile'",
+    }),
+    provider: z.enum(["bkash", "nagad", "rocket"]).optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.type === "mobile") return !!data.provider;
+      return true;
+    },
+    {
+      message:
+        "Provider (bkash / nagad / rocket) is required for mobile payment",
+      path: ["provider"],
+    },
+  );
+
 const baseSaleValidator = z.object({
   customerName: z
     .string({ error: "Customer name is required" })
@@ -36,7 +56,7 @@ const baseSaleValidator = z.object({
   items: z.array(salesItemSchema).min(1, "At least 1 drugs need to add."),
   discount: z.number().nonnegative().optional().default(0),
   tax: z.number().nonnegative().optional().default(0),
-  paymentMethod: z.enum(["cash", "card", "mobile"]),
+  paymentMethod: paymentSchema,
 });
 
 export const saleSchemaValidator = (req: AuthRequest) => {
@@ -63,6 +83,8 @@ export const updateSaleValidator = (req: AuthRequest) => {
   const superAdmin = isSuperAdmin(req.user);
 
   return baseSaleValidator.partial().extend({
+    paymentMethod: paymentSchema.partial(),
+
     organizationName: superAdmin
       ? z
           .string({ error: "Organization name is required for super admin" })
