@@ -27,4 +27,12 @@ router.get(
   journalEntryList,
 );
 
+// individual journal entry info
+router.get(
+  "/:id",
+  authenticate,
+  authorize(["journal-entry:manage", "superAdmin:manage"]),
+  journalEntryInfo,
+);
+
 export default router;
