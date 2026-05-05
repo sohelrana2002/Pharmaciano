@@ -11,6 +11,7 @@ import {
   deletePurchase,
   purchaseInfo,
   purchaseList,
+  purchasePaymentSupplier,
   receivePurchase,
 } from "../controllers/purchase.controller";
 
@@ -64,6 +65,14 @@ router.delete(
   authenticate,
   authorize(["purchase:manage", "superAdmin:manage"]),
   deletePurchase,
+);
+
+// payment to supplier
+router.post(
+  "/:id/pay-supplier",
+  authenticate,
+  authorize(["purchase:manage", "superAdmin:manage"]),
+  purchasePaymentSupplier,
 );
 
 export default router;
