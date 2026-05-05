@@ -281,12 +281,12 @@ export interface IJournalEntry extends Document {
   creditAccountId: Types.ObjectId;
   amount: number;
   referenceType:
-    | "sale"
-    | "purchase"
-    | "expense"
-    | "drawing"
-    | "capital"
-    | "manual";
+    | "Sale"
+    | "Purchase"
+    | "Expense"
+    | "Drawing"
+    | "Capital"
+    | "Manual";
   referenceId?: Types.ObjectId;
   note?: string;
   isReversed: boolean;

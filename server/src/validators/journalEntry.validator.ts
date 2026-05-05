@@ -3,12 +3,12 @@ import { AuthRequest } from "../types";
 import { isSuperAdmin } from "../middlewares/auth.middleware";
 
 const REFERENCE_TYPES = [
-  "sale",
-  "purchase",
-  "expense",
-  "drawing",
-  "capital",
-  "manual",
+  "Sale",
+  "Purchase",
+  "Expense",
+  "Drawing",
+  "Capital",
+  "Manual",
 ] as const;
 
 const baseJournalEntrySchema = z.object({
@@ -19,7 +19,7 @@ const baseJournalEntrySchema = z.object({
     .min(1, "Amount at least 1 digit"),
   referenceType: z.enum(REFERENCE_TYPES, {
     error:
-      "Reference type must be one of: sale, purchase, expense, drawing, capital, manual",
+      "Reference type must be one of: Sale, Purchase, Expense, Drawing, Capital, Manual",
   }),
   referenceId: z.string().optional(),
   note: z.string().optional(),

@@ -30,12 +30,12 @@ const journalEntrySchema = new Schema<IJournalEntry>(
     },
     referenceType: {
       type: String,
-      enum: ["sale", "purchase", "expense", "drawing", "capital", "manual"],
+      enum: ["Sale", "Purchase", "Expense", "Drawing", "Capital", "Manual"],
       required: true,
     },
     referenceId: {
       type: Schema.Types.ObjectId,
-      required: true,
+      refPath: "referenceType",
     },
     note: {
       type: String,
