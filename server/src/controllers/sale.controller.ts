@@ -11,6 +11,8 @@ import { generateInvoicePDF } from "../shared/generateInvoice";
 import { isSuperAdmin } from "../middlewares/auth.middleware";
 import Organization from "../models/Organization.model";
 import Branch from "../models/Branch.model";
+import { Account } from "../models/Account.model";
+import { JournalEntry } from "../models/JournalEntry.model";
 
 const createSale = async (req: AuthRequest, res: Response) => {
   const session = await mongoose.startSession();
@@ -229,10 +231,83 @@ const createSale = async (req: AuthRequest, res: Response) => {
       discount,
       tax,
       totalAmount,
-      paymentMethod,
+      paymentMethod: {
+        type: paymentMethod.type,
+        provider: paymentMethod.provider,
+      },
     });
 
     await sale.save({ session });
+
+    // account type setup
+    const salesAccount = await Account.findOne({
+      code: "401",
+      organizationId,
+    }).session(session);
+
+    if (!salesAccount) {
+      return res.status(404).json({
+        success: false,
+        message: customMessage.notFound("Sales account"),
+      });
+    }
+
+    let debitAccount;
+
+    if (paymentMethod.type === "cash") {
+      debitAccount = await Account.findOne({
+        code: "101",
+        organizationId,
+      }).session(session);
+    } else if (paymentMethod.type === "card") {
+      debitAccount = await Account.findOne({
+        code: "102",
+        organizationId,
+      }).session(session);
+    } else if (paymentMethod.type === "mobile") {
+      if (paymentMethod.provider === "bkash") {
+        debitAccount = await Account.findOne({
+          code: "103",
+          organizationId,
+        }).session(session);
+      } else if (paymentMethod.provider === "nagad") {
+        debitAccount = await Account.findOne({
+          code: "104",
+          organizationId,
+        }).session(session);
+      } else {
+        debitAccount = await Account.findOne({
+          code: "105",
+          organizationId,
+        }).session(session);
+      }
+    } else {
+      debitAccount = await Account.findOne({
+        code: "106",
+        organizationId,
+      }).session(session);
+    }
+
+    if (!debitAccount) {
+      return res.status(404).json({
+        success: false,
+        message: customMessage.notFound("Debit account"),
+      });
+    }
+
+    // journal entry
+    const journal = new JournalEntry({
+      organizationId,
+      branchId,
+      debitAccountId: debitAccount!._id,
+      creditAccountId: salesAccount!._id,
+      amount: totalAmount,
+      referenceType: "Sale",
+      referenceId: sale!._id,
+      note: `Invoice-${invoiceNo}`,
+    });
+
+    await journal.save({ session });
 
     // commit
     await session.commitTransaction();
