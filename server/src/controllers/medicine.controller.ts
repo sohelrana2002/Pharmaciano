@@ -432,8 +432,12 @@ const updateMedicine = async (req: AuthRequest, res: Response) => {
     if (taxRate !== undefined) updateData.taxRate = taxRate;
     if (isActive !== undefined) updateData.isActive = isActive;
 
-    if (unitPrice && unitsPerStrip) {
-      updateData.stripPrice = unitPrice * unitsPerStrip;
+    const finalUnitPrice = updateData.unitPrice || medicine.unitPrice;
+    const finalUnitPerStrip =
+      updateData.unitsPerStrip || medicine.unitsPerStrip;
+
+    if (finalUnitPrice && finalUnitPerStrip) {
+      updateData.stripPrice = finalUnitPrice * finalUnitPerStrip;
     }
 
     const finalName = updateData.name || medicine.name;
@@ -444,51 +448,55 @@ const updateMedicine = async (req: AuthRequest, res: Response) => {
       .trim()
       .toLowerCase();
 
-    //   check valid category
-    const activeCategory = await Category.find({
-      organizationId: finalOrganizationId,
-      isActive: true,
-    }).select("name");
-
-    const category = await Category.findOne({
-      name: categoryName,
-      organizationId: finalOrganizationId,
-      isActive: true,
-    });
-
-    if (!category) {
-      return res.status(404).json({
-        success: false,
-        message: "Invalid category name.",
-        hints: `Active category names are ${activeCategory.map((c) => c.name).join(", ")}`,
+    if (categoryName) {
+      //   check valid category
+      const category = await Category.findOne({
+        name: categoryName,
+        organizationId: finalOrganizationId,
+        isActive: true,
       });
+
+      if (!category) {
+        const activeCategory = await Category.find({
+          organizationId: finalOrganizationId,
+          isActive: true,
+        }).select("name");
+
+        return res.status(404).json({
+          success: false,
+          message: "Invalid category name.",
+          hints: `Active category names are ${activeCategory.map((c) => c.name).join(", ")}`,
+        });
+      }
+
+      // valid categoryId update
+      updateData.categoryId = category._id;
     }
 
-    // valid category name update
-    updateData.categoryId = category._id;
-
-    //   check valid brand
-    const activeBrand = await Brand.find({
-      organizationId: finalOrganizationId,
-      isActive: true,
-    }).select("name");
-
-    const brand = await Brand.findOne({
-      name: brandName,
-      organizationId: finalOrganizationId,
-      isActive: true,
-    });
-
-    if (!brand) {
-      return res.status(404).json({
-        success: false,
-        message: "Invalid brand name.",
-        hints: `Active brand names are ${activeBrand.map((b) => b.name).join(", ")}`,
+    if (brandName) {
+      //   check valid brand
+      const brand = await Brand.findOne({
+        name: brandName,
+        organizationId: finalOrganizationId,
+        isActive: true,
       });
-    }
 
-    // valid brand name
-    updateData.brandId = brand._id;
+      if (!brand) {
+        const activeBrand = await Brand.find({
+          organizationId: finalOrganizationId,
+          isActive: true,
+        }).select("name");
+
+        return res.status(404).json({
+          success: false,
+          message: "Invalid brand name.",
+          hints: `Active brand names are ${activeBrand.map((b) => b.name).join(", ")}`,
+        });
+      }
+
+      // valid brandId update
+      updateData.brandId = brand._id;
+    }
 
     // Update medicine
     const updatedMedicine = await Medicine.findByIdAndUpdate(
