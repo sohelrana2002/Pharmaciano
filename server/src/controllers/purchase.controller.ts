@@ -11,6 +11,8 @@ import { AuthRequest } from "../types";
 import { Response } from "express";
 import InventoryBatch from "../models/InventoryBatch.model";
 import Warehouse from "../models/Warehouse.model";
+import { Account } from "../models/Account.model";
+import { JournalEntry } from "../models/JournalEntry.model";
 
 // create purchase
 const createPurchase = async (req: AuthRequest, res: Response) => {
@@ -465,6 +467,79 @@ const receivePurchase = async (req: AuthRequest, res: Response) => {
 
     await purchase.save();
 
+    // account find
+    const inventoryAccount = await Account.findOne({
+      code: "106",
+      organizationId: purchase.organizationId,
+    });
+
+    const payableAccount = await Account.findOne({
+      code: "201",
+      organizationId: purchase.organizationId,
+    });
+
+    const cashAccount = await Account.findOne({
+      code: "101",
+      organizationId: purchase.organizationId,
+    });
+
+    if (!inventoryAccount || !payableAccount || !cashAccount) {
+      return res.status(404).json({
+        success: false,
+        message: "Inventory or Payable or Cash account not found.",
+      });
+    }
+
+    // journal entry
+    if (purchase.dueAmount === 0) {
+      await JournalEntry.create({
+        organizationId: purchase.organizationId,
+        branchId: purchase.branchId,
+        debitAccountId: inventoryAccount!._id,
+        creditAccountId: cashAccount!._id,
+        amount: purchase.totalAmount,
+        referenceType: "Purchase",
+        referenceId: purchase!._id,
+        note: "Purchase fully paid.",
+      });
+    } else if (purchase.paidAmount > 0) {
+      // cash part
+      await JournalEntry.create({
+        organizationId: purchase.organizationId,
+        branchId: purchase.branchId,
+        debitAccountId: inventoryAccount!._id,
+        creditAccountId: cashAccount!._id,
+        amount: purchase.paidAmount,
+        referenceType: "Purchase",
+        referenceId: purchase!._id,
+        note: "Purchase partial paid.",
+      });
+
+      // due part
+      await JournalEntry.create({
+        organizationId: purchase.organizationId,
+        branchId: purchase.branchId,
+        debitAccountId: inventoryAccount!._id,
+        creditAccountId: payableAccount!._id,
+        amount: purchase.dueAmount,
+        referenceType: "Purchase",
+        referenceId: purchase!._id,
+        note: "Purchase due.",
+      });
+    } else {
+      // full due
+      await JournalEntry.create({
+        organizationId: purchase.organizationId,
+        branchId: purchase.branchId,
+        debitAccountId: inventoryAccount!._id,
+        creditAccountId: payableAccount!._id,
+        amount: purchase.totalAmount,
+        referenceType: "Purchase",
+        referenceId: purchase!._id,
+        note: "Purchase fully due.",
+      });
+    }
+
     return res.status(200).json({
       success: true,
       message: "Purchase receive successfully & update inventory batch!",
@@ -726,6 +801,110 @@ const deletePurchase = async (req: AuthRequest, res: Response) => {
   }
 };
 
+// payment to  supplier
+const purchasePaymentSupplier = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const { amount } = req.body;
+
+    const superAdmin = isSuperAdmin(req.user);
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(409).json({
+        success: false,
+        message: customMessage.invalidId("Mongoose", id),
+      });
+    }
+
+    const filter: any = { _id: id };
+
+    if (!superAdmin) {
+      filter.organizationId = req.user!.organizationId;
+      filter.branchId = req.user!.branchId;
+    }
+
+    const purchase = await Purchase.findOne(filter);
+
+    if (!purchase) {
+      return res.status(404).json({
+        success: false,
+        message: customMessage.notFound("Purchase"),
+      });
+    }
+
+    // payment check
+    if (purchase.dueAmount === 0 || purchase.paymentStatus === "paid") {
+      return res.status(400).json({
+        success: false,
+        message: "Your payment alreday clear.",
+      });
+    }
+
+    if (amount > purchase.dueAmount) {
+      return res.status(400).json({
+        success: false,
+        message: "Payment exceeds due amount.",
+      });
+    }
+
+    const payableAccount = await Account.findOne({
+      code: "201",
+      organizationId: purchase.organizationId,
+    });
+
+    const cashAccount = await Account.findOne({
+      code: "101",
+      organizationId: purchase.organizationId,
+    });
+
+    if (!payableAccount || !cashAccount) {
+      return res.status(404).json({
+        success: false,
+        message: "Payable and Cash account not found.",
+      });
+    }
+
+    await JournalEntry.create({
+      organizationId: purchase.organizationId,
+      branchId: purchase.branchId,
+      debitAccountId: payableAccount!._id, //liability decrease
+      creditAccountId: cashAccount!._id, //asset decrease
+      amount,
+      referenceType: "Purchase",
+      referenceId: purchase!._id,
+      note: `Supplier payment for purchase ${purchase!._id}`,
+      isReversed: false,
+    });
+
+    // update purchase
+    purchase.paidAmount += amount;
+    purchase.dueAmount = purchase.totalAmount - purchase.paidAmount;
+
+    purchase.paymentStatus = purchase.dueAmount === 0 ? "paid" : "partial";
+
+    await purchase.save();
+
+    return res.status(200).json({
+      success: true,
+      message: "Supplier payment successfully.",
+
+      data: {
+        purchaseId: purchase!._id,
+        paidAmount: purchase.paidAmount,
+        dueAmount: purchase.dueAmount,
+      },
+    });
+  } catch (error) {
+    console.error("delete purchase error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: customMessage.serverError(),
+    });
+  }
+};
+
 export {
   createPurchase,
   approvePurchase,
@@ -733,4 +912,5 @@ export {
   purchaseList,
   purchaseInfo,
   deletePurchase,
+  purchasePaymentSupplier,
 };
