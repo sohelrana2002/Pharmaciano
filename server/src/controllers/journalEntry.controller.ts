@@ -8,6 +8,7 @@ import Organization from "../models/Organization.model";
 import Branch from "../models/Branch.model";
 import { Account } from "../models/Account.model";
 import { JournalEntry } from "../models/JournalEntry.model";
+import { getReferencePopulate } from "../helper/getReferencePopulate";
 
 // create journalEntry
 const createJournalEntry = async (req: AuthRequest, res: Response) => {
@@ -203,10 +204,6 @@ const journalEntryList = async (req: AuthRequest, res: Response) => {
           path: "creditAccountId",
           select: "name type code -_id",
         },
-        {
-          path: "referenceId",
-          //   select: "name -_id",
-        },
       ])
       .skip(skip)
       .limit(limitNumber)
@@ -245,6 +242,84 @@ const journalEntryList = async (req: AuthRequest, res: Response) => {
     });
   } catch (error) {
     console.error("list of journalEntry error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: customMessage.serverError(),
+    });
+  }
+};
+
+// individual journalentry info
+const journalEntryInfo = async (req: AuthRequest, res: Response) => {
+  try {
+    const { id } = req.params;
+
+    const superAdmin = isSuperAdmin(req.user);
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(409).json({
+        success: false,
+        message: customMessage.invalidId("Mongoose", id),
+      });
+    }
+
+    const filter: any = { _id: id };
+
+    if (!superAdmin) {
+      filter.organizationId = req.user!.organizationId;
+      filter.branchId = req.user!.branchId;
+    }
+
+    const journal = await JournalEntry.findOne(filter);
+
+    if (!journal) {
+      return res.status(404).json({
+        success: false,
+        message: customMessage.notFound("Journal enrty", id),
+      });
+    }
+
+    const referenceIdPopulate = getReferencePopulate(journal.referenceType);
+
+    await journal.populate([
+      {
+        path: "organizationId",
+        select: "name contact address -_id",
+      },
+      {
+        path: "branchId",
+        select: "name contact address -_id",
+      },
+      {
+        path: "debitAccountId",
+        select: "name type code -_id",
+        populate: {
+          path: "parentId",
+          select: "name type code -_id",
+        },
+      },
+      {
+        path: "creditAccountId",
+        select: "name type code -_id",
+        populate: {
+          path: "parentId",
+          select: "name type code -_id",
+        },
+      },
+      {
+        path: "referenceId",
+        ...referenceIdPopulate,
+      },
+    ]);
+
+    return res.status(200).json({
+      success: true,
+      message: customMessage.found("Journal entry", id),
+      data: { journal },
+    });
+  } catch (error) {
+    console.error("journalEntry info error:", error);
 
     res.status(500).json({
       success: false,
