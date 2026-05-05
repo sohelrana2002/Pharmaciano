@@ -62,7 +62,7 @@ const seedAccounts = async (organizationId: string) => {
     // child account
     const accounts = [
       { name: "Cash", type: "asset", code: "101", parentId: currentAssets._id },
-      { name: "Bank", type: "asset", code: "102", parentId: currentAssets._id },
+      { name: "Card", type: "asset", code: "102", parentId: currentAssets._id },
       {
         name: "Bkash",
         type: "asset",
