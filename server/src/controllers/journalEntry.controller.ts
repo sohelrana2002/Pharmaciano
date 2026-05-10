@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { AuthRequest } from "../types";
 import { Response } from "express";
-import mongoose from "mongoose";
+import mongoose, { PopulateOptions } from "mongoose";
 import { customMessage } from "../constants/customMessage";
 import { isSuperAdmin } from "../middlewares/auth.middleware";
 import Organization from "../models/Organization.model";
@@ -183,7 +183,7 @@ const journalEntryList = async (req: AuthRequest, res: Response) => {
     }
 
     const pageNumber = parseInt(page as string) || 1;
-    const limitNumber = parseInt(limit as string) || 10;
+    const limitNumber = parseInt(limit as string) || 20;
     const skip = (pageNumber - 1) * limitNumber;
 
     const journal = await JournalEntry.find(filter)
@@ -280,9 +280,8 @@ const journalEntryInfo = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const referenceIdPopulate = getReferencePopulate(journal.referenceType);
-
-    await journal.populate([
+    // make populate options
+    const populateOptions: PopulateOptions[] = [
       {
         path: "organizationId",
         select: "name contact address -_id",
@@ -307,11 +306,19 @@ const journalEntryInfo = async (req: AuthRequest, res: Response) => {
           select: "name type code -_id",
         },
       },
-      {
+    ];
+
+    // only populate if referenceId is exist
+    if (journal.referenceId) {
+      const referencePopulate = getReferencePopulate(journal.referenceType);
+
+      populateOptions.push({
         path: "referenceId",
-        ...referenceIdPopulate,
-      },
-    ]);
+        ...referencePopulate,
+      });
+    }
+
+    await journal.populate(populateOptions);
 
     return res.status(200).json({
       success: true,
@@ -328,4 +335,87 @@ const journalEntryInfo = async (req: AuthRequest, res: Response) => {
   }
 };
 
-export { createJournalEntry, journalEntryList, journalEntryInfo };
+// reverse journaal
+const reverseJournal = async (req: AuthRequest, res: Response) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+
+  try {
+    const { id } = req.params;
+
+    const superAdmin = isSuperAdmin(req.user);
+
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(409).json({
+        success: false,
+        message: customMessage.invalidId("Mongoose", id),
+      });
+    }
+
+    const filter: any = { _id: id };
+
+    if (!superAdmin) {
+      filter.organizationId = req.user!.organizationId;
+      filter.branchId = req.user!.branchId;
+    }
+
+    const journal = await JournalEntry.findOne(filter).session(session);
+
+    if (!journal) {
+      return res.status(404).json({
+        success: false,
+        message: customMessage.notFound("Journal Entry"),
+      });
+    }
+
+    if (journal.isReversed) {
+      return res.status(400).json({
+        success: false,
+        message: "This journal already reversed.",
+      });
+    }
+
+    await JournalEntry.create(
+      [
+        {
+          organizationId: journal.organizationId,
+          branchId: journal.branchId,
+          debitAccountId: journal.debitAccountId,
+          creditAccountId: journal.creditAccountId,
+          amount: journal.amount,
+          referenceType: "Manual",
+          referenceId: journal!._id,
+          note: "Auto reversed",
+          isReversed: true,
+        },
+      ],
+      { session },
+    );
+
+    journal.isReversed = true;
+    await journal.save({ session });
+
+    // commit session
+    await session.commitTransaction();
+    session.endSession();
+
+    return res.status(201).json({
+      success: true,
+      message: customMessage.created("Journal Entry reverse"),
+    });
+  } catch (error) {
+    console.error("reverse journalEntry error:", error);
+
+    res.status(500).json({
+      success: false,
+      message: customMessage.serverError(),
+    });
+  }
+};
+
+export {
+  createJournalEntry,
+  journalEntryList,
+  journalEntryInfo,
+  reverseJournal,
+};
