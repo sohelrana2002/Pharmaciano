@@ -1,16 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-
-type ReferencePopulateConfig = {
-  select?: string;
-  populate?: {
-    path: string;
-    select?: string;
-  };
-};
+import { PopulateOptions } from "mongoose";
 
 export const getReferencePopulate = (
   referenceType?: string,
-): ReferencePopulateConfig => {
+): Partial<PopulateOptions> => {
   switch (referenceType) {
     case "Sale":
       return {
