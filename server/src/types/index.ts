@@ -287,7 +287,7 @@ export interface IJournalEntry extends Document {
     | "Drawing"
     | "Capital"
     | "Manual";
-  referenceId?: Types.ObjectId;
+  referenceId?: Types.ObjectId | null;
   note?: string;
   isReversed: boolean;
 }
