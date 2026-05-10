@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import { IJournalEntry } from "../types";
 
 import { Schema, model } from "mongoose";
@@ -47,6 +48,14 @@ const journalEntrySchema = new Schema<IJournalEntry>(
   },
   { timestamps: true },
 );
+
+journalEntrySchema.pre("validate", function (next) {
+  if (this.referenceType === "Manual") {
+    this.referenceId = null;
+  }
+
+  next();
+});
 
 export const JournalEntry = model<IJournalEntry>(
   "JournalEntry",
