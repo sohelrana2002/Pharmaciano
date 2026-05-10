@@ -6,6 +6,7 @@ import {
   createJournalEntry,
   journalEntryInfo,
   journalEntryList,
+  reverseJournal,
 } from "../controllers/journalEntry.controller";
 
 const router = Router();
@@ -33,6 +34,14 @@ router.get(
   authenticate,
   authorize(["journal-entry:manage", "superAdmin:manage"]),
   journalEntryInfo,
+);
+
+// reverse journal
+router.post(
+  "/:id/reverse",
+  authenticate,
+  authorize(["journal-entry:manage", "superAdmin:manage"]),
+  reverseJournal,
 );
 
 export default router;
