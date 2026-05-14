@@ -83,7 +83,7 @@ export const updateSaleValidator = (req: AuthRequest) => {
   const superAdmin = isSuperAdmin(req.user);
 
   return baseSaleValidator.partial().extend({
-    paymentMethod: paymentSchema.partial(),
+    paymentMethod: paymentSchema.partial().optional(),
 
     organizationName: superAdmin
       ? z
