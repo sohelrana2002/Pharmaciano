@@ -4,14 +4,14 @@ import { customMessage } from "../constants/customMessage";
 import Organization from "../models/Organization.model";
 import Branch from "../models/Branch.model";
 import Role from "../models/Role.model";
-import { Medicine } from "../models/Medicine.model";
-import Category from "../models/Category.model";
-import Brand from "../models/Brand.model";
-import InventoryBatch from "../models/InventoryBatch.model";
+import Warehouse from "../models/Warehouse.model";
 
 export const uniqueNameList = async (req: AuthRequest, res: Response) => {
   try {
-    const organizationName = await Organization.distinct("name");
+    const organizationName = await Organization.aggregate([
+      { $group: { _id: "$name", firstId: { $first: "$_id" } } },
+      { $project: { _id: "$firstId", name: "$_id" } },
+    ]);
 
     if (!organizationName) {
       return res.status(404).json({
@@ -20,7 +20,10 @@ export const uniqueNameList = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const branchName = await Branch.distinct("name");
+    const branchName = await Branch.aggregate([
+      { $group: { _id: "$name", firstId: { $first: "$_id" } } },
+      { $project: { _id: "$firstId", name: "$_id" } },
+    ]);
 
     if (!branchName) {
       return res.status(404).json({
@@ -29,7 +32,10 @@ export const uniqueNameList = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const roleName = await Role.distinct("name");
+    const roleName = await Role.aggregate([
+      { $group: { _id: "$name", firstId: { $first: "$_id" } } },
+      { $project: { _id: "$firstId", name: "$_id" } },
+    ]);
 
     if (!roleName) {
       return res.status(404).json({
@@ -38,39 +44,15 @@ export const uniqueNameList = async (req: AuthRequest, res: Response) => {
       });
     }
 
-    const medicineName = await Medicine.distinct("name");
+    const warehouseName = await Warehouse.aggregate([
+      { $group: { _id: "$name", firstId: { $first: "$_id" } } },
+      { $project: { _id: "$firstId", name: "$_id" } },
+    ]);
 
-    if (!medicineName) {
+    if (!warehouseName) {
       return res.status(404).json({
         success: false,
-        message: customMessage.notFound("Medicine name"),
-      });
-    }
-
-    const brandName = await Brand.distinct("name");
-
-    if (!brandName) {
-      return res.status(404).json({
-        success: false,
-        message: customMessage.notFound("Brand name"),
-      });
-    }
-
-    const categoryName = await Category.distinct("name");
-
-    if (!categoryName) {
-      return res.status(404).json({
-        success: false,
-        message: customMessage.notFound("Category name"),
-      });
-    }
-
-    const batchNo = await InventoryBatch.distinct("batchNo");
-
-    if (!batchNo) {
-      return res.status(404).json({
-        success: false,
-        message: customMessage.notFound("InventoryBatch name"),
+        message: customMessage.notFound("Warehouse name"),
       });
     }
 
@@ -81,10 +63,7 @@ export const uniqueNameList = async (req: AuthRequest, res: Response) => {
         organizationName,
         branchName,
         roleName,
-        medicineName,
-        categoryName,
-        brandName,
-        batchNo,
+        warehouseName,
       },
     });
   } catch (error) {
