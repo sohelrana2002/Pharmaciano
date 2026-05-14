@@ -782,28 +782,39 @@
       },
       "PurchaseItem": {
         "type": "object",
+        "required": [
+          "medicineName",
+          "quantity"
+        ],
         "properties": {
           "medicineId": {
-            "type": "string"
+            "type": "string",
+            "example": "6851b18fcb234fa92f45f111"
           },
           "medicineName": {
-            "type": "string"
+            "type": "string",
+            "example": "Napa 500mg"
           },
           "batchNo": {
-            "type": "string"
+            "type": "string",
+            "example": "BATCH-1001"
           },
           "expiryDate": {
             "type": "string",
-            "format": "date"
+            "format": "date",
+            "example": "2027-12-31"
           },
           "quantity": {
-            "type": "number"
+            "type": "number",
+            "example": 50
           },
           "purchasePrice": {
-            "type": "number"
+            "type": "number",
+            "example": 8
           },
           "totalCost": {
-            "type": "number"
+            "type": "number",
+            "example": 400
           }
         }
       },
@@ -826,7 +837,8 @@
             "type": "string"
           },
           "purchaseNo": {
-            "type": "string"
+            "type": "string",
+            "example": "PUR-1747202121"
           },
           "status": {
             "type": "string",
@@ -843,16 +855,23 @@
             }
           },
           "subtotal": {
-            "type": "number"
+            "type": "number",
+            "example": 1000
           },
           "discount": {
-            "type": "number"
+            "type": "number",
+            "example": 5
           },
           "tax": {
-            "type": "number"
+            "type": "number",
+            "example": 10
           },
           "totalAmount": {
-            "type": "number"
+            "type": "number",
+            "example": 1050
+          },
+          "approvedBy": {
+            "type": "string"
           },
           "paymentStatus": {
             "type": "string",
@@ -863,13 +882,12 @@
             ]
           },
           "paidAmount": {
-            "type": "number"
+            "type": "number",
+            "example": 500
           },
           "dueAmount": {
-            "type": "number"
-          },
-          "approvedBy": {
-            "type": "string"
+            "type": "number",
+            "example": 550
           },
           "createdAt": {
             "type": "string",
@@ -884,16 +902,31 @@
       "CreatePurchaseUser": {
         "type": "object",
         "required": [
-          "items",
           "supplier",
-          "warehouseName"
+          "items",
+          "paymentStatus",
+          "paidAmount"
         ],
         "properties": {
           "supplier": {
-            "type": "string"
+            "type": "string",
+            "example": "Square Pharmaceuticals"
           },
           "warehouseName": {
-            "type": "string"
+            "type": "string",
+            "example": "Main Warehouse"
+          },
+          "paymentStatus": {
+            "type": "string",
+            "enum": [
+              "unpaid",
+              "partial",
+              "paid"
+            ]
+          },
+          "paidAmount": {
+            "type": "number",
+            "example": 500
           },
           "items": {
             "type": "array",
@@ -905,63 +938,50 @@
               ],
               "properties": {
                 "medicineName": {
-                  "type": "string"
+                  "type": "string",
+                  "example": "Napa 500mg"
                 },
                 "quantity": {
-                  "type": "number"
+                  "type": "number",
+                  "example": 50
                 }
               }
             }
-          },
-          "paymentStatus": {
-            "type": "string",
-            "enum": [
-              "unpaid",
-              "partial",
-              "paid"
-            ]
-          },
-          "paidAmount": {
-            "type": "number"
           }
         }
       },
       "CreatePurchaseSuperAdmin": {
+        "allOf": [
+          {
+            "$ref": "#/components/schemas/CreatePurchaseUser"
+          },
+          {
+            "type": "object",
+            "required": [
+              "organizationName",
+              "branchName"
+            ],
+            "properties": {
+              "organizationName": {
+                "type": "string",
+                "example": "MediCare Pharmacy"
+              },
+              "branchName": {
+                "type": "string",
+                "example": "Dhaka Branch"
+              }
+            }
+          }
+        ]
+      },
+      "ReceivePurchase": {
         "type": "object",
         "required": [
           "items",
-          "supplier",
-          "warehouseName",
-          "organizationName",
-          "branchName"
+          "paymentStatus",
+          "paidAmount"
         ],
         "properties": {
-          "supplier": {
-            "type": "string"
-          },
-          "warehouseName": {
-            "type": "string"
-          },
-          "organizationName": {
-            "type": "string"
-          },
-          "branchName": {
-            "type": "string"
-          },
-          "items": {
-            "type": "array",
-            "items": {
-              "type": "object",
-              "properties": {
-                "medicineName": {
-                  "type": "string"
-                },
-                "quantity": {
-                  "type": "number"
-                }
-              }
-            }
-          },
           "paymentStatus": {
             "type": "string",
             "enum": [
@@ -971,56 +991,59 @@
             ]
           },
           "paidAmount": {
-            "type": "number"
-          }
-        }
-      },
-      "ReceivePurchase": {
-        "type": "object",
-        "required": [
-          "items"
-        ],
-        "properties": {
+            "type": "number",
+            "example": 1000
+          },
+          "discount": {
+            "type": "number",
+            "example": 5
+          },
+          "tax": {
+            "type": "number",
+            "example": 10
+          },
           "items": {
             "type": "array",
             "items": {
               "type": "object",
               "required": [
-                "medicineName"
+                "medicineName",
+                "batchNo",
+                "expiryDate",
+                "purchasePrice"
               ],
               "properties": {
                 "medicineName": {
-                  "type": "string"
+                  "type": "string",
+                  "example": "Napa 500mg"
                 },
                 "batchNo": {
-                  "type": "string"
+                  "type": "string",
+                  "example": "BATCH-1001"
                 },
                 "expiryDate": {
                   "type": "string",
-                  "format": "date"
+                  "format": "date",
+                  "example": "2027-12-31"
                 },
                 "purchasePrice": {
-                  "type": "number"
+                  "type": "number",
+                  "example": 8
                 }
               }
             }
-          },
-          "paymentStatus": {
-            "type": "string",
-            "enum": [
-              "unpaid",
-              "partial",
-              "paid"
-            ]
-          },
-          "paidAmount": {
-            "type": "number"
-          },
-          "discount": {
-            "type": "number"
-          },
-          "tax": {
-            "type": "number"
+          }
+        }
+      },
+      "SupplierPayment": {
+        "type": "object",
+        "required": [
+          "amount"
+        ],
+        "properties": {
+          "amount": {
+            "type": "number",
+            "example": 500
           }
         }
       },
@@ -1637,13 +1660,13 @@
         },
         "description": "Purchase ID"
       },
-      "purchaseSearch": {
+      "searchPurchase": {
         "in": "query",
         "name": "search",
         "schema": {
           "type": "string"
         },
-        "description": "Search by purchase number"
+        "description": "Search purchase by purchase number"
       },
       "paymentStatus": {
         "in": "query",
@@ -3580,11 +3603,11 @@
     },
     "/api/v1/purchases": {
       "post": {
-        "summary": "Create a new purchase",
+        "summary": "Create a purchase",
         "tags": [
           "Purchases"
         ],
-        "description": "- Normal users: organization & branch from token\n- Super Admin: must provide organizationName & branchName\n",
+        "description": "Create purchase request.\n\n- Normal User:\n  organization & branch come from token\n\n- Super Admin:\n  must provide organizationName & branchName\n",
         "requestBody": {
           "required": true,
           "content": {
@@ -3604,16 +3627,34 @@
         },
         "responses": {
           "201": {
-            "description": "Purchase created successfully"
-          },
-          "400": {
-            "description": "Validation error"
+            "description": "Purchase created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "id": {
+                      "type": "string"
+                    },
+                    "purchaseNo": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
           },
           "404": {
-            "description": "Medicine / Supplier / Warehouse not found"
+            "description": "Medicine / Supplier / Organization / Branch / Warehouse not found"
           },
           "409": {
-            "description": "Duplicate purchase"
+            "description": "Duplicate data conflict"
           },
           "500": {
             "description": "Server error"
@@ -3621,7 +3662,7 @@
         }
       },
       "get": {
-        "summary": "Get list of purchases",
+        "summary": "Get purchase list",
         "tags": [
           "Purchases"
         ],
@@ -3633,7 +3674,7 @@
             "$ref": "#/components/parameters/limit"
           },
           {
-            "$ref": "#/components/parameters/purchaseSearch"
+            "$ref": "#/components/parameters/searchPurchase"
           },
           {
             "$ref": "#/components/parameters/status"
@@ -3650,7 +3691,7 @@
         ],
         "responses": {
           "200": {
-            "description": "List of purchases",
+            "description": "Purchase list fetched successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -3716,6 +3757,7 @@
         "tags": [
           "Purchases"
         ],
+        "description": "Only pending purchases can be approved",
         "parameters": [
           {
             "$ref": "#/components/parameters/purchaseId"
@@ -3723,16 +3765,16 @@
         ],
         "responses": {
           "200": {
-            "description": "Purchase approved"
+            "description": "Purchase approved successfully"
           },
           "400": {
-            "description": "Only pending purchase can be approved"
+            "description": "Purchase already approved or received"
           },
           "404": {
             "description": "Purchase not found"
           },
           "409": {
-            "description": "Invalid ID"
+            "description": "Invalid purchase ID"
           },
           "500": {
             "description": "Server error"
@@ -3742,11 +3784,11 @@
     },
     "/api/v1/purchases/{id}/receive": {
       "patch": {
-        "summary": "Receive purchase & update inventory",
+        "summary": "Receive purchase and update inventory batch",
         "tags": [
           "Purchases"
         ],
-        "description": "- Only approved purchases can be received\n- Updates inventory batch automatically\n",
+        "description": "Receive approved purchase.\nThis API:\n- updates inventory batch\n- calculates subtotal, tax, discount\n- creates journal entries\n- updates payment & due amount\n",
         "parameters": [
           {
             "$ref": "#/components/parameters/purchaseId"
@@ -3764,16 +3806,16 @@
         },
         "responses": {
           "200": {
-            "description": "Purchase received and inventory updated"
+            "description": "Purchase received successfully"
           },
           "400": {
-            "description": "Validation error / invalid state"
+            "description": "Validation failed or invalid purchase status"
           },
           "404": {
-            "description": "Purchase or medicine not found"
+            "description": "Purchase / Medicine / Account not found"
           },
           "409": {
-            "description": "Invalid ID"
+            "description": "Invalid purchase ID"
           },
           "500": {
             "description": "Server error"
@@ -3794,13 +3836,36 @@
         ],
         "responses": {
           "200": {
-            "description": "Purchase found"
+            "description": "Purchase found successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "purchase": {
+                          "$ref": "#/components/schemas/Purchase"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
           },
           "404": {
             "description": "Purchase not found"
           },
           "409": {
-            "description": "Invalid ID"
+            "description": "Invalid purchase ID"
           },
           "500": {
             "description": "Server error"
@@ -3825,7 +3890,77 @@
             "description": "Purchase not found"
           },
           "409": {
-            "description": "Invalid ID"
+            "description": "Invalid purchase ID"
+          },
+          "500": {
+            "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/v1/purchases/{id}/pay-supplier": {
+      "post": {
+        "summary": "Pay supplier due amount",
+        "tags": [
+          "Purchases"
+        ],
+        "description": "Pay due amount to supplier.\n\nThis API:\n- creates payable journal entry\n- updates paidAmount\n- updates dueAmount\n- updates paymentStatus\n",
+        "parameters": [
+          {
+            "$ref": "#/components/parameters/purchaseId"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SupplierPayment"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Supplier payment successful",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "purchaseId": {
+                          "type": "string"
+                        },
+                        "paidAmount": {
+                          "type": "number"
+                        },
+                        "dueAmount": {
+                          "type": "number"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Payment already clear or exceeds due amount"
+          },
+          "404": {
+            "description": "Purchase or account not found"
+          },
+          "409": {
+            "description": "Invalid purchase ID"
           },
           "500": {
             "description": "Server error"
