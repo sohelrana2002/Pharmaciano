@@ -1094,23 +1094,54 @@
         ],
         "properties": {
           "medicineId": {
-            "type": "string"
+            "type": "string",
+            "example": "6851b18fcb234fa92f45f111"
           },
           "medicineName": {
             "type": "string",
-            "example": "medicine name(napa 500mg) or barcode(MED-349A2BDP)"
+            "example": "Napa 500mg"
           },
           "batchNo": {
-            "type": "string"
+            "type": "string",
+            "example": "BATCH-1001"
           },
           "quantity": {
-            "type": "number"
+            "type": "number",
+            "example": 5
           },
           "sellingPrice": {
-            "type": "number"
+            "type": "number",
+            "example": 12
           },
           "purchasePrice": {
-            "type": "number"
+            "type": "number",
+            "example": 8
+          }
+        }
+      },
+      "PaymentMethod": {
+        "type": "object",
+        "required": [
+          "type"
+        ],
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "cash",
+              "card",
+              "mobile"
+            ],
+            "example": "mobile"
+          },
+          "provider": {
+            "type": "string",
+            "enum": [
+              "bkash",
+              "nagad",
+              "rocket"
+            ],
+            "example": "bkash"
           }
         }
       },
@@ -1118,26 +1149,32 @@
         "type": "object",
         "properties": {
           "_id": {
-            "type": "string"
+            "type": "string",
+            "example": "6851b18fcb234fa92f45f111"
           },
           "organizationId": {
-            "type": "string"
+            "type": "string",
+            "example": "6851b18fcb234fa92f45f112"
           },
           "branchId": {
-            "type": "string"
+            "type": "string",
+            "example": "6851b18fcb234fa92f45f113"
           },
           "cashierId": {
-            "type": "string"
+            "type": "string",
+            "example": "6851b18fcb234fa92f45f114"
           },
           "invoiceNo": {
             "type": "string",
             "example": "INV-1001"
           },
           "customerName": {
-            "type": "string"
+            "type": "string",
+            "example": "Rahim"
           },
           "customerPhone": {
-            "type": "string"
+            "type": "string",
+            "example": "017XXXXXXXX"
           },
           "items": {
             "type": "array",
@@ -1146,24 +1183,23 @@
             }
           },
           "subtotal": {
-            "type": "number"
+            "type": "number",
+            "example": 500
           },
           "discount": {
-            "type": "number"
+            "type": "number",
+            "example": 5
           },
           "tax": {
-            "type": "number"
+            "type": "number",
+            "example": 10
           },
           "totalAmount": {
-            "type": "number"
+            "type": "number",
+            "example": 525
           },
           "paymentMethod": {
-            "type": "string",
-            "enum": [
-              "cash",
-              "card",
-              "mobile"
-            ]
+            "$ref": "#/components/schemas/PaymentMethod"
           },
           "createdAt": {
             "type": "string",
@@ -1207,12 +1243,7 @@
             "example": 10
           },
           "paymentMethod": {
-            "type": "string",
-            "enum": [
-              "cash",
-              "card",
-              "mobile"
-            ]
+            "$ref": "#/components/schemas/PaymentMethod"
           }
         }
       },
@@ -1229,10 +1260,12 @@
             ],
             "properties": {
               "organizationName": {
-                "type": "string"
+                "type": "string",
+                "example": "MediCare Pharmacy"
               },
               "branchName": {
-                "type": "string"
+                "type": "string",
+                "example": "Dhaka Branch"
               }
             }
           }
@@ -1242,10 +1275,12 @@
         "type": "object",
         "properties": {
           "customerName": {
-            "type": "string"
+            "type": "string",
+            "example": "Karim"
           },
           "customerPhone": {
-            "type": "string"
+            "type": "string",
+            "example": "018XXXXXXXX"
           },
           "items": {
             "type": "array",
@@ -1254,24 +1289,23 @@
             }
           },
           "discount": {
-            "type": "number"
+            "type": "number",
+            "example": 3
           },
           "tax": {
-            "type": "number"
+            "type": "number",
+            "example": 5
           },
           "paymentMethod": {
-            "type": "string",
-            "enum": [
-              "cash",
-              "card",
-              "mobile"
-            ]
+            "$ref": "#/components/schemas/PaymentMethod"
           },
           "organizationName": {
-            "type": "string"
+            "type": "string",
+            "example": "MediCare Pharmacy"
           },
           "branchName": {
-            "type": "string"
+            "type": "string",
+            "example": "Uttara Branch"
           }
         }
       },
@@ -1629,7 +1663,8 @@
         "schema": {
           "type": "string",
           "format": "date"
-        }
+        },
+        "example": "2026-05-01"
       },
       "toDate": {
         "in": "query",
@@ -1637,7 +1672,8 @@
         "schema": {
           "type": "string",
           "format": "date"
-        }
+        },
+        "example": "2026-05-31"
       },
       "saleId": {
         "in": "path",
@@ -1654,7 +1690,7 @@
         "schema": {
           "type": "string"
         },
-        "description": "Search sales by invoice number or customer name (e.g. INV-1001, rahim)"
+        "description": "Search by invoice number or customer name"
       },
       "warehouseId": {
         "in": "path",
@@ -4141,7 +4177,7 @@
         "tags": [
           "Sales"
         ],
-        "description": "- Normal users: organization & branch from token\n- Super Admin: must provide organizationName & branchName\n",
+        "description": "Create sale with stock deduction and journal entry.\n\n- Normal User:\n  organization & branch come from token\n\n- Super Admin:\n  must provide organizationName & branchName\n",
         "requestBody": {
           "required": true,
           "content": {
@@ -4161,16 +4197,40 @@
         },
         "responses": {
           "201": {
-            "description": "Sale created successfully"
+            "description": "Sale created successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": true
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Sale created successfully"
+                    },
+                    "id": {
+                      "type": "string"
+                    },
+                    "invoiceNo": {
+                      "type": "string",
+                      "example": "INV-1001"
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
-            "description": "Validation failed / stock issue"
+            "description": "Validation failed or insufficient stock"
           },
           "404": {
-            "description": "Medicine / Batch / Organization / Branch not found"
+            "description": "Organization / Branch / Medicine / Batch not found"
           },
           "409": {
-            "description": "Duplicate invoice"
+            "description": "Duplicate data conflict"
           },
           "500": {
             "description": "Server error"
@@ -4178,7 +4238,7 @@
         }
       },
       "get": {
-        "summary": "Get list of sales",
+        "summary": "Get all sales",
         "tags": [
           "Sales"
         ],
@@ -4191,11 +4251,17 @@
           },
           {
             "$ref": "#/components/parameters/searchSale"
+          },
+          {
+            "$ref": "#/components/parameters/fromDate"
+          },
+          {
+            "$ref": "#/components/parameters/toDate"
           }
         ],
         "responses": {
           "200": {
-            "description": "List of sales",
+            "description": "Sales fetched successfully",
             "content": {
               "application/json": {
                 "schema": {
@@ -4254,7 +4320,7 @@
     },
     "/api/v1/sales/{id}": {
       "get": {
-        "summary": "Get single sale info",
+        "summary": "Get single sale details",
         "tags": [
           "Sales"
         ],
@@ -4265,13 +4331,36 @@
         ],
         "responses": {
           "200": {
-            "description": "Sale found"
+            "description": "Sale found successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "data": {
+                      "type": "object",
+                      "properties": {
+                        "sale": {
+                          "$ref": "#/components/schemas/Sale"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
           },
           "404": {
             "description": "Sale not found"
           },
           "409": {
-            "description": "Invalid ID"
+            "description": "Invalid sale ID"
           },
           "500": {
             "description": "Server error"
@@ -4283,7 +4372,7 @@
         "tags": [
           "Sales"
         ],
-        "description": "- Normal users: cannot change organization/branch\n- Super Admin: can update organizationName & branchName\n",
+        "description": "Update sale with stock rollback and journal reverse entry.\n\n- Normal User:\n  cannot update organization or branch\n\n- Super Admin:\n  can update organizationName & branchName\n",
         "parameters": [
           {
             "$ref": "#/components/parameters/saleId"
@@ -4301,16 +4390,34 @@
         },
         "responses": {
           "200": {
-            "description": "Sale updated successfully"
+            "description": "Sale updated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "id": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
           },
           "400": {
-            "description": "Validation failed"
+            "description": "Validation failed / insufficient stock"
           },
           "404": {
-            "description": "Not found"
+            "description": "Sale / Medicine / Batch / Account not found"
           },
           "409": {
-            "description": "Duplicate data"
+            "description": "Invalid ID or duplicate conflict"
           },
           "500": {
             "description": "Server error"
@@ -4329,13 +4436,31 @@
         ],
         "responses": {
           "200": {
-            "description": "Sale deleted successfully"
+            "description": "Sale deleted successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    },
+                    "id": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            }
           },
           "404": {
             "description": "Sale not found"
           },
           "409": {
-            "description": "Invalid ID"
+            "description": "Invalid sale ID"
           },
           "500": {
             "description": "Server error"
@@ -4345,11 +4470,11 @@
     },
     "/api/v1/sales/{id}/invoice": {
       "get": {
-        "summary": "Generate PDF invoice",
+        "summary": "Generate sale invoice PDF",
         "tags": [
           "Sales"
         ],
-        "description": "Generate PDF invoice for a sale",
+        "description": "Generate and download PDF invoice for a sale",
         "parameters": [
           {
             "$ref": "#/components/parameters/saleId"
@@ -4371,7 +4496,7 @@
             "description": "Sale not found"
           },
           "409": {
-            "description": "Invalid ID"
+            "description": "Invalid sale ID"
           },
           "500": {
             "description": "Server error"
