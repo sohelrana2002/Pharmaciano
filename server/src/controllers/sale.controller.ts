@@ -552,6 +552,13 @@ const updateSale = async (req: AuthRequest, res: Response) => {
       });
     }
 
+    // find old journal
+    const oldJournalExist = await JournalEntry.findOne({
+      referenceType: "Sale",
+      referenceId: existingSale!._id,
+      isReversed: false,
+    }).session(session);
+
     //   build update object dynamically
     const updateData: any = {};
 
@@ -765,8 +772,122 @@ const updateSale = async (req: AuthRequest, res: Response) => {
     if (customerPhone) updateData.customerPhone = customerPhone;
     if (paymentMethod) updateData.paymentMethod = paymentMethod;
 
+    // reverse old journal
+    if (oldJournalExist) {
+      const reverseJournal = new JournalEntry({
+        organizationId: oldJournalExist.organizationId,
+        branchId: oldJournalExist.branchId,
+
+        debitAccountId: oldJournalExist.creditAccountId,
+
+        creditAccountId: oldJournalExist.debitAccountId,
+
+        amount: oldJournalExist.amount,
+
+        referenceType: "Manual",
+        referenceId: null,
+
+        isReversed: true,
+
+        note: `Reverse of ${existingSale.invoiceNo}`,
+      });
+
+      await reverseJournal.save({ session });
+
+      oldJournalExist.isReversed = true;
+
+      await oldJournalExist.save({ session });
+    }
     // update sale
-    await Sale.findByIdAndUpdate(filter, updateData, { new: true, session });
+    const updatedSale = await Sale.findByIdAndUpdate(filter, updateData, {
+      new: true,
+      session,
+    });
+
+    // sales account
+    const salesAccount = await Account.findOne({
+      code: "401",
+      organizationId: finalOrganizationId,
+    }).session(session);
+
+    if (!salesAccount) {
+      await session.abortTransaction();
+      session.endSession();
+
+      return res.status(404).json({
+        success: false,
+        message: customMessage.notFound("Sales account"),
+      });
+    }
+
+    // payment method
+    const finalPaymentMethod = paymentMethod || existingSale.paymentMethod;
+
+    let debitAccount;
+
+    if (finalPaymentMethod.type === "cash") {
+      debitAccount = await Account.findOne({
+        code: "101",
+        organizationId: finalOrganizationId,
+      }).session(session);
+    } else if (finalPaymentMethod.type === "card") {
+      debitAccount = await Account.findOne({
+        code: "102",
+        organizationId: finalOrganizationId,
+      }).session(session);
+    } else if (finalPaymentMethod.type === "mobile") {
+      if (finalPaymentMethod.provider === "bkash") {
+        debitAccount = await Account.findOne({
+          code: "103",
+          organizationId: finalOrganizationId,
+        }).session(session);
+      } else if (finalPaymentMethod.provider === "nagad") {
+        debitAccount = await Account.findOne({
+          code: "104",
+          organizationId: finalOrganizationId,
+        }).session(session);
+      } else {
+        debitAccount = await Account.findOne({
+          code: "105",
+          organizationId: finalOrganizationId,
+        }).session(session);
+      }
+    } else {
+      debitAccount = await Account.findOne({
+        code: "106",
+        organizationId: finalOrganizationId,
+      }).session(session);
+    }
+
+    if (!debitAccount) {
+      await session.abortTransaction();
+      session.endSession();
+
+      return res.status(404).json({
+        success: false,
+        message: customMessage.notFound("Debit account"),
+      });
+    }
+
+    // create new journal
+    const newJournal = new JournalEntry({
+      organizationId: finalOrganizationId,
+      branchId: finalBranchId,
+
+      debitAccountId: debitAccount._id,
+
+      creditAccountId: salesAccount._id,
+
+      amount: totalAmount,
+
+      referenceType: "Sale",
+
+      referenceId: updatedSale!._id,
+
+      note: `Updated Invoice-${updatedSale!.invoiceNo}`,
+    });
+
+    await newJournal.save({ session });
 
     // Commit transaction
     await session.commitTransaction();
