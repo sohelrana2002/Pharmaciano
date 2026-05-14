@@ -10,7 +10,7 @@
  * /api/v1/unique-names:
  *   get:
  *     summary: Get all unique names from multiple collections
- *     description: Returns distinct (unique) names for organization, branch, role, medicine, category, brand, and batch numbers.
+ *     description: Returns distinct (unique) names for organization, branch, role, and warehouse.
  *     tags: [All necessary unique name]
  *     security:
  *       - bearerAuth: []
@@ -46,33 +46,18 @@
  *                       items:
  *                         type: string
  *                       example: ["Admin", "Manager", "Cashier"]
- *                     medicineName:
+ *                     warehouseName:
  *                       type: array
  *                       items:
  *                         type: string
- *                       example: ["Napa", "Seclo"]
- *                     categoryName:
- *                       type: array
- *                       items:
- *                         type: string
- *                       example: ["Tablet", "Capsule"]
- *                     brandName:
- *                       type: array
- *                       items:
- *                         type: string
- *                       example: ["Beximco", "Square"]
- *                     batchNo:
- *                       type: array
- *                       items:
- *                         type: string
- *                       example: ["BATCH-001", "BATCH-002"]
+ *                       example: ["central-warehouse", "rajshahi-warehouse"]
  *       404:
- *         description: কোনো নির্দিষ্ট collection এ data পাওয়া যায়নি
+ *         description: Collection data not found.
  *         content:
  *           application/json:
  *             example:
  *               success: false
- *               message: Organization name not found
+ *               message: Collection name not found
  *       500:
  *         description: Server error
  *         content:
