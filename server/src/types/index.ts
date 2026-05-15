@@ -291,3 +291,29 @@ export interface IJournalEntry extends Document {
   note?: string;
   isReversed: boolean;
 }
+
+// AIInsight interface
+export interface IAIInsight extends Document {
+  _id: Types.ObjectId;
+  organizationId: Types.ObjectId;
+  branchId: Types.ObjectId;
+  medicineId: Types.ObjectId;
+  insightType: "demand" | "trend" | "stock";
+  predictedValue: number;
+  confidence: number;
+  recommendation: string;
+  generatedAt: Date;
+
+  // enhance
+  validFrom: Date;
+  validTo: Date;
+  urgencyLevel: "Critical" | "High" | "Medium" | "Low";
+  riskLevel: "Stockout" | "Overstock" | "Expiry" | "Optimal";
+  expiryImpact?: number;
+  actualValue?: number;
+  forecastError?: number;
+  modelVersion: string;
+  modelName: string;
+  status: "pending" | "reviewed" | "actioned" | "expired" | "failed";
+  processingTimeMs: number;
+}
