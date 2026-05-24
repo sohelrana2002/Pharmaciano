@@ -22,10 +22,12 @@
   "components": {
     "securitySchemes": {
       "bearerAuth": {
-        "type": "apiKey",
+        "type": "http",
         "in": "header",
         "name": "Authorization",
-        "description": "JWT token WITHOUT 'Bearer ' prefix. Just the token itself."
+        "description": "JWT token WITHOUT 'Bearer ' prefix. Just the token itself.",
+        "scheme": "bearer",
+        "bearerFormat": "JWT"
       }
     },
     "schemas": {
@@ -2992,6 +2994,129 @@
           },
           "500": {
             "description": "Server error"
+          }
+        }
+      }
+    },
+    "/api/v1/database/download": {
+      "get": {
+        "summary": "Download full database backup",
+        "tags": [
+          "Database"
+        ],
+        "description": "**⚠️ Super Admin only** – Exports all collections from the database as a single JSON file.\n\n- The file is automatically downloaded with the name `database-backup.json`.\n- Contains all documents from every collection in the database.\n",
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Database backup file downloaded successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": {
+                    "type": "array",
+                    "description": "Array of documents from a collection",
+                    "items": {
+                      "type": "object"
+                    }
+                  },
+                  "example": {
+                    "users": [
+                      {
+                        "_id": "60d21b4667d0d8992e610c85",
+                        "name": "John Doe",
+                        "email": "john@example.com"
+                      }
+                    ],
+                    "sales": [
+                      {
+                        "_id": "60d21b4667d0d8992e610c86",
+                        "invoiceNo": "INV-001",
+                        "totalAmount": 250
+                      }
+                    ]
+                  }
+                },
+                "headers": {
+                  "Content-Disposition": {
+                    "schema": {
+                      "type": "string",
+                      "example": "attachment; filename=\"database-backup.json\""
+                    }
+                  },
+                  "Content-Type": {
+                    "schema": {
+                      "type": "string",
+                      "example": "application/json"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized – No token or invalid token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Authentication required"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden – User is not a Super Admin",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Only super admin can perform this operation"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Server error – Database connection issue or internal failure",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "example": false
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Something went wrong"
+                    }
+                  }
+                }
+              }
+            }
           }
         }
       }
@@ -6042,6 +6167,10 @@
     {
       "name": "Categories",
       "description": "Category management APIs"
+    },
+    {
+      "name": "Database",
+      "description": "Database backup and export operations (Super Admin only)"
     },
     {
       "name": "Inventory Batches",
