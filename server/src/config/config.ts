@@ -12,6 +12,8 @@ interface IConfig {
   tokenExpireIn: StringValue;
   apiVersion: string;
   backEndBaseUrl: string;
+  genevaApiKey: string;
+  genevaApiUrl: string;
 }
 
 // define port
@@ -59,6 +61,18 @@ if (!process.env.BACK_END_BASE_URL) {
 }
 const backEndBaseUrl = process.env.BACK_END_BASE_URL;
 
+// define geneva api key
+if (!process.env.GENEVA_API_KEY) {
+  throw new Error("Geneva API KEY is required in environment variables");
+}
+const genevaApiKey = process.env.GENEVA_API_KEY;
+
+// define geneva api url
+if (!process.env.GENEVA_API_URL) {
+  throw new Error("Geneva API URL is required in environment variables");
+}
+const genevaApiUrl = process.env.GENEVA_API_URL;
+
 const _config: IConfig = {
   port,
   databaseURI,
@@ -68,6 +82,8 @@ const _config: IConfig = {
   tokenExpireIn,
   apiVersion,
   backEndBaseUrl,
+  genevaApiKey,
+  genevaApiUrl,
 };
 
 // freeze to prevent accidental modification
