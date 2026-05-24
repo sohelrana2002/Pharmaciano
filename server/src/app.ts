@@ -38,6 +38,7 @@ const allowedOrigins = [
   "https://pharmaciano.vercel.app",
   "https://pharmaciano-backend.vercel.app",
   "https://rafiz001.github.io",
+  "https://pharmaciano.onrender.com",
 ];
 
 const corsOptions = {
