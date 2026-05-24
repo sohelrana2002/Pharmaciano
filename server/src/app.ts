@@ -31,6 +31,7 @@ import purchaseRouter from "./routes/purchase.route";
 import accountRouter from "./routes/account.route";
 import journalEntryRouter from "./routes/journalEntry.route";
 import AIInsightRouter from "./routes/aiinsight.route";
+import databaseRouter from "./routes/database.route";
 
 const allowedOrigins = [
   "http://localhost:3000",
@@ -80,6 +81,7 @@ apiRouter.use("/purchases", purchaseRouter);
 apiRouter.use("/accounts", accountRouter);
 apiRouter.use("/journal-entries", journalEntryRouter);
 apiRouter.use("/ai-insights", AIInsightRouter);
+apiRouter.use("/database", databaseRouter);
 
 // all necessary unique name
 apiRouter.use("/unique-names", uniqueNameRouter);
