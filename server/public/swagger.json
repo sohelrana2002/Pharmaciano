@@ -13,6 +13,10 @@
     {
       "url": "https://pharmaciano-backend.vercel.app",
       "description": "Production server"
+    },
+    {
+      "url": "https://pharmaciano.onrender.com",
+      "description": "Production server(onrender)"
     }
   ],
   "components": {
