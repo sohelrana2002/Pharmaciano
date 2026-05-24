@@ -23,6 +23,10 @@ APIs for managing all entities in the system.
         url: "https://pharmaciano-backend.vercel.app", // Replace with your production URL
         description: "Production server",
       },
+      {
+        url: "https://pharmaciano.onrender.com", // Replace with your production URL
+        description: "Production server(onrender)",
+      },
     ],
     components: {
       securitySchemes: {
