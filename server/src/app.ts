@@ -53,15 +53,6 @@ const corsOptions = {
   // optionsSuccessStatus: 200
 };
 
-// global cache-control middleware
-app.use((req, res, next) => {
-  res.setHeader(
-    "Cache-Control",
-    "no-cache, no-store, max-age=0, must-revalidate",
-  );
-  next();
-});
-
 // Middleware
 app.use(cors(corsOptions));
 app.use(express.json({ limit: "10mb" }));
