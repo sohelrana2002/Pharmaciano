@@ -8,7 +8,10 @@ import { Response } from "express";
 const downloadFullDatabase = async (req: AuthRequest, res: Response) => {
   try {
     if (!mongoose.connection.db) {
-      throw new Error("Database connection not established");
+      return res.status(503).json({
+        success: false,
+        message: "Database connection not established",
+      });
     }
 
     const collections = await mongoose.connection.db.collections();
@@ -25,7 +28,7 @@ const downloadFullDatabase = async (req: AuthRequest, res: Response) => {
     res.setHeader("Content-Type", "application/json");
     res.send(JSON.stringify(allData, null, 2));
   } catch (error) {
-    console.error("Download database error:", error);
+    console.error("Download database error: ", error);
 
     res.status(500).json({
       success: false,
