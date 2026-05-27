@@ -54,14 +54,7 @@ const login = async (req: Request, res: Response) => {
     const token = jwt.sign(
       {
         userId: user._id,
-        email: user.email,
-        role: role.name,
-        permissions: role.permissions,
         lastLogin: user.lastLogin,
-        organizationId: user.organizationId,
-        branchId: user.branchId,
-        warehouseId: user.warehouseId,
-        phone: user.phone,
       },
       config.jwtSecret,
       { expiresIn: config.tokenExpireIn },
@@ -74,9 +67,7 @@ const login = async (req: Request, res: Response) => {
         token,
         user: {
           id: user._id,
-          email: user.email,
           name: user.name,
-          role: role.name,
           lastLogin: user.lastLogin,
         },
       },
