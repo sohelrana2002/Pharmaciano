@@ -128,6 +128,8 @@ const createInventoryBatch = async (req: AuthRequest, res: Response) => {
       });
     }
 
+    const fullMedicineName = `${medicine.name} ${medicine.strength}${medicine.unit}`;
+
     if (warehouseName) {
       const warehouse = await Warehouse.findOne({
         name: warehouseName,
@@ -171,6 +173,7 @@ const createInventoryBatch = async (req: AuthRequest, res: Response) => {
       organizationId,
       branchId,
       medicineId: medicine._id,
+      medicineName: fullMedicineName,
       batchNo,
       expiryDate,
       quantity,
@@ -507,6 +510,7 @@ const updateInventoryBatch = async (req: AuthRequest, res: Response) => {
       }
       //   update medicineId
       updateData.medicineId = medicine._id;
+      updateData.medicineName = `${medicine.name} ${medicine.strength}${medicine.unit}`;
     }
 
     // manage branch
