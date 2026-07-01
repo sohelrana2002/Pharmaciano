@@ -419,9 +419,10 @@ const saleList = async (req: AuthRequest, res: Response) => {
       message:
         sales.length > 0 ? customMessage.found("Sales") : "No sale found!",
       meta: {
-        page: pageNumber,
+        totalRecords: total,
+        currentPage: pageNumber,
         limit: limitNumber,
-        count: sales.length,
+        totalPages: Math.ceil(total / limitNumber),
       },
       total,
       active: activeCount,
