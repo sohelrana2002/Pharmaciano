@@ -13,6 +13,7 @@ import {
   deleteSale,
   createPDF,
 } from "../controllers/sale.controller";
+import { redisCache } from "../middlewares/redisCache.middleware";
 
 const router = Router();
 
@@ -30,6 +31,7 @@ router.get(
   "/",
   authenticate,
   authorize(["cashier:manage", "superAdmin:manage"]),
+  redisCache(),
   saleList,
 );
 
