@@ -65,4 +65,13 @@ inventoryBatchSchema.index(
   { unique: true },
 );
 
+// NEW QUERY PERFORMANCE INDEX RIGHT HERE
+inventoryBatchSchema.index({
+  organizationId: 1,
+  branchId: 1,
+  status: 1,
+  medicineId: 1,
+  batchNo: 1,
+});
+
 export default model<IInventoryBatch>("InventoryBatch", inventoryBatchSchema);
