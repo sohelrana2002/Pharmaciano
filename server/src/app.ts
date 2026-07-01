@@ -32,6 +32,7 @@ import accountRouter from "./routes/account.route";
 import journalEntryRouter from "./routes/journalEntry.route";
 import AIInsightRouter from "./routes/aiinsight.route";
 import databaseRouter from "./routes/database.route";
+import AIForecasting from "./routes/aiForecasting.route";
 
 const allowedOrigins = [
   "http://localhost:3000",
@@ -82,6 +83,7 @@ apiRouter.use("/accounts", accountRouter);
 apiRouter.use("/journal-entries", journalEntryRouter);
 apiRouter.use("/ai-insights", AIInsightRouter);
 apiRouter.use("/database", databaseRouter);
+apiRouter.use("/ai-forecasting", AIForecasting);
 
 // all necessary unique name
 apiRouter.use("/unique-names", uniqueNameRouter);
