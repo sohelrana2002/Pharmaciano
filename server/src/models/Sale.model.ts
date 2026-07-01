@@ -102,4 +102,10 @@ const saleSchema = new Schema<ISale>(
   },
 );
 
+// Speeds up initial matching by organization, branch, and creation date
+saleSchema.index({ organizationId: 1, branchId: 1, createdAt: -1 });
+
+// Speeds up query searches using medicineId and medicineName nested inside the items array
+saleSchema.index({ "items.medicineId": 1, "items.medicineName": 1 });
+
 export default model<ISale>("Sale", saleSchema);
