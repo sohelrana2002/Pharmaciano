@@ -13,6 +13,7 @@ interface IConfig {
   apiVersion: string;
   backEndBaseUrl: string;
   geminiApiKey: string;
+  redisUrl: string;
 }
 
 // define port
@@ -60,11 +61,17 @@ if (!process.env.BACK_END_BASE_URL) {
 }
 const backEndBaseUrl = process.env.BACK_END_BASE_URL;
 
-// define geneva api key
+// define gemini api key
 if (!process.env.GEMINI_API_KEYS) {
   throw new Error("GEMINI API KEY is required in environment variables");
 }
 const geminiApiKey = process.env.GEMINI_API_KEYS;
+
+// define redis url
+if (!process.env.REDIS_URL) {
+  throw new Error("REDIS_URL is required in environment variables");
+}
+const redisUrl = process.env.REDIS_URL;
 
 const _config: IConfig = {
   port,
@@ -76,6 +83,7 @@ const _config: IConfig = {
   apiVersion,
   backEndBaseUrl,
   geminiApiKey,
+  redisUrl,
 };
 
 // freeze to prevent accidental modification
