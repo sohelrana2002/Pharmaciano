@@ -13,7 +13,7 @@ import {
   deleteSale,
   createPDF,
 } from "../controllers/sale.controller";
-import { redisCache } from "../middlewares/redisCache.middleware";
+// import { redisCache } from "../middlewares/redisCache.middleware";
 
 const router = Router();
 
@@ -26,12 +26,21 @@ router.post(
   createSale,
 );
 
-// list of sales
+/*
+list of sales (Used redis for cache but I have no to much tokens so we ignore this route)
 router.get(
   "/",
   authenticate,
   authorize(["cashier:manage", "superAdmin:manage"]),
   redisCache(),
+  saleList,
+);
+*/
+
+router.get(
+  "/",
+  authenticate,
+  authorize(["cashier:manage", "superAdmin:manage"]),
   saleList,
 );
 
