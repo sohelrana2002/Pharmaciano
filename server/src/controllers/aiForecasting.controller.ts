@@ -210,8 +210,8 @@ const getAiForecasting = async (req: AuthRequest, res: Response) => {
     const allForecasts = result.forecast || [];
 
     const totalRecords = allForecasts.length;
-    const startIndex = pageNumber;
-    const endIndex = limitNumber;
+    const startIndex = (pageNumber - 1) * limitNumber;
+    const endIndex = startIndex + limitNumber;
     const paginatedForecasts = allForecasts.slice(startIndex, endIndex);
 
     const finalResponsePayload = {
