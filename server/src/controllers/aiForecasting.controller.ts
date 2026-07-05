@@ -238,11 +238,11 @@ const getAiForecasting = async (req: AuthRequest, res: Response) => {
       },
     };
 
-    // Save response to redis cache(1 hours)
+    // Save response to redis cache(24 hours)
     try {
       await redisClient.setEx(
         cacheKey,
-        3600,
+        86400,
         JSON.stringify(finalResponsePayload),
       );
     } catch (cacheWriteError) {
