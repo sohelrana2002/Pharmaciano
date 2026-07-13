@@ -41,6 +41,7 @@ const allowedOrigins = [
   "https://pharmaciano-backend.vercel.app",
   "https://rafiz001.github.io",
   "https://pharmaciano.onrender.com",
+  "https://pharmaciano.netlify.app"
 ];
 
 const corsOptions = {
