@@ -1,4 +1,21 @@
 import swaggerJsdoc from "swagger-jsdoc";
+import { config } from "./config";
+
+const isDev = config.nodeEnv === "development";
+
+const serversUrl = isDev
+  ? [
+      {
+        url: "http://localhost:5000", // Base URL for local development
+        description: "Local server",
+      },
+    ]
+  : [
+      {
+        url: "https://pharmaciano-pvcu.onrender.com", // Replace with your production URL
+        description: "Production server",
+      },
+    ];
 
 const options = {
   definition: {
@@ -14,20 +31,7 @@ feature-based access control, secure JWT authentication, and provides
 APIs for managing all entities in the system.
       `,
     },
-    servers: [
-      {
-        url: "http://localhost:5000", // Base URL for local development
-        description: "Local server",
-      },
-      {
-        url: "https://pharmaciano-backend.vercel.app", // Replace with your production URL
-        description: "Production server",
-      },
-      {
-        url: "https://pharmaciano.onrender.com", // Replace with your production URL
-        description: "Production server(onrender)",
-      },
-    ],
+    servers: serversUrl,
     components: {
       securitySchemes: {
         bearerAuth: {
