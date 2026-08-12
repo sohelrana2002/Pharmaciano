@@ -11,6 +11,7 @@ interface IConfig {
   superAdminPassword: string;
   tokenExpireIn: StringValue;
   apiVersion: string;
+  nodeEnv: string;
   backEndBaseUrl: string;
   geminiApiKey: string;
   redisUrl: string;
@@ -55,6 +56,12 @@ if (!process.env.API_VERSION) {
 }
 const apiVersion = process.env.API_VERSION;
 
+// define nodeEnv
+if (!process.env.NODE_ENV) {
+  throw new Error("NODE_ENV is required in environment variables");
+}
+const nodeEnv = process.env.NODE_ENV;
+
 // define back End Base Url
 if (!process.env.BACK_END_BASE_URL) {
   throw new Error("Back End Base Url is required in environment variables");
@@ -81,6 +88,7 @@ const _config: IConfig = {
   superAdminPassword,
   tokenExpireIn,
   apiVersion,
+  nodeEnv,
   backEndBaseUrl,
   geminiApiKey,
   redisUrl,
