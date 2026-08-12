@@ -41,7 +41,7 @@ const allowedOrigins = [
   "https://pharmaciano.vercel.app",
   "https://pharmaciano-backend.vercel.app",
   "https://rafiz001.github.io",
-  "https://pharmaciano-e4du.onrender.com",
+  "https://pharmaciano-api-yvxm.onrender.com",
   "https://pharmaciano.netlify.app",
 ];
 

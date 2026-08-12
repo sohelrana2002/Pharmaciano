@@ -12,7 +12,7 @@ const serversUrl = isDev
     ]
   : [
       {
-        url: "https://pharmaciano-pvcu.onrender.com", // Replace with your production URL
+        url: "https://pharmaciano-api-yvxm.onrender.com", // Replace with your production URL
         description: "Production server",
       },
     ];
