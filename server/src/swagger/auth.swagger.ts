@@ -10,7 +10,16 @@
  * /api/v1/auth/login:
  *   post:
  *     summary: Login user
- *     description: Authenticate a user using email and password and return a JWT token.
+ *     description: |
+ *       Authenticate a user using email and password and return a JWT token.
+ *
+ *       Demo Credentials:
+ *
+ *       Super Admin:
+ *
+ *       Email: superadmin@pharmaciano.com
+ *
+ *       Password: superadmin123
  *     tags: [Auth]
  *     requestBody:
  *       required: true
@@ -29,7 +38,7 @@
  *               password:
  *                 type: string
  *                 format: password
- *                 example: superadmin12
+ *                 example: superadmin123
  *     responses:
  *       200:
  *         description: Login successful
