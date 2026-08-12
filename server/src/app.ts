@@ -33,6 +33,7 @@ import journalEntryRouter from "./routes/journalEntry.route";
 import AIInsightRouter from "./routes/aiinsight.route";
 import databaseRouter from "./routes/database.route";
 import AIForecasting from "./routes/aiForecasting.route";
+import reportRouter from "./routes/report.route";
 
 const allowedOrigins = [
   "http://localhost:3000",
@@ -40,8 +41,8 @@ const allowedOrigins = [
   "https://pharmaciano.vercel.app",
   "https://pharmaciano-backend.vercel.app",
   "https://rafiz001.github.io",
-  "https://pharmaciano.onrender.com",
-  "https://pharmaciano.netlify.app"
+  "https://pharmaciano-pvcu.onrender.com",
+  "https://pharmaciano.netlify.app",
 ];
 
 const corsOptions = {
@@ -85,6 +86,7 @@ apiRouter.use("/journal-entries", journalEntryRouter);
 apiRouter.use("/ai-insights", AIInsightRouter);
 apiRouter.use("/database", databaseRouter);
 apiRouter.use("/ai-forecasting", AIForecasting);
+apiRouter.use("/report", reportRouter);
 
 // all necessary unique name
 apiRouter.use("/unique-names", uniqueNameRouter);
@@ -92,7 +94,16 @@ apiRouter.use("/unique-names", uniqueNameRouter);
 // Test route
 app.get("/", (req: Request, res: Response) => {
   res.json({
-    message: "Backend is running!",
+    success: true,
+    message: "API is live!",
+  });
+});
+
+// Health checker route
+app.get("/health", (req: Request, res: Response) => {
+  res.json({
+    success: true,
+    message: "Server is running",
   });
 });
 

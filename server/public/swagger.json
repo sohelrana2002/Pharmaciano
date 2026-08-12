@@ -9,14 +9,6 @@
     {
       "url": "http://localhost:5000",
       "description": "Local server"
-    },
-    {
-      "url": "https://pharmaciano-backend.vercel.app",
-      "description": "Production server"
-    },
-    {
-      "url": "https://pharmaciano.onrender.com",
-      "description": "Production server(onrender)"
     }
   ],
   "components": {
@@ -2334,7 +2326,7 @@
     "/api/v1/auth/login": {
       "post": {
         "summary": "Login user",
-        "description": "Authenticate a user using email and password and return a JWT token.",
+        "description": "Authenticate a user using email and password and return a JWT token.\n\nDemo Credentials:\n\nSuper Admin:\n\nEmail: superadmin@pharmaciano.com\n\nPassword: superadmin123\n",
         "tags": [
           "Auth"
         ],
@@ -2357,7 +2349,7 @@
                   "password": {
                     "type": "string",
                     "format": "password",
-                    "example": "superadmin12"
+                    "example": "superadmin123"
                   }
                 }
               }
