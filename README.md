@@ -62,7 +62,7 @@ Pharmaciano also includes **AI-powered features** such as medicine demand foreca
 
 Interactive API documentation is available here:
 
-🔗 **[Pharmaciano API Docs](https://pharmaciano-backend.vercel.app/api-docs)**
+🔗 **[Pharmaciano API Docs](https://pharmaciano-api-yvxm.onrender.com/api-docs)**
 
 The documentation allows you to:
 
